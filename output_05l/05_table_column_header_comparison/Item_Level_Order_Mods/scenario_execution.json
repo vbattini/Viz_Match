@@ -1,0 +1,192 @@
+{
+  "scenario_name": "05_table_column_header_comparison",
+  "scroll_strategy": "LARGE",
+  "horizontal_scrollbar_presence": {
+    "dashboard_A": true,
+    "dashboard_B": true
+  },
+  "dashboard_A": {
+    "screenshots": {
+      "initial": "output_05l\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\initial.png",
+      "middle": "output_05l\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\middle.png",
+      "extreme_right": "output_05l\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\extreme_right.png"
+    },
+    "scroll_positions": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 752.3846435546875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.856349156774481,
+            "actual_fraction": 0
+          }
+        ]
+      },
+      "middle": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 752.3846435546875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.856349156774481,
+            "actual_fraction": 0
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49983185354984155
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "extreme_right": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 1035.6904296875,
+              "y": 1026.70166015625,
+              "width": 752.384765625,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.8563488555919849,
+            "actual_fraction": 0.49983185354984155
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 1.0002887381875958
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    },
+    "horizontal_scrollbar_present": true,
+    "max_horizontal_scroll_range_ratio": 0.856349156774481,
+    "scroll_strategy": "LARGE"
+  },
+  "dashboard_B": {
+    "screenshots": {
+      "initial": "output_05l\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\initial.png",
+      "middle": "output_05l\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\middle.png",
+      "extreme_right": "output_05l\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\extreme_right.png"
+    },
+    "scroll_positions": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 705.22412109375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.9804889776978312,
+            "actual_fraction": 0
+          }
+        ]
+      },
+      "middle": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 705.22412109375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.9804889776978312,
+            "actual_fraction": 0
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.4990086463410479
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "extreme_right": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 1058.693603515625,
+              "y": 1026.70166015625,
+              "width": 705.22412109375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.9804889776978312,
+            "actual_fraction": 0.4990086463410479
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9994636751106942
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    },
+    "horizontal_scrollbar_present": true,
+    "max_horizontal_scroll_range_ratio": 0.9804889776978312,
+    "scroll_strategy": "LARGE"
+  }
+}

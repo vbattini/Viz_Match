@@ -1,0 +1,39 @@
+{
+  "outcome": "UNVERIFIED",
+  "dashboard_A": {
+    "record": {
+      "filter": "Supply Planner Hierarchy",
+      "requested": [
+        "Amanda Stromgren"
+      ],
+      "applied": false,
+      "error": "RuntimeError: Clicking option 'Amanda Stromgren' did not change filter 'Supply Planner Hierarchy'; selected values: ['All']",
+      "verified": null
+    },
+    "verified": null,
+    "screenshot": "output_0203\\02_single_filter_selection\\Inventory_Bands\\dashboard_A.png",
+    "restored": true,
+    "restore_error": null,
+    "kept_for_next": false
+  },
+  "dashboard_B": {
+    "record": {
+      "filter": "Supply Planner Hierarchy",
+      "requested": [
+        "Amanda Stromgren"
+      ],
+      "applied": false,
+      "error": "RuntimeError: Clicking option 'Amanda Stromgren' did not change filter 'Supply Planner Hierarchy'; selected values: ['All']",
+      "verified": null
+    },
+    "verified": null,
+    "screenshot": "output_0203\\02_single_filter_selection\\Inventory_Bands\\dashboard_B.png",
+    "restored": true,
+    "restore_error": null,
+    "kept_for_next": false
+  },
+  "screenshots": {
+    "dashboard_A": "output_0203\\02_single_filter_selection\\Inventory_Bands\\dashboard_A.png",
+    "dashboard_B": "output_0203\\02_single_filter_selection\\Inventory_Bands\\dashboard_B.png"
+  }
+}

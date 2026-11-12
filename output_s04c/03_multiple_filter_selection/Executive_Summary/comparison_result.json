@@ -1,0 +1,31 @@
+{
+  "outcome": "FAIL",
+  "dashboard_A": {
+    "filter": "Facility",
+    "requested": [
+      "54 - NF Distributors",
+      "86 - Severn"
+    ],
+    "applied": true,
+    "selected": [
+      "54 - NF Distributors"
+    ],
+    "verified": false
+  },
+  "dashboard_B": {
+    "filter": "Facility",
+    "requested": [
+      "54 - NF Distributors",
+      "86 - Severn"
+    ],
+    "applied": true,
+    "selected": [
+      "All"
+    ],
+    "verified": false
+  },
+  "screenshots": {
+    "dashboard_A": "output_s04c\\03_multiple_filter_selection\\Executive_Summary\\dashboard_A.png",
+    "dashboard_B": "output_s04c\\03_multiple_filter_selection\\Executive_Summary\\dashboard_B.png"
+  }
+}

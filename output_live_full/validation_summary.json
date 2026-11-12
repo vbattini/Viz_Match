@@ -1,0 +1,114 @@
+{
+  "pages": [
+    {
+      "page": "Executive Summary",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: RuntimeError: Cannot read current selections for filter 'Facility'"
+    },
+    {
+      "page": "Weekly Trending",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: RuntimeError: Cannot read current selections for filter 'Rank'"
+    },
+    {
+      "page": "All Items",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_function: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Health Index",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: BrowserContext.new_page: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Inventory Bands",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: RuntimeError: Cannot read current selections for filter 'Vendor'"
+    },
+    {
+      "page": "Item Counts",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: RuntimeError: Could not restore baseline selections for filter 'Supply Planner Hierarchy'; expected ['All']"
+    },
+    {
+      "page": "Vendor-Item Counts",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed"
+    },
+    {
+      "page": "To Be Discontinued",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: BrowserContext.new_page: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Current On Hand",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: RuntimeError: Cannot read current selections for filter 'Vendor'"
+    },
+    {
+      "page": "Item Level Order Mods",
+      "statuses": {
+        "01_default_filter_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: RuntimeError: Cannot read current selections for filter 'Master Vendor'"
+    }
+  ]
+}

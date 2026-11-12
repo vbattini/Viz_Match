@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "tables_found_a": true,
+  "tables_found_b": true,
+  "headers_a": [
+    "Facility",
+    "On Hand $",
+    "On Hand Cases",
+    "On Order $",
+    "On Order Cases"
+  ],
+  "headers_b": [
+    "Facility",
+    "On Hand $",
+    "On Hand Cases",
+    "On Order $",
+    "On Order Cases"
+  ],
+  "differences": [
+    {
+      "status": "MATCH",
+      "header_a": "Facility",
+      "header_b": "Facility",
+      "observation": "Header matches exactly."
+    },
+    {
+      "status": "MATCH",
+      "header_a": "On Hand $",
+      "header_b": "On Hand $",
+      "observation": "Header matches exactly."
+    },
+    {
+      "status": "MATCH",
+      "header_a": "On Hand Cases",
+      "header_b": "On Hand Cases",
+      "observation": "Header matches exactly."
+    },
+    {
+      "status": "MATCH",
+      "header_a": "On Order $",
+      "header_b": "On Order $",
+      "observation": "Header matches exactly."
+    },
+    {
+      "status": "MATCH",
+      "header_a": "On Order Cases",
+      "header_b": "On Order Cases",
+      "observation": "Header matches exactly."
+    }
+  ],
+  "notes": []
+}

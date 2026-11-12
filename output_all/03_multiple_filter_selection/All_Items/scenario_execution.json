@@ -1,0 +1,25 @@
+{
+  "plan": {
+    "filter_key": "rank",
+    "name_a": "Rank",
+    "name_b": "Rank",
+    "values_a": [
+      "C",
+      "U"
+    ],
+    "values_b": [
+      "C",
+      "U"
+    ]
+  },
+  "steps": [
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Rank'"
+    },
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Rank'"
+    }
+  ]
+}

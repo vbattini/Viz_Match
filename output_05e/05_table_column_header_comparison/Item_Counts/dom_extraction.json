@@ -1,0 +1,10 @@
+{
+  "dashboard_A": {
+    "page": "Item Counts",
+    "tables": []
+  },
+  "dashboard_B": {
+    "page": "Item Counts",
+    "tables": []
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "status": "SKIPPED",
+  "tables_found_a": false,
+  "tables_found_b": false,
+  "headers_a": [],
+  "headers_b": [],
+  "differences": [],
+  "notes": [
+    "No table or matrix visual is present on the 'Weekly Trending' page in either Dashboard A or Dashboard B. The page contains only charts and filter slicers."
+  ]
+}

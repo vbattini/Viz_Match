@@ -1,0 +1,69 @@
+{
+  "pages": [
+    {
+      "page": "Executive Summary",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Weekly Trending",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "All Items",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Health Index",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Inventory Bands",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Item Counts",
+      "statuses": {
+        "04_drilldown": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_function: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Vendor-Item Counts",
+      "statuses": {
+        "04_drilldown": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: BrowserContext.new_page: Target page, context or browser has been closed"
+    },
+    {
+      "page": "To Be Discontinued",
+      "statuses": {
+        "04_drilldown": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_function: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Current On Hand",
+      "statuses": {
+        "04_drilldown": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_function: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Item Level Order Mods",
+      "statuses": {
+        "04_drilldown": "UNVERIFIED"
+      },
+      "reason": "page failed: Error: BrowserContext.new_page: Protocol error (Target.createTarget): browserContextId"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "02 - Sioux Falls",
+    "value_b": "02 - Sioux Falls"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "02 - Sioux Falls"
+        ],
+        "applied": true,
+        "selected": [
+          "02 - Sioux Falls"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Item_Counts\\dashboard_A.png",
+      "restored": null,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    },
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "02 - Sioux Falls"
+        ],
+        "applied": true,
+        "selected": [
+          "02 - Sioux Falls"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Item_Counts\\dashboard_B.png",
+      "restored": null,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    }
+  ]
+}

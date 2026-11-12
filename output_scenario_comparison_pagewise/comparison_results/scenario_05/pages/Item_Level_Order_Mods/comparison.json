@@ -1,0 +1,304 @@
+{
+  "scenario_id": "05",
+  "scenario_name": "Table and Matrix Headers",
+  "page_name": "Item Level Order Mods",
+  "scenario_execution_status": "PASS",
+  "scenario_execution_reason": null,
+  "comparison_status": "PASS",
+  "filter_comparison": {
+    "status": "NOT_APPLICABLE",
+    "state_equivalent": null,
+    "items": []
+  },
+  "visual_comparison": {
+    "status": "PASS",
+    "headers_a": [
+      "Facility",
+      "Case UPC",
+      "Item #",
+      "Description",
+      "Purch Status",
+      "Billing Status",
+      "Availability Code",
+      "Pack",
+      "Size",
+      "Master Vendor",
+      "Vendor",
+      "Vendor Ti",
+      "Vendor Hi",
+      "Whse Ti",
+      "Whse Hi",
+      "Vendor Pallet Cases",
+      "4 Wk Avg Mvmnt",
+      "13 Wk Avg Mvmnt",
+      "Item Type"
+    ],
+    "headers_b": [
+      "Facility",
+      "Case UPC",
+      "Item #",
+      "Description",
+      "Purch Status",
+      "Billing Status",
+      "Availability Code",
+      "Pack",
+      "Size",
+      "Master Vendor",
+      "Vendor",
+      "Vendor Ti",
+      "Vendor Hi",
+      "Whse Ti",
+      "Whse Hi",
+      "Vendor Pallet Cases",
+      "4 Wk Avg Mvmnt",
+      "13 Wk Avg Mvmnt",
+      "Item Type"
+    ],
+    "notes": [],
+    "source_result": {
+      "status": "PASS",
+      "tables_found_a": true,
+      "tables_found_b": true,
+      "headers_a": [
+        "Facility",
+        "Case UPC",
+        "Item #",
+        "Description",
+        "Purch Status",
+        "Billing Status",
+        "Availability Code",
+        "Pack",
+        "Size",
+        "Master Vendor",
+        "Vendor",
+        "Vendor Ti",
+        "Vendor Hi",
+        "Whse Ti",
+        "Whse Hi",
+        "Vendor Pallet Cases",
+        "4 Wk Avg Mvmnt",
+        "13 Wk Avg Mvmnt",
+        "Item Type"
+      ],
+      "headers_b": [
+        "Facility",
+        "Case UPC",
+        "Item #",
+        "Description",
+        "Purch Status",
+        "Billing Status",
+        "Availability Code",
+        "Pack",
+        "Size",
+        "Master Vendor",
+        "Vendor",
+        "Vendor Ti",
+        "Vendor Hi",
+        "Whse Ti",
+        "Whse Hi",
+        "Vendor Pallet Cases",
+        "4 Wk Avg Mvmnt",
+        "13 Wk Avg Mvmnt",
+        "Item Type"
+      ],
+      "matching_headers": [
+        "Facility",
+        "Case UPC",
+        "Item #",
+        "Description",
+        "Purch Status",
+        "Billing Status",
+        "Availability Code",
+        "Pack",
+        "Size",
+        "Master Vendor",
+        "Vendor",
+        "Vendor Ti",
+        "Vendor Hi",
+        "Whse Ti",
+        "Whse Hi",
+        "Vendor Pallet Cases",
+        "4 Wk Avg Mvmnt",
+        "13 Wk Avg Mvmnt",
+        "Item Type"
+      ],
+      "missing_headers": [],
+      "additional_headers": [],
+      "renamed_headers": [],
+      "differently_ordered_headers": [],
+      "notes": []
+    }
+  },
+  "findings": [
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Case UPC",
+      "element_b": "Case UPC",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Item #",
+      "element_b": "Item #",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Description",
+      "element_b": "Description",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Purch Status",
+      "element_b": "Purch Status",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Billing Status",
+      "element_b": "Billing Status",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Availability Code",
+      "element_b": "Availability Code",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Pack",
+      "element_b": "Pack",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Size",
+      "element_b": "Size",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Master Vendor",
+      "element_b": "Master Vendor",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Vendor",
+      "element_b": "Vendor",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Vendor Ti",
+      "element_b": "Vendor Ti",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Vendor Hi",
+      "element_b": "Vendor Hi",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Whse Ti",
+      "element_b": "Whse Ti",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Whse Hi",
+      "element_b": "Whse Hi",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Vendor Pallet Cases",
+      "element_b": "Vendor Pallet Cases",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "4 Wk Avg Mvmnt",
+      "element_b": "4 Wk Avg Mvmnt",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "13 Wk Avg Mvmnt",
+      "element_b": "13 Wk Avg Mvmnt",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Item Type",
+      "element_b": "Item Type",
+      "observation": "Header matched by LLM Vision."
+    }
+  ],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\visual_comparison.json",
+    "dashboard_A_screenshots": [
+      {
+        "label": "initial",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\initial.png"
+      },
+      {
+        "label": "horizontal_scroll_01",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\horizontal_scroll_01.png"
+      },
+      {
+        "label": "horizontal_scroll_02",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\horizontal_scroll_02.png"
+      }
+    ],
+    "dashboard_B_screenshots": [
+      {
+        "label": "initial",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\initial.png"
+      },
+      {
+        "label": "horizontal_scroll_01",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\horizontal_scroll_01.png"
+      },
+      {
+        "label": "horizontal_scroll_02",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\horizontal_scroll_02.png"
+      }
+    ],
+    "errors": []
+  },
+  "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+}

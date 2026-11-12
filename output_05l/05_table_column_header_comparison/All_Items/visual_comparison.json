@@ -1,0 +1,319 @@
+{
+  "scenario_name": "05_table_column_header_comparison",
+  "dashboard_A_screenshot_paths": {
+    "initial": "output_05l\\05_table_column_header_comparison\\All_Items\\dashboard_A\\initial.png",
+    "middle": "output_05l\\05_table_column_header_comparison\\All_Items\\dashboard_A\\middle.png",
+    "extreme_right": "output_05l\\05_table_column_header_comparison\\All_Items\\dashboard_A\\extreme_right.png"
+  },
+  "dashboard_B_screenshot_paths": {
+    "initial": "output_05l\\05_table_column_header_comparison\\All_Items\\dashboard_B\\initial.png",
+    "middle": "output_05l\\05_table_column_header_comparison\\All_Items\\dashboard_B\\middle.png",
+    "extreme_right": "output_05l\\05_table_column_header_comparison\\All_Items\\dashboard_B\\extreme_right.png"
+  },
+  "captured_scroll_positions": {
+    "dashboard_A": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 1396.0374755859375,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 478.2230224609375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 1.9192184608802885,
+            "actual_fraction": 0
+          }
+        ]
+      },
+      "middle": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 1396.0374755859375,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 478.2230224609375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 1.9192184608802885,
+            "actual_fraction": 0
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49992046535481494
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "extreme_right": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 1396.0374755859375,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 1173.4810791015625,
+              "y": 1026.02978515625,
+              "width": 478.2230224609375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 1.9192184608802885,
+            "actual_fraction": 0.49992046535481494
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.999441395394305
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    },
+    "dashboard_B": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 1408.1373291015625,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 626.8682861328125,
+              "height": 12.10009765625
+            },
+            "range_ratio": 1.2463049419654721,
+            "actual_fraction": 0
+          }
+        ]
+      },
+      "middle": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 1408.1373291015625,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 626.8682861328125,
+              "height": 12.10009765625
+            },
+            "range_ratio": 1.2463049419654721,
+            "actual_fraction": 0
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.4990091649314228
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "extreme_right": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1026.02978515625,
+              "width": 1408.1373291015625,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 1104.50732421875,
+              "y": 1026.02978515625,
+              "width": 626.8681640625,
+              "height": 12.10009765625
+            },
+            "range_ratio": 1.246305379389419,
+            "actual_fraction": 0.4990091649314228
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9993412661595645
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    }
+  },
+  "horizontal_scrollbar_presence": {
+    "dashboard_A": true,
+    "dashboard_B": true
+  },
+  "scroll_strategy": "LARGE",
+  "llm_vision_comparison": {
+    "status": "PASS",
+    "tables_found_a": true,
+    "tables_found_b": true,
+    "headers_a": [
+      "2nd Lvl Manager",
+      "Manager",
+      "Supply Planner",
+      "Facility",
+      "Item Nbr HS",
+      "Case UPC",
+      "Unit UPC",
+      "Description",
+      "Dept",
+      "Master Vendor",
+      "Vendor",
+      "Item Rank",
+      "Code Date Max",
+      "Code Date Min",
+      "Shelf Life",
+      "List Cost",
+      "On Hand $",
+      "On Hand Cases",
+      "Cases Per Day",
+      "On Order Cases",
+      "Days on Hand",
+      "DOH Band",
+      "Purchase Status",
+      "DFAI Forcast Ind",
+      "Reserve Committed",
+      "Stock Facility",
+      "Set Code"
+    ],
+    "headers_b": [
+      "2nd Lvl Manager",
+      "Manager",
+      "Supply Planner",
+      "Facility",
+      "Item Nbr HS",
+      "Case UPC",
+      "Unit UPC",
+      "Description",
+      "Dept",
+      "Master Vendor",
+      "Vendor",
+      "Item Rank",
+      "Code Date Max",
+      "Code Date Min",
+      "Shelf Life",
+      "List Cost",
+      "On Hand $",
+      "On Hand Cases",
+      "Cases Per Day",
+      "On Order Cases",
+      "Days on Hand",
+      "DOH Band",
+      "Purchase Status",
+      "DFAI Forcast Ind",
+      "Reserve Committed",
+      "Stock Facility",
+      "Set Code"
+    ],
+    "matching_headers": [
+      "2nd Lvl Manager",
+      "Manager",
+      "Supply Planner",
+      "Facility",
+      "Item Nbr HS",
+      "Case UPC",
+      "Unit UPC",
+      "Description",
+      "Dept",
+      "Master Vendor",
+      "Vendor",
+      "Item Rank",
+      "Code Date Max",
+      "Code Date Min",
+      "Shelf Life",
+      "List Cost",
+      "On Hand $",
+      "On Hand Cases",
+      "Cases Per Day",
+      "On Order Cases",
+      "Days on Hand",
+      "DOH Band",
+      "Purchase Status",
+      "DFAI Forcast Ind",
+      "Reserve Committed",
+      "Stock Facility",
+      "Set Code"
+    ],
+    "missing_headers": [],
+    "additional_headers": [],
+    "renamed_headers": [],
+    "differently_ordered_headers": [],
+    "notes": [
+      "All 27 column headers match in sequence, naming, and order between Dashboard A and Dashboard B across the scrollable table views."
+    ]
+  },
+  "matching_headers": [
+    "2nd Lvl Manager",
+    "Manager",
+    "Supply Planner",
+    "Facility",
+    "Item Nbr HS",
+    "Case UPC",
+    "Unit UPC",
+    "Description",
+    "Dept",
+    "Master Vendor",
+    "Vendor",
+    "Item Rank",
+    "Code Date Max",
+    "Code Date Min",
+    "Shelf Life",
+    "List Cost",
+    "On Hand $",
+    "On Hand Cases",
+    "Cases Per Day",
+    "On Order Cases",
+    "Days on Hand",
+    "DOH Band",
+    "Purchase Status",
+    "DFAI Forcast Ind",
+    "Reserve Committed",
+    "Stock Facility",
+    "Set Code"
+  ],
+  "missing_headers": [],
+  "additional_headers": [],
+  "renamed_headers": [],
+  "differently_ordered_headers": [],
+  "overall_comparison_status": "PASS",
+  "execution_status": "PASS",
+  "reason": null
+}

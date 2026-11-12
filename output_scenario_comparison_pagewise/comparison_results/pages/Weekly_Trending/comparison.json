@@ -1,0 +1,985 @@
+{
+  "page_name": "Weekly Trending",
+  "overall_status": "FAIL",
+  "scenario_count": 5,
+  "status_counts": {
+    "PASS": 0,
+    "FAIL": 2,
+    "UNVERIFIED": 1,
+    "SKIPPED": 2
+  },
+  "category_counts": {
+    "ADDITIONAL": 0,
+    "BEHAVIOR_DIFFERENCE": 4,
+    "DIFFERENT_ORDER": 0,
+    "DIFFERENT_VALUE": 0,
+    "MATCH": 42,
+    "MISSING": 0,
+    "RENAMED": 0,
+    "UNVERIFIED": 3,
+    "VISUAL_DIFFERENCE": 8
+  },
+  "scenarios": [
+    {
+      "page_name": "Weekly Trending",
+      "scenario_execution_status": "PASS",
+      "scenario_execution_reason": null,
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "PASS",
+        "state_equivalent": true,
+        "items": [
+          {
+            "category": "MATCH",
+            "filter_key": "doh bands",
+            "name_a": "DOH Bands",
+            "name_b": "DOH Bands",
+            "selected_a": [],
+            "selected_b": []
+          },
+          {
+            "category": "MATCH",
+            "filter_key": "facility",
+            "name_a": "Facility",
+            "name_b": "Facility",
+            "selected_a": [],
+            "selected_b": []
+          },
+          {
+            "category": "MATCH",
+            "filter_key": "master vendor",
+            "name_a": "Master Vendor",
+            "name_b": "Master Vendor",
+            "selected_a": [],
+            "selected_b": []
+          },
+          {
+            "category": "MATCH",
+            "filter_key": "rank",
+            "name_a": "Rank",
+            "name_b": "Rank",
+            "selected_a": [],
+            "selected_b": []
+          },
+          {
+            "category": "MATCH",
+            "filter_key": "supply planner hierarchy",
+            "name_a": "Supply Planner Hierarchy",
+            "name_b": "Supply Planner Hierarchy",
+            "selected_a": [
+              "All"
+            ],
+            "selected_b": [
+              "All"
+            ]
+          },
+          {
+            "category": "MATCH",
+            "filter_key": "vendor",
+            "name_a": "Vendor",
+            "name_b": "Vendor",
+            "selected_a": [],
+            "selected_b": []
+          }
+        ],
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "DOH Bands",
+              "name_b": "DOH Bands",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Rank",
+              "name_b": "Rank",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "page_name": "Weekly Trending",
+        "status": "PASS",
+        "matching_elements": [
+          "Facility slicer",
+          "Master Vendor slicer",
+          "Supply Planner Hierarchy slicer",
+          "Vendor slicer",
+          "DOH Bands slicer",
+          "Rank slicer",
+          "Inventory by DOH Band stacked column chart",
+          "Inventory by Rank stacked column chart",
+          "On Hand Cases Trending line chart",
+          "Inventory by DOH Band line chart"
+        ],
+        "findings": [],
+        "notes": []
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Facility slicer",
+          "element_b": "Facility slicer",
+          "observation": "LLM Vision reported a match for Facility slicer."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Master Vendor slicer",
+          "element_b": "Master Vendor slicer",
+          "observation": "LLM Vision reported a match for Master Vendor slicer."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Supply Planner Hierarchy slicer",
+          "element_b": "Supply Planner Hierarchy slicer",
+          "observation": "LLM Vision reported a match for Supply Planner Hierarchy slicer."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Vendor slicer",
+          "element_b": "Vendor slicer",
+          "observation": "LLM Vision reported a match for Vendor slicer."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "DOH Bands slicer",
+          "element_b": "DOH Bands slicer",
+          "observation": "LLM Vision reported a match for DOH Bands slicer."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Rank slicer",
+          "element_b": "Rank slicer",
+          "observation": "LLM Vision reported a match for Rank slicer."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Inventory by DOH Band stacked column chart",
+          "element_b": "Inventory by DOH Band stacked column chart",
+          "observation": "LLM Vision reported a match for Inventory by DOH Band stacked column chart."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Inventory by Rank stacked column chart",
+          "element_b": "Inventory by Rank stacked column chart",
+          "observation": "LLM Vision reported a match for Inventory by Rank stacked column chart."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "On Hand Cases Trending line chart",
+          "element_b": "On Hand Cases Trending line chart",
+          "observation": "LLM Vision reported a match for On Hand Cases Trending line chart."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Inventory by DOH Band line chart",
+          "element_b": "Inventory by DOH Band line chart",
+          "observation": "LLM Vision reported a match for Inventory by DOH Band line chart."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Default Filter Selection",
+          "element_a": "DOH Bands",
+          "element_b": "DOH Bands",
+          "observation": "Recorded default values: A=[]; B=[]."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Default Filter Selection",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Recorded default values: A=[]; B=[]."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Default Filter Selection",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Recorded default values: A=[]; B=[]."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Default Filter Selection",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Recorded default values: A=[]; B=[]."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Default Filter Selection",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Recorded default values: A=['All']; B=['All']."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Default Filter Selection",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Recorded default values: A=[]; B=[]."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "DOH Bands",
+          "element_b": "DOH Bands",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Weekly_Trending",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Weekly_Trending\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Weekly_Trending\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Weekly_Trending\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Weekly_Trending\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Weekly_Trending\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      },
+      "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+    },
+    {
+      "page_name": "Weekly Trending",
+      "scenario_execution_status": "PASS",
+      "scenario_execution_reason": null,
+      "comparison_status": "FAIL",
+      "filter_comparison": {
+        "status": "PASS",
+        "state_equivalent": true,
+        "expected_state_applied": true,
+        "items": [
+          {
+            "category": "MATCH",
+            "element_type": "Filter Selection",
+            "element_a": "['01 - Grand Rapids']",
+            "element_b": "['01 - Grand Rapids']",
+            "observation": "Both dashboards show the same selected value(s) for Facility."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Facility",
+          "requested": [
+            "01 - Grand Rapids"
+          ],
+          "applied": true,
+          "selected": [
+            "01 - Grand Rapids"
+          ],
+          "verified": true
+        },
+        "dashboard_B": {
+          "filter": "Facility",
+          "requested": [
+            "01 - Grand Rapids"
+          ],
+          "applied": true,
+          "selected": [
+            "01 - Grand Rapids"
+          ],
+          "verified": true
+        },
+        "inventory": {
+          "status": "FAIL",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "DOH Bands",
+              "name_b": "DOH Bands",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "BEHAVIOR_DIFFERENCE",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Rank",
+              "name_b": "Rank",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "BEHAVIOR_DIFFERENCE",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "page_name": "Weekly Trending",
+        "status": "FAIL",
+        "matching_elements": [
+          "Page title and header banner",
+          "Slicers (Facility, Master Vendor, Supply Planner Hierarchy, Vendor, DOH Bands, Rank)"
+        ],
+        "findings": [
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by DOH Band stacked bar chart",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Dashboard B displays an error message instead of rendering the Inventory by DOH Band visual."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by Rank stacked bar chart",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Dashboard B displays an error message instead of rendering the Inventory by Rank visual."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "On Hand Cases Trending line chart",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Dashboard B displays an error message instead of rendering the On Hand Cases Trending visual."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by DOH Band line chart",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Dashboard B displays an error message instead of rendering the lower-right line chart visual."
+          }
+        ],
+        "notes": [
+          "All four chart visuals fail to load with 'Error fetching data for this visual' in Dashboard B."
+        ]
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Page title and header banner",
+          "element_b": "Page title and header banner",
+          "observation": "LLM Vision reported a match for Page title and header banner."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Slicers (Facility, Master Vendor, Supply Planner Hierarchy, Vendor, DOH Bands, Rank)",
+          "element_b": "Slicers (Facility, Master Vendor, Supply Planner Hierarchy, Vendor, DOH Bands, Rank)",
+          "observation": "LLM Vision reported a match for Slicers (Facility, Master Vendor, Supply Planner Hierarchy, Vendor, DOH Bands, Rank)."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by DOH Band stacked bar chart",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Dashboard B displays an error message instead of rendering the Inventory by DOH Band visual."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by Rank stacked bar chart",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Dashboard B displays an error message instead of rendering the Inventory by Rank visual."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "On Hand Cases Trending line chart",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Dashboard B displays an error message instead of rendering the On Hand Cases Trending visual."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by DOH Band line chart",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Dashboard B displays an error message instead of rendering the lower-right line chart visual."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Selection",
+          "element_a": "['01 - Grand Rapids']",
+          "element_b": "['01 - Grand Rapids']",
+          "observation": "Both dashboards show the same selected value(s) for Facility."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "DOH Bands",
+          "element_b": "DOH Bands",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "BEHAVIOR_DIFFERENCE",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "BEHAVIOR_DIFFERENCE",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Weekly_Trending",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Weekly_Trending\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Weekly_Trending\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Weekly_Trending\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      },
+      "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+    },
+    {
+      "page_name": "Weekly Trending",
+      "scenario_execution_status": "PASS",
+      "scenario_execution_reason": null,
+      "comparison_status": "FAIL",
+      "filter_comparison": {
+        "status": "PASS",
+        "state_equivalent": true,
+        "expected_state_applied": true,
+        "items": [
+          {
+            "category": "MATCH",
+            "element_type": "Filter Selection",
+            "element_a": "['A']",
+            "element_b": "['A']",
+            "observation": "Both dashboards show the same selected value(s) for Rank."
+          },
+          {
+            "category": "MATCH",
+            "element_type": "Base Filter Selection",
+            "element_a": "Facility: ['01 - Grand Rapids']",
+            "element_b": "Facility: ['01 - Grand Rapids']",
+            "observation": "The retained Scenario 02 filter state matches."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Rank",
+          "requested": [
+            "A"
+          ],
+          "applied": true,
+          "selected": [
+            "A"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Facility",
+            "requested": [
+              "01 - Grand Rapids"
+            ],
+            "selected": [
+              "01 - Grand Rapids"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "dashboard_B": {
+          "filter": "Rank",
+          "requested": [
+            "A"
+          ],
+          "applied": true,
+          "selected": [
+            "A"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Facility",
+            "requested": [
+              "01 - Grand Rapids"
+            ],
+            "selected": [
+              "01 - Grand Rapids"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "inventory": {
+          "status": "FAIL",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "DOH Bands",
+              "name_b": "DOH Bands",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "BEHAVIOR_DIFFERENCE",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Rank",
+              "name_b": "Rank",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "BEHAVIOR_DIFFERENCE",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "page_name": "Weekly Trending",
+        "status": "FAIL",
+        "matching_elements": [
+          "Page title 'Inventory Insights Weekly Trending'",
+          "Facility slicer ('01 - Grand Rapids')",
+          "Master Vendor slicer ('All')",
+          "Supply Planner Hierarchy slicer ('All')",
+          "Vendor slicer ('All')",
+          "DOH Bands slicer ('All')",
+          "Rank slicer ('A')"
+        ],
+        "findings": [
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by DOH Band",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Top-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by Rank",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Top-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "On Hand Cases Trending",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Bottom-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by DOH Band",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Bottom-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          }
+        ],
+        "notes": [
+          "All four chart visuals on Dashboard B encountered query execution errors."
+        ]
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Page title 'Inventory Insights Weekly Trending'",
+          "element_b": "Page title 'Inventory Insights Weekly Trending'",
+          "observation": "LLM Vision reported a match for Page title 'Inventory Insights Weekly Trending'."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Facility slicer ('01 - Grand Rapids')",
+          "element_b": "Facility slicer ('01 - Grand Rapids')",
+          "observation": "LLM Vision reported a match for Facility slicer ('01 - Grand Rapids')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Master Vendor slicer ('All')",
+          "element_b": "Master Vendor slicer ('All')",
+          "observation": "LLM Vision reported a match for Master Vendor slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Supply Planner Hierarchy slicer ('All')",
+          "element_b": "Supply Planner Hierarchy slicer ('All')",
+          "observation": "LLM Vision reported a match for Supply Planner Hierarchy slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Vendor slicer ('All')",
+          "element_b": "Vendor slicer ('All')",
+          "observation": "LLM Vision reported a match for Vendor slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "DOH Bands slicer ('All')",
+          "element_b": "DOH Bands slicer ('All')",
+          "observation": "LLM Vision reported a match for DOH Bands slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Rank slicer ('A')",
+          "element_b": "Rank slicer ('A')",
+          "observation": "LLM Vision reported a match for Rank slicer ('A')."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by DOH Band",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Top-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by Rank",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Top-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "On Hand Cases Trending",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Bottom-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by DOH Band",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Bottom-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Selection",
+          "element_a": "['A']",
+          "element_b": "['A']",
+          "observation": "Both dashboards show the same selected value(s) for Rank."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Base Filter Selection",
+          "element_a": "Facility: ['01 - Grand Rapids']",
+          "element_b": "Facility: ['01 - Grand Rapids']",
+          "observation": "The retained Scenario 02 filter state matches."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "DOH Bands",
+          "element_b": "DOH Bands",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "BEHAVIOR_DIFFERENCE",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "BEHAVIOR_DIFFERENCE",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      },
+      "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+    },
+    {
+      "page_name": "Weekly Trending",
+      "scenario_execution_status": "SKIPPED",
+      "scenario_execution_reason": "no drill-capable visual in DOM",
+      "comparison_status": "SKIPPED",
+      "filter_comparison": {
+        "status": "NOT_APPLICABLE",
+        "state_equivalent": null,
+        "items": []
+      },
+      "visual_comparison": null,
+      "findings": [],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Weekly_Trending",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Weekly_Trending\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Weekly_Trending\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Weekly_Trending\\comparison_result.json",
+        "dashboard_A_screenshots": [],
+        "dashboard_B_screenshots": [],
+        "errors": []
+      },
+      "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+    },
+    {
+      "page_name": "Weekly Trending",
+      "scenario_execution_status": "SKIPPED",
+      "scenario_execution_reason": "neither dashboard has a horizontal table scrollbar",
+      "comparison_status": "SKIPPED",
+      "filter_comparison": {
+        "status": "NOT_APPLICABLE",
+        "state_equivalent": null,
+        "items": []
+      },
+      "visual_comparison": {
+        "status": "SKIPPED",
+        "headers_a": [],
+        "headers_b": [],
+        "notes": [],
+        "source_result": {}
+      },
+      "findings": [],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Weekly_Trending",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Weekly_Trending\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Weekly_Trending\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Weekly_Trending\\visual_comparison.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "initial",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Weekly_Trending\\dashboard_A\\initial.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "initial",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Weekly_Trending\\dashboard_B\\initial.png"
+          }
+        ],
+        "errors": []
+      },
+      "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+    }
+  ]
+}

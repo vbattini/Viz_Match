@@ -1,0 +1,42 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "54 - NF Distributors",
+      "86 - Severn"
+    ],
+    "values_b": [
+      "54 - NF Distributors",
+      "86 - Severn"
+    ]
+  },
+  "steps": [
+    {
+      "filter": "Facility",
+      "requested": [
+        "54 - NF Distributors",
+        "86 - Severn"
+      ],
+      "applied": true,
+      "selected": [
+        "54 - NF Distributors"
+      ],
+      "verified": false
+    },
+    {
+      "filter": "Facility",
+      "requested": [
+        "54 - NF Distributors",
+        "86 - Severn"
+      ],
+      "applied": true,
+      "selected": [
+        "All"
+      ],
+      "verified": false
+    }
+  ],
+  "restored": true
+}

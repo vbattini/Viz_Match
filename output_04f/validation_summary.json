@@ -1,0 +1,64 @@
+{
+  "pages": [
+    {
+      "page": "Executive Summary",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Weekly Trending",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "All Items",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Health Index",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Inventory Bands",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Item Counts",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Vendor-Item Counts",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "To Be Discontinued",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Current On Hand",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    },
+    {
+      "page": "Item Level Order Mods",
+      "statuses": {
+        "04_drilldown": "SKIPPED"
+      }
+    }
+  ]
+}

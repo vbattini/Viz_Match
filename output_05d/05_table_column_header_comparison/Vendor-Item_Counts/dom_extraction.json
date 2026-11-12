@@ -1,0 +1,692 @@
+{
+  "dashboard_A": {
+    "page": "Vendor-Item Counts",
+    "visuals": [
+      {
+        "key": "Image",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 425,
+          "y": 98,
+          "width": 102,
+          "height": 102
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 527,
+          "y": 98,
+          "width": 678,
+          "height": 100
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 1137,
+          "y": 164,
+          "width": 287,
+          "height": 39
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 419,
+          "y": 198,
+          "width": 2312,
+          "height": 20
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 219,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "visual-1",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 703,
+          "y": 241,
+          "width": 1431,
+          "height": 810
+        },
+        "headers": [
+          {
+            "text": "Row Selection",
+            "index": 0,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "start",
+            "bounds": {
+              "x": 12,
+              "y": 11,
+              "width": 1,
+              "height": 1
+            }
+          },
+          {
+            "text": "Facility",
+            "index": 1,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 12,
+              "y": 11,
+              "width": 116,
+              "height": 43
+            }
+          },
+          {
+            "text": "Whse",
+            "index": 2,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 128,
+              "y": 11,
+              "width": 62,
+              "height": 43
+            }
+          },
+          {
+            "text": "MV #",
+            "index": 3,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 190,
+              "y": 11,
+              "width": 61,
+              "height": 43
+            }
+          },
+          {
+            "text": "Master Vendor",
+            "index": 4,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 250,
+              "y": 11,
+              "width": 194,
+              "height": 43
+            }
+          },
+          {
+            "text": "Vendor #",
+            "index": 5,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 444,
+              "y": 11,
+              "width": 91,
+              "height": 43
+            }
+          },
+          {
+            "text": "Vendor",
+            "index": 6,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 535,
+              "y": 11,
+              "width": 258,
+              "height": 43
+            }
+          },
+          {
+            "text": "EOQ",
+            "index": 7,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 793,
+              "y": 11,
+              "width": 67,
+              "height": 43
+            }
+          },
+          {
+            "text": "EOQ Type",
+            "index": 8,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 860,
+              "y": 11,
+              "width": 97,
+              "height": 43
+            }
+          },
+          {
+            "text": "Max Qty",
+            "index": 9,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 957,
+              "y": 11,
+              "width": 86,
+              "height": 43
+            }
+          },
+          {
+            "text": "Max Type",
+            "index": 10,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1043,
+              "y": 11,
+              "width": 97,
+              "height": 43
+            }
+          },
+          {
+            "text": "Lead Time (Days)",
+            "index": 11,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1140,
+              "y": 11,
+              "width": 160,
+              "height": 43
+            }
+          },
+          {
+            "text": "Order Int (Weeks)",
+            "index": 12,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1300,
+              "y": 11,
+              "width": 165,
+              "height": 43
+            }
+          }
+        ]
+      },
+      {
+        "key": "",
+        "title": "Supply Planner Hierarchy",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 307,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 395,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 483,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 572,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 659,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      }
+    ]
+  },
+  "dashboard_B": {
+    "page": "Vendor-Item Counts",
+    "visuals": [
+      {
+        "key": "Image",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 425,
+          "y": 98,
+          "width": 102,
+          "height": 102
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 527,
+          "y": 98,
+          "width": 678,
+          "height": 100
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 1137,
+          "y": 164,
+          "width": 287,
+          "height": 39
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 419,
+          "y": 198,
+          "width": 2312,
+          "height": 20
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 219,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "visual-1",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 703,
+          "y": 241,
+          "width": 1431,
+          "height": 810
+        },
+        "headers": [
+          {
+            "text": "Row Selection",
+            "index": 0,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "start",
+            "bounds": {
+              "x": 12,
+              "y": 11,
+              "width": 1,
+              "height": 1
+            }
+          },
+          {
+            "text": "Facility",
+            "index": 1,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 12,
+              "y": 11,
+              "width": 74,
+              "height": 43
+            }
+          },
+          {
+            "text": "Whse",
+            "index": 2,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 86,
+              "y": 11,
+              "width": 62,
+              "height": 43
+            }
+          },
+          {
+            "text": "MV #",
+            "index": 3,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 148,
+              "y": 11,
+              "width": 59,
+              "height": 43
+            }
+          },
+          {
+            "text": "Master Vendor",
+            "index": 4,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 207,
+              "y": 11,
+              "width": 138,
+              "height": 43
+            }
+          },
+          {
+            "text": "Vendor #",
+            "index": 5,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 346,
+              "y": 11,
+              "width": 91,
+              "height": 43
+            }
+          },
+          {
+            "text": "Vendor",
+            "index": 6,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 437,
+              "y": 11,
+              "width": 75,
+              "height": 43
+            }
+          },
+          {
+            "text": "EOQ",
+            "index": 7,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 512,
+              "y": 11,
+              "width": 51,
+              "height": 43
+            }
+          },
+          {
+            "text": "EOQ Type",
+            "index": 8,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 563,
+              "y": 11,
+              "width": 97,
+              "height": 43
+            }
+          },
+          {
+            "text": "Max Qty",
+            "index": 9,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 660,
+              "y": 11,
+              "width": 86,
+              "height": 43
+            }
+          },
+          {
+            "text": "Max Type",
+            "index": 10,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 746,
+              "y": 11,
+              "width": 97,
+              "height": 43
+            }
+          },
+          {
+            "text": "Lead Time (Days)",
+            "index": 11,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 843,
+              "y": 11,
+              "width": 160,
+              "height": 43
+            }
+          },
+          {
+            "text": "Order Int (Weeks)",
+            "index": 12,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1003,
+              "y": 11,
+              "width": 165,
+              "height": 43
+            }
+          },
+          {
+            "text": "Active Item Count",
+            "index": 13,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1168,
+              "y": 11,
+              "width": 167,
+              "height": 43
+            }
+          },
+          {
+            "text": "Suspended Item Count",
+            "index": 14,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1335,
+              "y": 11,
+              "width": 207,
+              "height": 43
+            }
+          }
+        ]
+      },
+      {
+        "key": "",
+        "title": "Supply Planner Hierarchy",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 307,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 395,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 483,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 572,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 659,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      }
+    ]
+  }
+}

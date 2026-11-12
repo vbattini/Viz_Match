@@ -1,0 +1,15 @@
+{
+  "outcome": "UNVERIFIED",
+  "dashboard_A": {
+    "status": "UNVERIFIED",
+    "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Vendor'"
+  },
+  "dashboard_B": {
+    "status": "UNVERIFIED",
+    "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Vendor'"
+  },
+  "screenshots": {
+    "dashboard_A": null,
+    "dashboard_B": null
+  }
+}

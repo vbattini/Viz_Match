@@ -1,0 +1,9 @@
+{
+  "plan": {
+    "filter_key": "department",
+    "name_a": "Department",
+    "name_b": "Department",
+    "value_a": "GROCERY",
+    "value_b": "GROCERY"
+  }
+}

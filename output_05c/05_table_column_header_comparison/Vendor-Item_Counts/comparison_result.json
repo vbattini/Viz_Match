@@ -1,0 +1,144 @@
+{
+  "visuals": [
+    {
+      "visual": "",
+      "visual_status": "DIFFERENT",
+      "matched_by": "position",
+      "confidence": {
+        "A": "high",
+        "B": "high"
+      },
+      "column_count": {
+        "A": 13,
+        "B": 15
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Row Selection",
+          "header_b": "Row Selection",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Facility",
+          "header_b": "Facility",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Whse",
+          "header_b": "Whse",
+          "index_a": 2,
+          "index_b": 2
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "MV #",
+          "header_b": "MV #",
+          "index_a": 3,
+          "index_b": 3
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Master Vendor",
+          "header_b": "Master Vendor",
+          "index_a": 4,
+          "index_b": 4
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Vendor #",
+          "header_b": "Vendor #",
+          "index_a": 5,
+          "index_b": 5
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Vendor",
+          "header_b": "Vendor",
+          "index_a": 6,
+          "index_b": 6
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "EOQ",
+          "header_b": "EOQ",
+          "index_a": 7,
+          "index_b": 7
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "EOQ Type",
+          "header_b": "EOQ Type",
+          "index_a": 8,
+          "index_b": 8
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Max Qty",
+          "header_b": "Max Qty",
+          "index_a": 9,
+          "index_b": 9
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Max Type",
+          "header_b": "Max Type",
+          "index_a": 10,
+          "index_b": 10
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Lead Time (Days)",
+          "header_b": "Lead Time (Days)",
+          "index_a": 11,
+          "index_b": 11
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "Order Int (Weeks)",
+          "header_b": "Order Int (Weeks)",
+          "index_a": 12,
+          "index_b": 12
+        },
+        {
+          "status": "EXTRA",
+          "reason": "extra_in_dashboard_B",
+          "header_a": null,
+          "header_b": "Active Item Count",
+          "index_a": null,
+          "index_b": 13
+        },
+        {
+          "status": "EXTRA",
+          "reason": "extra_in_dashboard_B",
+          "header_a": null,
+          "header_b": "Suspended Item Count",
+          "index_a": null,
+          "index_b": 14
+        }
+      ],
+      "outcome": "FAIL"
+    }
+  ],
+  "table_visuals": {
+    "A": 1,
+    "B": 1
+  }
+}

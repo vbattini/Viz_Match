@@ -1,0 +1,33 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "filter": "Facility",
+    "requested": [
+      "71 - Bellefontaine",
+      "69 - Landover"
+    ],
+    "applied": true,
+    "selected": [
+      "69 - Landover",
+      "71 - Bellefontaine"
+    ],
+    "verified": true
+  },
+  "dashboard_B": {
+    "filter": "Facility",
+    "requested": [
+      "71 - Bellefontaine",
+      "69 - Landover"
+    ],
+    "applied": true,
+    "selected": [
+      "69 - Landover",
+      "71 - Bellefontaine"
+    ],
+    "verified": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_s03h\\03_multiple_filter_selection\\Health_Index\\dashboard_A.png",
+    "dashboard_B": "output_s03h\\03_multiple_filter_selection\\Health_Index\\dashboard_B.png"
+  }
+}

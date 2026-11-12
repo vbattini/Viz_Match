@@ -1,4 +1,4 @@
-from powerbi_dashboard_comparator.visual_filter_comparison import (
+from Backend.visual_filter_comparison import (
     DIFFERENT,
     INFO,
     MATCH,
@@ -6,6 +6,7 @@ from powerbi_dashboard_comparator.visual_filter_comparison import (
     classify_visual_type,
     compare_filter_configurations,
     compare_visual_inventories,
+    same_visual_type,
 )
 
 
@@ -46,6 +47,93 @@ def test_kpi_vs_kpi_is_match() -> None:
     assert statuses(rows) == [MATCH]
 
 
+def test_matching_explicitly_blank_kpis_match_the_base_dashboard() -> None:
+    base = {
+        **visual("fill-rate", "KPI", *GRID["top_left"]),
+        "visual_name": "Fill Rate",
+        "rendering_status": "Blank",
+        "confidence": "High",
+    }
+    compare = {
+        **visual("fill-rate", "KPI", *GRID["top_left"]),
+        "visual_name": "Fill Rate",
+        "rendering_status": "Blank",
+        "confidence": "High",
+    }
+
+    rows = compare_visual_inventories("Fill Rate Trend", [base], [compare])
+
+    assert statuses(rows) == [MATCH]
+    assert "matches the Base dashboard" in rows[0]["comparison_notes"]
+
+
+def test_blank_kpi_on_only_one_dashboard_remains_a_failure() -> None:
+    base = {
+        **visual("fill-rate", "KPI", *GRID["top_left"]),
+        "visual_name": "Fill Rate",
+        "rendering_status": "Blank",
+        "confidence": "High",
+    }
+    compare = {
+        **visual("fill-rate", "KPI", *GRID["top_left"]),
+        "visual_name": "Fill Rate",
+        "rendering_status": "Rendered",
+        "confidence": "High",
+    }
+
+    rows = compare_visual_inventories("Fill Rate Trend", [base], [compare])
+
+    assert statuses(rows) == [DIFFERENT]
+
+
+def test_exact_visual_title_matches_when_type_labels_differ() -> None:
+    rows = compare_visual_inventories(
+        "Overview",
+        [
+            {
+                **visual("base-1", "Multi-row Card", *GRID["top_left"]),
+                "visual_name": "Upcoming Holiday",
+            }
+        ],
+        [
+            {
+                **visual("compare-1", "KPI", *GRID["top_left"]),
+                "visual_name": "Upcoming Holiday",
+            }
+        ],
+    )
+
+    assert rows[0]["visual_name"] == "Upcoming Holiday"
+    assert rows[0]["visual_name_a"] == "Upcoming Holiday"
+    assert rows[0]["visual_name_b"] == "Upcoming Holiday"
+    assert rows[0]["visual_type_a"] == "Multi-row Card"
+    assert rows[0]["visual_type_b"] == "KPI"
+    assert rows[0]["status"] == MATCH
+    assert "type labels differ" in rows[0]["comparison_notes"]
+
+
+def test_different_titles_do_not_hide_different_visual_types() -> None:
+    rows = compare_visual_inventories(
+        "Overview",
+        [
+            {
+                **visual("same-id", "Table", *GRID["top_left"]),
+                "visual_name": "Orders",
+            }
+        ],
+        [
+            {
+                **visual("same-id", "KPI", *GRID["top_left"]),
+                "visual_name": "Scheduled This Week",
+            }
+        ],
+    )
+
+    assert rows[0]["status"] == DIFFERENT
+    assert rows[0]["visual_name_a"] == "Orders"
+    assert rows[0]["visual_name_b"] == "Scheduled This Week"
+
+
 def test_bar_vs_bar_is_match() -> None:
     rows = compare_visual_inventories(
         "Overview", single("Bar Chart"), single("Bar Chart")
@@ -67,9 +155,9 @@ def test_bar_vs_kpi_is_different() -> None:
     assert statuses(rows) == [DIFFERENT]
 
 
-def test_table_vs_matrix_is_different() -> None:
+def test_table_vs_matrix_is_match() -> None:
     rows = compare_visual_inventories("Overview", single("Table"), single("Matrix"))
-    assert statuses(rows) == [DIFFERENT]
+    assert statuses(rows) == [MATCH]
 
 
 def test_treemap_vs_treemap_is_match() -> None:
@@ -88,7 +176,7 @@ def test_visual_only_in_dashboard_a_is_reported_as_missing() -> None:
     rows = compare_visual_inventories("Overview", single("Table"), [])
     assert rows[0]["status"] == DIFFERENT
     assert rows[0]["visual_type_b"] == "Missing"
-    assert "no corresponding visual is present in Dashboard B" in rows[0]["comparison_notes"]
+    assert "no corresponding visual was detected in Dashboard B" in rows[0]["comparison_notes"]
     assert INFO in statuses(rows)
 
 
@@ -96,7 +184,50 @@ def test_visual_only_in_dashboard_b_is_reported_as_added() -> None:
     rows = compare_visual_inventories("Overview", [], single("Card"))
     assert rows[0]["status"] == DIFFERENT
     assert rows[0]["visual_type_a"] == "Missing"
-    assert "no corresponding visual is present in Dashboard A" in rows[0]["comparison_notes"]
+    assert "no corresponding visual was detected in Dashboard A" in rows[0]["comparison_notes"]
+
+
+def test_high_confidence_one_sided_visual_fails_with_other_unmatched_visuals() -> None:
+    dashboard_a = [
+        {
+            **visual("base-table", "Table", *GRID["top_left"]),
+            "visual_name": "All Items Table",
+            "rendering_status": "Rendered",
+            "confidence": "High",
+        }
+    ]
+    dashboard_b = [
+        {
+            **visual("compare-matrix", "Matrix", *GRID["bottom_right"]),
+            "visual_name": "Different Matrix",
+            "rendering_status": "Rendered",
+            "confidence": "High",
+        }
+    ]
+
+    rows = compare_visual_inventories("Overview", dashboard_a, dashboard_b)
+
+    assert [row["status"] for row in rows[:2]] == [DIFFERENT, DIFFERENT]
+    assert "no corresponding visual was detected in Dashboard B" in (
+        rows[0]["comparison_notes"]
+    )
+    assert "no corresponding visual was detected in Dashboard A" in (
+        rows[1]["comparison_notes"]
+    )
+
+
+def test_uncertain_visual_detection_is_not_confirmed_as_missing() -> None:
+    divider = {
+        **visual("VISUAL_005", "Shape / Line", *GRID["top_left"]),
+        "rendering_status": "Blank",
+        "confidence": "Medium",
+    }
+
+    rows = compare_visual_inventories("Overview", [divider], [])
+
+    assert rows[0]["status"] == UNVERIFIED
+    assert rows[0]["visual_type_b"] == "Missing"
+    assert "may be a missing, renamed, or unmatched visual" in rows[0]["comparison_notes"]
 
 
 def test_same_type_with_significantly_different_layout_is_different() -> None:
@@ -147,6 +278,84 @@ def test_geometry_alone_does_not_pair_unidentified_visuals() -> None:
     )
 
 
+def test_renamed_line_charts_pair_as_one_title_mismatch() -> None:
+    rows = compare_visual_inventories(
+        "Day of Week Insights",
+        [
+            {
+                **visual("base-chart", "Line Chart", *GRID["top_left"]),
+                "visual_name": "Amount by Week Ending",
+            }
+        ],
+        [
+            {
+                **visual("compare-chart", "Line Chart", *GRID["top_left"]),
+                "visual_name": "Paid Hours and Cases Selected by Week Ending",
+            }
+        ],
+    )
+
+    assert len(rows) == 1
+    assert rows[0]["visual_name_a"] == "Amount by Week Ending"
+    assert rows[0]["visual_name_b"] == "Paid Hours and Cases Selected by Week Ending"
+    assert rows[0]["visual_type_a"] == rows[0]["visual_type_b"] == "Line Chart"
+    assert rows[0]["status"] == DIFFERENT
+    assert "Visual title/name differs" in rows[0]["comparison_notes"]
+
+
+def test_screenshot_detected_line_chart_labels_do_not_create_missing_visuals() -> None:
+    base = {
+        **visual("SCREENSHOT_001", "Line Chart", *GRID["top_left"]),
+        "visual_name": "Fill Rate and Vendor Adj Fill Rate by Fiscal Year",
+        "rendering_status": "Rendered",
+        "confidence": "High",
+    }
+    compare = {
+        **visual("SCREENSHOT_001", "Line Chart", 8, 2, 405, 302),
+        "visual_name": "Fill Rate Trend Line Chart",
+        "rendering_status": "Rendered",
+        "confidence": "High",
+    }
+
+    rows = compare_visual_inventories("Fill Rate Trend", [base], [compare])
+
+    assert len(rows) == 1
+    assert rows[0]["status"] == MATCH
+    assert "generated visual labels differ" in rows[0]["comparison_notes"]
+
+
+def test_renamed_visual_candidates_use_geometry_to_disambiguate() -> None:
+    visuals_a = [
+        {
+            **visual("base-amount", "Line Chart", *GRID["top_left"]),
+            "visual_name": "Amount by Week Ending",
+        },
+        {
+            **visual("base-cases", "Line Chart", *GRID["bottom_right"]),
+            "visual_name": "Cases by Week Ending",
+        },
+    ]
+    visuals_b = [
+        {
+            **visual("compare-paid", "Line Chart", *GRID["bottom_right"]),
+            "visual_name": "Paid Hours and Cases Selected by Week Ending",
+        },
+        {
+            **visual("compare-total", "Line Chart", *GRID["top_left"]),
+            "visual_name": "Total Items by Week Ending",
+        },
+    ]
+
+    rows = compare_visual_inventories("Overview", visuals_a, visuals_b)
+
+    assert {
+        (row["visual_id_a"], row["visual_id_b"]) for row in rows
+    } == {
+        ("base-amount", "compare-total"),
+        ("base-cases", "compare-paid"),
+    }
+
+
 def test_unidentified_visual_type_is_unverified_not_guessed() -> None:
     rows = compare_visual_inventories(
         "Overview", single(None), single("Table")
@@ -193,9 +402,8 @@ def test_stable_id_pairs_visuals_with_different_titles() -> None:
     a = [{**visual("a1", "Table", *GRID["top_left"]), "visual_name": "Sales by Dept"}]
     b = [{**visual("a1", "Table", *GRID["top_left"]), "visual_name": "Revenue"}]
     rows = compare_visual_inventories("Overview", a, b)
-    assert statuses(rows) == [DIFFERENT]
+    assert statuses(rows) == [MATCH]
     assert rows[0]["visual_name"] == "Sales by Dept"
-    assert "Visual title/name differs" in rows[0]["comparison_notes"]
 
 
 def test_screenshot_ids_do_not_override_matching_titles() -> None:
@@ -262,7 +470,8 @@ def test_duplicate_visual_titles_pair_by_chart_family() -> None:
     assert by_base_type["Column Chart"]["visual_type_b"] == (
         "Column Chart (100% stacked)"
     )
-    assert by_base_type["Column Chart"]["status"] == DIFFERENT
+    assert by_base_type["Column Chart"]["status"] == MATCH
+    assert "type labels differ" in by_base_type["Column Chart"]["comparison_notes"]
     assert by_base_type["Line Chart"]["visual_type_b"] == "Line Chart"
     assert by_base_type["Line Chart"]["status"] == MATCH
 
@@ -312,6 +521,47 @@ def test_same_filter_configuration_is_match() -> None:
     b = [filter_item("Calendar", "date", [], ["2026-01-01"])]
     rows = compare_filter_configurations("Overview", a, b)
     assert statuses(rows) == [MATCH]
+
+
+def test_matching_filter_selections_pass_when_control_type_is_unknown() -> None:
+    a = [filter_item("Master Vendor", None, [], ["000006 - PETKING INC"])]
+    b = [filter_item("Master Vendor", None, [], ["000006 - PETKING INC"])]
+
+    rows = compare_filter_configurations("Item Counts", a, b)
+
+    assert statuses(rows) == [MATCH]
+    assert rows[0]["selected_values_a"] == "000006 - PETKING INC"
+    assert rows[0]["selected_values_b"] == "000006 - PETKING INC"
+    assert "Filter control type could not be identified" in rows[0]["comparison_notes"]
+    assert "Filter selection successfully verified" in rows[0]["comparison_notes"]
+
+
+def test_different_filter_selections_fail_when_control_type_is_unknown() -> None:
+    a = [filter_item("Master Vendor", None, [], ["000006 - PETKING INC"])]
+    b = [filter_item("Master Vendor", None, [], ["000007 - OTHER VENDOR"])]
+
+    rows = compare_filter_configurations("Item Counts", a, b)
+
+    assert statuses(rows) == [DIFFERENT]
+    assert "Selected values differ" in rows[0]["comparison_notes"]
+
+
+def test_matching_filter_selection_passes_when_only_one_control_type_is_known() -> None:
+    a = [filter_item("Master Vendor", "radio_dropdown", [], ["000006 - PETKING INC"])]
+    b = [filter_item("Master Vendor", None, [], ["000006 - PETKING INC"])]
+
+    rows = compare_filter_configurations("Item Counts", a, b)
+
+    assert statuses(rows) == [MATCH]
+
+
+def test_missing_filter_selection_remains_unverified_without_control_type() -> None:
+    a = [filter_item("Master Vendor", None, [], [])]
+    b = [filter_item("Master Vendor", None, [], ["000006 - PETKING INC"])]
+
+    rows = compare_filter_configurations("Item Counts", a, b)
+
+    assert statuses(rows) == [UNVERIFIED]
 
 
 def test_different_filter_type_is_different() -> None:

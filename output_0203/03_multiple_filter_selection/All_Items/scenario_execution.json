@@ -1,0 +1,73 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "38 - Bloomington",
+      "03 - Fargo"
+    ],
+    "values_b": [
+      "38 - Bloomington",
+      "03 - Fargo"
+    ]
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "38 - Bloomington"
+        ],
+        "applied": true,
+        "selected": [
+          "38 - Bloomington"
+        ],
+        "verified": true,
+        "base_selection": {
+          "filter": "Vendor",
+          "requested": [
+            "- DACOTAH PAPER CO"
+          ],
+          "selected": [
+            "- DACOTAH PAPER CO"
+          ],
+          "verified": true,
+          "source": "dom_readback"
+        }
+      },
+      "verified": true,
+      "screenshot": "output_0203\\03_multiple_filter_selection\\All_Items\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null
+    },
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "38 - Bloomington"
+        ],
+        "applied": true,
+        "selected": [
+          "38 - Bloomington"
+        ],
+        "verified": true,
+        "base_selection": {
+          "filter": "Vendor",
+          "requested": [
+            "- DACOTAH PAPER CO"
+          ],
+          "selected": [
+            "- DACOTAH PAPER CO"
+          ],
+          "verified": true,
+          "source": "dom_readback"
+        }
+      },
+      "verified": true,
+      "screenshot": "output_0203\\03_multiple_filter_selection\\All_Items\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null
+    }
+  ]
+}

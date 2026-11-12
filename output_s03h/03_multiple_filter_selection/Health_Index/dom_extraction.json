@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "71 - Bellefontaine",
+      "69 - Landover"
+    ],
+    "values_b": [
+      "71 - Bellefontaine",
+      "69 - Landover"
+    ]
+  }
+}

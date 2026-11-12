@@ -1,0 +1,39 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "record": {
+      "filter": "Rank",
+      "requested": [
+        "B"
+      ],
+      "applied": true,
+      "selected": [
+        "B"
+      ],
+      "verified": true
+    },
+    "verified": true,
+    "screenshot": "output_all\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png",
+    "restored": true
+  },
+  "dashboard_B": {
+    "record": {
+      "filter": "Rank",
+      "requested": [
+        "B"
+      ],
+      "applied": true,
+      "selected": [
+        "B"
+      ],
+      "verified": true
+    },
+    "verified": true,
+    "screenshot": "output_all\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png",
+    "restored": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_all\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png",
+    "dashboard_B": "output_all\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png"
+  }
+}

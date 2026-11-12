@@ -1,0 +1,363 @@
+{
+  "scenario_name": "05_table_column_header_comparison",
+  "dashboard_A_screenshot_paths": {
+    "initial": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\initial.png",
+    "horizontal_scroll_01": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\horizontal_scroll_01.png",
+    "horizontal_scroll_02": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\horizontal_scroll_02.png"
+  },
+  "dashboard_B_screenshot_paths": {
+    "initial": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\initial.png",
+    "horizontal_scroll_01": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\horizontal_scroll_01.png",
+    "horizontal_scroll_02": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\horizontal_scroll_02.png"
+  },
+  "captured_scroll_positions": {
+    "dashboard_A": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 752.3846435546875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.856349156774481,
+            "actual_fraction": 0
+          }
+        ]
+      },
+      "horizontal_scroll_01": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 752.3846435546875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.856349156774481,
+            "actual_fraction": 0
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49983185354984155
+          }
+        ],
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49983185354984155
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "horizontal_scroll_02": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 1035.6904296875,
+              "y": 1026.70166015625,
+              "width": 752.384765625,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.8563488555919849,
+            "actual_fraction": 0.49983185354984155
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 1.0002887381875958
+          }
+        ],
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 1.0002887381875958
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    },
+    "dashboard_B": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 705.22412109375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.9804889776978312,
+            "actual_fraction": 0
+          }
+        ]
+      },
+      "horizontal_scroll_01": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 705.22412109375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.9804889776978312,
+            "actual_fraction": 0
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.4990086463410479
+          }
+        ],
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.4990086463410479
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "horizontal_scroll_02": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 713.6468505859375,
+              "y": 1026.70166015625,
+              "width": 1396.6885986328125,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 1058.693603515625,
+              "y": 1026.70166015625,
+              "width": 705.22412109375,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.9804889776978312,
+            "actual_fraction": 0.4990086463410479
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9994636751106942
+          }
+        ],
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9994636751106942
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    }
+  },
+  "scroll_attempts": {
+    "dashboard_A": [
+      {
+        "requested_fraction": 0.5,
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49983185354984155
+          }
+        ],
+        "position_changed": true,
+        "screenshot": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\horizontal_scroll_01.png"
+      },
+      {
+        "requested_fraction": 1.0,
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 1.0002887381875958
+          }
+        ],
+        "position_changed": true,
+        "screenshot": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A\\horizontal_scroll_02.png"
+      }
+    ],
+    "dashboard_B": [
+      {
+        "requested_fraction": 0.5,
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.4990086463410479
+          }
+        ],
+        "position_changed": true,
+        "screenshot": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\horizontal_scroll_01.png"
+      },
+      {
+        "requested_fraction": 1.0,
+        "actual_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9994636751106942
+          }
+        ],
+        "position_changed": true,
+        "screenshot": "output_05m\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B\\horizontal_scroll_02.png"
+      }
+    ]
+  },
+  "reached_extreme_right": {
+    "dashboard_A": true,
+    "dashboard_B": true
+  },
+  "horizontal_scrollbar_presence": {
+    "dashboard_A": true,
+    "dashboard_B": true
+  },
+  "scroll_strategy": "INCREMENTAL",
+  "llm_vision_comparison": {
+    "status": "PASS",
+    "tables_found_a": true,
+    "tables_found_b": true,
+    "headers_a": [
+      "Facility",
+      "Case UPC",
+      "Item #",
+      "Description",
+      "Purch Status",
+      "Billing Status",
+      "Availability Code",
+      "Pack",
+      "Size",
+      "Master Vendor",
+      "Vendor",
+      "Vendor Ti",
+      "Vendor Hi",
+      "Whse Ti",
+      "Whse Hi",
+      "Vendor Pallet Cases",
+      "4 Wk Avg Mvmnt",
+      "13 Wk Avg Mvmnt",
+      "Item Type"
+    ],
+    "headers_b": [
+      "Facility",
+      "Case UPC",
+      "Item #",
+      "Description",
+      "Purch Status",
+      "Billing Status",
+      "Availability Code",
+      "Pack",
+      "Size",
+      "Master Vendor",
+      "Vendor",
+      "Vendor Ti",
+      "Vendor Hi",
+      "Whse Ti",
+      "Whse Hi",
+      "Vendor Pallet Cases",
+      "4 Wk Avg Mvmnt",
+      "13 Wk Avg Mvmnt",
+      "Item Type"
+    ],
+    "matching_headers": [
+      "Facility",
+      "Case UPC",
+      "Item #",
+      "Description",
+      "Purch Status",
+      "Billing Status",
+      "Availability Code",
+      "Pack",
+      "Size",
+      "Master Vendor",
+      "Vendor",
+      "Vendor Ti",
+      "Vendor Hi",
+      "Whse Ti",
+      "Whse Hi",
+      "Vendor Pallet Cases",
+      "4 Wk Avg Mvmnt",
+      "13 Wk Avg Mvmnt",
+      "Item Type"
+    ],
+    "missing_headers": [],
+    "additional_headers": [],
+    "renamed_headers": [],
+    "differently_ordered_headers": [],
+    "notes": []
+  },
+  "matching_headers": [
+    "Facility",
+    "Case UPC",
+    "Item #",
+    "Description",
+    "Purch Status",
+    "Billing Status",
+    "Availability Code",
+    "Pack",
+    "Size",
+    "Master Vendor",
+    "Vendor",
+    "Vendor Ti",
+    "Vendor Hi",
+    "Whse Ti",
+    "Whse Hi",
+    "Vendor Pallet Cases",
+    "4 Wk Avg Mvmnt",
+    "13 Wk Avg Mvmnt",
+    "Item Type"
+  ],
+  "missing_headers": [],
+  "additional_headers": [],
+  "renamed_headers": [],
+  "differently_ordered_headers": [],
+  "overall_comparison_status": "PASS",
+  "execution_status": "PASS",
+  "reason": null
+}

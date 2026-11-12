@@ -1,0 +1,86 @@
+{
+  "steps": [
+    {
+      "visuals": [
+        {
+          "key": "visual-1",
+          "title": "",
+          "visual_type": "",
+          "positions": {
+            "initial": {
+              "requested_fraction": 0.0,
+              "requested_scroll_left": null,
+              "scroll_left": null,
+              "max_scroll": null,
+              "client_width": null,
+              "scrollable": false,
+              "screenshot": "output_05f\\05_table_column_header_comparison\\To_Be_Discontinued\\dashboard_dashboard_A_table0_initial.png"
+            },
+            "middle": {
+              "requested_fraction": 0.5,
+              "requested_scroll_left": null,
+              "scroll_left": null,
+              "max_scroll": null,
+              "client_width": null,
+              "scrollable": false,
+              "screenshot": "output_05f\\05_table_column_header_comparison\\To_Be_Discontinued\\dashboard_dashboard_A_table0_middle.png"
+            },
+            "end": {
+              "requested_fraction": 1.0,
+              "requested_scroll_left": null,
+              "scroll_left": null,
+              "max_scroll": null,
+              "client_width": null,
+              "scrollable": false,
+              "screenshot": "output_05f\\05_table_column_header_comparison\\To_Be_Discontinued\\dashboard_dashboard_A_table0_end.png"
+            }
+          },
+          "restored": true
+        }
+      ]
+    },
+    {
+      "visuals": [
+        {
+          "key": "visual-1",
+          "title": "",
+          "visual_type": "",
+          "positions": {
+            "initial": {
+              "requested_fraction": 0.0,
+              "requested_scroll_left": null,
+              "scroll_left": null,
+              "max_scroll": null,
+              "client_width": null,
+              "scrollable": false,
+              "screenshot": "output_05f\\05_table_column_header_comparison\\To_Be_Discontinued\\dashboard_dashboard_B_table0_initial.png"
+            },
+            "middle": {
+              "requested_fraction": 0.5,
+              "requested_scroll_left": null,
+              "scroll_left": null,
+              "max_scroll": null,
+              "client_width": null,
+              "scrollable": false,
+              "screenshot": "output_05f\\05_table_column_header_comparison\\To_Be_Discontinued\\dashboard_dashboard_B_table0_middle.png"
+            },
+            "end": {
+              "requested_fraction": 1.0,
+              "requested_scroll_left": null,
+              "scroll_left": null,
+              "max_scroll": null,
+              "client_width": null,
+              "scrollable": false,
+              "screenshot": "output_05f\\05_table_column_header_comparison\\To_Be_Discontinued\\dashboard_dashboard_B_table0_end.png"
+            }
+          },
+          "restored": true
+        }
+      ]
+    }
+  ],
+  "table_visuals": {
+    "A": 1,
+    "B": 1
+  }
+}

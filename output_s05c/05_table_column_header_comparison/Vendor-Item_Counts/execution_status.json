@@ -1,0 +1,4 @@
+{
+  "status": "UNVERIFIED",
+  "reason": "05_table_column_header_comparison failed: TargetClosedError: Frame.evaluate: Target page, context or browser has been closed"
+}

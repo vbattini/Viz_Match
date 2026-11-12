@@ -1,0 +1,25 @@
+{
+  "plan": {
+    "filter_key": "purchase status",
+    "name_a": "Purchase Status",
+    "name_b": "Purchase Status",
+    "values_a": [
+      "S",
+      "D"
+    ],
+    "values_b": [
+      "S",
+      "D"
+    ]
+  },
+  "steps": [
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Purchase Status'"
+    },
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Purchase Status'"
+    }
+  ]
+}

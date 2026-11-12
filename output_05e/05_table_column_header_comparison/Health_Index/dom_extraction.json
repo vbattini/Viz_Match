@@ -1,0 +1,10 @@
+{
+  "dashboard_A": {
+    "page": "Health Index",
+    "tables": []
+  },
+  "dashboard_B": {
+    "page": "Health Index",
+    "tables": []
+  }
+}

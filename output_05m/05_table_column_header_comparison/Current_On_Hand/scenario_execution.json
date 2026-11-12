@@ -1,0 +1,36 @@
+{
+  "scenario_name": "05_table_column_header_comparison",
+  "scroll_strategy": "NONE",
+  "horizontal_scrollbar_presence": {
+    "dashboard_A": false,
+    "dashboard_B": false
+  },
+  "dashboard_A": {
+    "screenshots": {
+      "initial": "output_05m\\05_table_column_header_comparison\\Current_On_Hand\\dashboard_A\\initial.png"
+    },
+    "scroll_positions": {
+      "initial": {
+        "scroller_count": 0,
+        "controls": []
+      }
+    },
+    "horizontal_scrollbar_present": false,
+    "max_horizontal_scroll_range_ratio": 0.0,
+    "scroll_strategy": "NONE"
+  },
+  "dashboard_B": {
+    "screenshots": {
+      "initial": "output_05m\\05_table_column_header_comparison\\Current_On_Hand\\dashboard_B\\initial.png"
+    },
+    "scroll_positions": {
+      "initial": {
+        "scroller_count": 0,
+        "controls": []
+      }
+    },
+    "horizontal_scrollbar_present": false,
+    "max_horizontal_scroll_range_ratio": 0.0,
+    "scroll_strategy": "NONE"
+  }
+}

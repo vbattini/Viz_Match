@@ -1,0 +1,73 @@
+{
+  "plan": {
+    "filter_key": "department",
+    "name_a": "Department",
+    "name_b": "Department",
+    "values_a": [
+      "BAKERY",
+      "DAIRY"
+    ],
+    "values_b": [
+      "BAKERY",
+      "DAIRY"
+    ]
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Department",
+        "requested": [
+          "BAKERY"
+        ],
+        "applied": true,
+        "selected": [
+          "All"
+        ],
+        "verified": false,
+        "base_selection": {
+          "filter": "Facility",
+          "requested": [
+            "08 - St. Cloud"
+          ],
+          "selected": [
+            "08 - St. Cloud"
+          ],
+          "verified": true,
+          "source": "dom_readback"
+        }
+      },
+      "verified": false,
+      "screenshot": "output_0203\\03_multiple_filter_selection\\Executive_Summary\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null
+    },
+    {
+      "record": {
+        "filter": "Department",
+        "requested": [
+          "BAKERY"
+        ],
+        "applied": true,
+        "selected": [
+          "BAKERY"
+        ],
+        "verified": true,
+        "base_selection": {
+          "filter": "Facility",
+          "requested": [
+            "08 - St. Cloud"
+          ],
+          "selected": [
+            "08 - St. Cloud"
+          ],
+          "verified": true,
+          "source": "dom_readback"
+        }
+      },
+      "verified": true,
+      "screenshot": "output_0203\\03_multiple_filter_selection\\Executive_Summary\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null
+    }
+  ]
+}

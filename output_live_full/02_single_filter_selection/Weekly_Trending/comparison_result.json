@@ -1,0 +1,29 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "filter": "Rank",
+    "requested": [
+      "D"
+    ],
+    "applied": true,
+    "selected": [
+      "D"
+    ],
+    "verified": true
+  },
+  "dashboard_B": {
+    "filter": "Rank",
+    "requested": [
+      "D"
+    ],
+    "applied": true,
+    "selected": [
+      "D"
+    ],
+    "verified": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_live_full\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png",
+    "dashboard_B": "output_live_full\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png"
+  }
+}

@@ -1,0 +1,496 @@
+{
+  "dashboard_A": {
+    "page": "Item Counts",
+    "visuals": [
+      {
+        "key": "Image",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 425,
+          "y": 98,
+          "width": 102,
+          "height": 102
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 527,
+          "y": 98,
+          "width": 678,
+          "height": 100
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 1137,
+          "y": 164,
+          "width": 287,
+          "height": 39
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 419,
+          "y": 198,
+          "width": 2312,
+          "height": 20
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 219,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "visual-1",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 704,
+          "y": 246,
+          "width": 1430,
+          "height": 809
+        },
+        "headers": [
+          {
+            "text": "Facility",
+            "index": 0,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 11,
+              "y": 11,
+              "width": 207,
+              "height": 43
+            }
+          },
+          {
+            "text": "Active Item Count",
+            "index": 1,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 218,
+              "y": 11,
+              "width": 167,
+              "height": 43
+            }
+          },
+          {
+            "text": "Suspended Item Count",
+            "index": 2,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 385,
+              "y": 11,
+              "width": 207,
+              "height": 43
+            }
+          },
+          {
+            "text": "DWO Item Count",
+            "index": 3,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 592,
+              "y": 11,
+              "width": 159,
+              "height": 43
+            }
+          },
+          {
+            "text": "All Item Count",
+            "index": 4,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 750,
+              "y": 11,
+              "width": 137,
+              "height": 43
+            }
+          },
+          {
+            "text": "Active Vendor Count",
+            "index": 5,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 887,
+              "y": 11,
+              "width": 188,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Hand Cases",
+            "index": 6,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 1076,
+              "y": 11,
+              "width": 141,
+              "height": 43
+            }
+          }
+        ]
+      },
+      {
+        "key": "",
+        "title": "Supply Planner Hierarchy",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 307,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 395,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 483,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 572,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 659,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      }
+    ]
+  },
+  "dashboard_B": {
+    "page": "Item Counts",
+    "visuals": [
+      {
+        "key": "Image",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 425,
+          "y": 98,
+          "width": 102,
+          "height": 102
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 527,
+          "y": 98,
+          "width": 678,
+          "height": 100
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 1137,
+          "y": 164,
+          "width": 287,
+          "height": 39
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 419,
+          "y": 198,
+          "width": 2312,
+          "height": 20
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 219,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "visual-1",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 704,
+          "y": 246,
+          "width": 1430,
+          "height": 809
+        },
+        "headers": [
+          {
+            "text": "Facility",
+            "index": 0,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 11,
+              "y": 11,
+              "width": 86,
+              "height": 43
+            }
+          },
+          {
+            "text": "Active Item Count",
+            "index": 1,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 97,
+              "y": 11,
+              "width": 167,
+              "height": 43
+            }
+          },
+          {
+            "text": "Suspended Item Count",
+            "index": 2,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 264,
+              "y": 11,
+              "width": 207,
+              "height": 43
+            }
+          },
+          {
+            "text": "DWO Item Count",
+            "index": 3,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 471,
+              "y": 11,
+              "width": 159,
+              "height": 43
+            }
+          },
+          {
+            "text": "All Item Count",
+            "index": 4,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 629,
+              "y": 11,
+              "width": 137,
+              "height": 43
+            }
+          },
+          {
+            "text": "Active Vendor Count",
+            "index": 5,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 766,
+              "y": 11,
+              "width": 188,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Hand Cases",
+            "index": 6,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 955,
+              "y": 11,
+              "width": 141,
+              "height": 43
+            }
+          }
+        ]
+      },
+      {
+        "key": "",
+        "title": "Supply Planner Hierarchy",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 307,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 395,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 483,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 572,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "key": "",
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 659,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "dashboard_A": {
+    "screenshots": {
+      "initial": "output_05i\\05_table_column_header_comparison\\Inventory_Bands\\dashboard_A_initial.png",
+      "middle": "output_05i\\05_table_column_header_comparison\\Inventory_Bands\\dashboard_A_middle.png",
+      "right": "output_05i\\05_table_column_header_comparison\\Inventory_Bands\\dashboard_A_right.png"
+    },
+    "scroll_positions": {
+      "initial": {
+        "scroller_count": 0,
+        "scrollers": []
+      },
+      "middle": {
+        "scroller_count": 0,
+        "scrollers": []
+      },
+      "right": {
+        "scroller_count": 0,
+        "scrollers": []
+      }
+    }
+  },
+  "dashboard_B": {
+    "screenshots": {
+      "initial": "output_05i\\05_table_column_header_comparison\\Inventory_Bands\\dashboard_B_initial.png",
+      "middle": "output_05i\\05_table_column_header_comparison\\Inventory_Bands\\dashboard_B_middle.png",
+      "right": "output_05i\\05_table_column_header_comparison\\Inventory_Bands\\dashboard_B_right.png"
+    },
+    "scroll_positions": {
+      "initial": {
+        "scroller_count": 0,
+        "scrollers": []
+      },
+      "middle": {
+        "scroller_count": 0,
+        "scrollers": []
+      },
+      "right": {
+        "scroller_count": 0,
+        "scrollers": []
+      }
+    }
+  }
+}

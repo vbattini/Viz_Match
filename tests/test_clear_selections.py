@@ -60,9 +60,10 @@ class FakeScope:
 
 
 class FakeControl:
-    def __init__(self, scopes, reveal=()):
+    def __init__(self, scopes, reveal=(), hover_error=None):
         self._scopes = list(scopes)
         self._reveal = list(reveal)
+        self._hover_error = hover_error
         self.hover_calls = 0
 
     def locator(self, selector):
@@ -72,6 +73,8 @@ class FakeControl:
     async def hover(self, timeout):
         assert timeout == browser.SLICER_CONTROL_ACTION_TIMEOUT_MS
         self.hover_calls += 1
+        if self._hover_error is not None:
+            raise self._hover_error
         for button in self._reveal:
             button.visible = True
 
@@ -108,6 +111,16 @@ def test_hidden_clear_button_is_found_after_hovering_slicer() -> None:
 
 def test_missing_clear_button_returns_none() -> None:
     control = FakeControl([FakeScope([]), FakeScope([])])
+
+    assert find_clear(control) is None
+    assert control.hover_calls == 1
+
+
+def test_hover_timeout_returns_no_clear_button() -> None:
+    control = FakeControl(
+        [FakeScope([]), FakeScope([])],
+        hover_error=PlaywrightTimeoutError("control could not be hovered"),
+    )
 
     assert find_clear(control) is None
     assert control.hover_calls == 1

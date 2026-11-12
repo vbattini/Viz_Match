@@ -1,0 +1,30 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "40 - Omaha",
+    "value_b": "40 - Omaha"
+  },
+  "steps": [
+    {
+      "filter": "Facility",
+      "requested": [
+        "40 - Omaha"
+      ],
+      "applied": false,
+      "error": "UnavailableFilterOptionError: Option '40 - Omaha' is unavailable for filter 'Facility' in filter popup after waiting for the option list and popup search; available options: ['61 - Bluefield', '66 - Belle Cigs', '67 - Omaha Cigs', '69 - Landover', '70 - Norfolk', '71 - Bellefontaine', '79 - Columbus DT', '80 - Columbus DG', '86 - Severn', '87 - Stockton', '90 - San Antonio DG', '92 - Severn MDV']",
+      "verified": null
+    },
+    {
+      "filter": "Facility",
+      "requested": [
+        "40 - Omaha"
+      ],
+      "applied": false,
+      "error": "UnavailableFilterOptionError: Option '40 - Omaha' is unavailable for filter 'Facility' in filter popup after waiting for the option list and popup search; available options: ['61 - Bluefield', '66 - Belle Cigs', '67 - Omaha Cigs', '69 - Landover', '70 - Norfolk', '71 - Bellefontaine', '79 - Columbus DT', '80 - Columbus DG', '86 - Severn', '87 - Stockton', '90 - San Antonio DG', '92 - Severn MDV']",
+      "verified": null
+    }
+  ],
+  "restored": true
+}

@@ -1,0 +1,85 @@
+{
+  "dashboard": "dashboard_B",
+  "page_name": "Inventory Bands",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "DOH Bands",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Rank",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Purchase Status",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Department",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "supply planner hierarchy",
+    "name_a": "Supply Planner Hierarchy",
+    "name_b": "Supply Planner Hierarchy",
+    "value_a": "Alona Florenz",
+    "value_b": "Alona Florenz"
+  },
+  "multi_filter_plan": {
+    "filter_key": "purchase status",
+    "name_a": "Purchase Status",
+    "name_b": "Purchase Status",
+    "values_a": [
+      "D",
+      "A"
+    ],
+    "values_b": [
+      "D",
+      "A"
+    ]
+  },
+  "drill_candidates": []
+}

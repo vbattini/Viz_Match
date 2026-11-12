@@ -1,0 +1,171 @@
+{
+  "scenario_id": "02",
+  "scenario_name": "Single Filter Selection",
+  "page_name": "Health Index",
+  "scenario_execution_status": "PASS",
+  "scenario_execution_reason": null,
+  "comparison_status": "FAIL",
+  "filter_comparison": {
+    "status": "PASS",
+    "state_equivalent": true,
+    "expected_state_applied": true,
+    "items": [
+      {
+        "category": "MATCH",
+        "element_type": "Filter Selection",
+        "element_a": "['29 - San Antonio']",
+        "element_b": "['29 - San Antonio']",
+        "observation": "Both dashboards show the same selected value(s) for Facility."
+      }
+    ],
+    "dashboard_A": {
+      "filter": "Facility",
+      "requested": [
+        "29 - San Antonio"
+      ],
+      "applied": true,
+      "selected": [
+        "29 - San Antonio"
+      ],
+      "verified": true
+    },
+    "dashboard_B": {
+      "filter": "Facility",
+      "requested": [
+        "29 - San Antonio"
+      ],
+      "applied": true,
+      "selected": [
+        "29 - San Antonio"
+      ],
+      "verified": true
+    },
+    "inventory": {
+      "status": "PASS",
+      "items": [
+        {
+          "category": "MATCH",
+          "name_a": "Facility",
+          "name_b": "Facility",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Supply Planner Hierarchy",
+          "name_b": "Supply Planner Hierarchy",
+          "control_type_a": "dropdown",
+          "control_type_b": "dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Time Hierarchy",
+          "name_b": "Time Hierarchy",
+          "control_type_a": "dropdown",
+          "control_type_b": "dropdown"
+        }
+      ],
+      "available_options_status": "UNVERIFIED",
+      "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  },
+  "visual_comparison": {
+    "page_name": "Health Index",
+    "status": "FAIL",
+    "matching_elements": [
+      "Page title and header banner",
+      "Slicers (Facility, Time Hierarchy, Supply Planner Hierarchy)"
+    ],
+    "findings": [
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "table",
+        "element_a": "Health Index matrix table with data rows",
+        "element_b": "Error fetching data for this visual",
+        "observation": "The Health Index matrix in Dashboard B fails to render and shows 'Error fetching data for this visual'."
+      }
+    ],
+    "notes": [
+      "Filter state for Facility '29 - San Antonio' matches on both dashboards."
+    ]
+  },
+  "findings": [
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Page title and header banner",
+      "element_b": "Page title and header banner",
+      "observation": "LLM Vision reported a match for Page title and header banner."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Slicers (Facility, Time Hierarchy, Supply Planner Hierarchy)",
+      "element_b": "Slicers (Facility, Time Hierarchy, Supply Planner Hierarchy)",
+      "observation": "LLM Vision reported a match for Slicers (Facility, Time Hierarchy, Supply Planner Hierarchy)."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "table",
+      "element_a": "Health Index matrix table with data rows",
+      "element_b": "Error fetching data for this visual",
+      "observation": "The Health Index matrix in Dashboard B fails to render and shows 'Error fetching data for this visual'."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Selection",
+      "element_a": "['29 - San Antonio']",
+      "element_b": "['29 - San Antonio']",
+      "observation": "Both dashboards show the same selected value(s) for Facility."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Control types: A=dropdown; B=dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Time Hierarchy",
+      "element_b": "Time Hierarchy",
+      "observation": "Control types: A=dropdown; B=dropdown."
+    },
+    {
+      "category": "UNVERIFIED",
+      "element_type": "Available Filter Options",
+      "element_a": null,
+      "element_b": null,
+      "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  ],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Health_Index",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Health_Index\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Health_Index\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Health_Index\\comparison_result.json",
+    "dashboard_A_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Health_Index\\dashboard_A.png"
+      }
+    ],
+    "dashboard_B_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Health_Index\\dashboard_B.png"
+      }
+    ],
+    "errors": []
+  },
+  "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+}

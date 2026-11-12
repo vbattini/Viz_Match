@@ -1,0 +1,34 @@
+{
+  "plan": {
+    "filter_key": "vendor",
+    "name_a": "Vendor",
+    "name_b": "Vendor",
+    "value_a": "- DACOTAH PAPER CO",
+    "value_b": "- DACOTAH PAPER CO"
+  },
+  "steps": [
+    {
+      "filter": "Vendor",
+      "requested": [
+        "- DACOTAH PAPER CO"
+      ],
+      "applied": true,
+      "selected": [
+        "- DACOTAH PAPER CO"
+      ],
+      "verified": true
+    },
+    {
+      "filter": "Vendor",
+      "requested": [
+        "- DACOTAH PAPER CO"
+      ],
+      "applied": true,
+      "selected": [
+        "- DACOTAH PAPER CO"
+      ],
+      "verified": true
+    }
+  ],
+  "restored": true
+}

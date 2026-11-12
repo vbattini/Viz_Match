@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "screenshot": "output_all\\01_initial_default_state\\Item_Counts\\dashboard_A.png"
+    },
+    {
+      "screenshot": "output_all\\01_initial_default_state\\Item_Counts\\dashboard_B.png"
+    }
+  ],
+  "inventory_error": null
+}

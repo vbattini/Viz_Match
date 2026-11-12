@@ -1,0 +1,25 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "01 - Grand Rapids",
+      "38 - Bloomington"
+    ],
+    "values_b": [
+      "01 - Grand Rapids",
+      "38 - Bloomington"
+    ]
+  },
+  "steps": [
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+    },
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "plan": {
+    "filter_key": "vendor",
+    "name_a": "Vendor",
+    "name_b": "Vendor",
+    "value_a": "- THE HERSHEY COMPANY",
+    "value_b": "- THE HERSHEY COMPANY"
+  },
+  "steps": [
+    {
+      "filter": "Vendor",
+      "requested": [
+        "- THE HERSHEY COMPANY"
+      ],
+      "applied": false,
+      "error": "UnavailableFilterOptionError: Option '- THE HERSHEY COMPANY' is unavailable for filter 'Vendor' in filter popup after waiting for the option list and popup search; available options: ['Select all', '- BARREL O FUN', '- BEAUMONT PRODUCTS INC', '- BUNZL', '- CONAGRA FOODS INC', '- DACOTAH PAPER CO', '- HEINZ NORTH AMERICA', '- HOMECARE LABS', '- J & J DISTRIBUTING', '- KIK CUSTOM PRODUCTS', '- KIKKOMAN INTERNATIONAL', '- KRAFT FOODS INC']",
+      "verified": null
+    },
+    {
+      "filter": "Vendor",
+      "requested": [
+        "- THE HERSHEY COMPANY"
+      ],
+      "applied": false,
+      "error": "UnavailableFilterOptionError: Option '- THE HERSHEY COMPANY' is unavailable for filter 'Vendor' in filter popup after waiting for the option list and popup search; available options: ['Select all', '- BARREL O FUN', '- BEAUMONT PRODUCTS INC', '- BUNZL', '- CONAGRA FOODS INC', '- DACOTAH PAPER CO', '- HEINZ NORTH AMERICA', '- HOMECARE LABS', '- J & J DISTRIBUTING', '- KIK CUSTOM PRODUCTS', '- KIKKOMAN INTERNATIONAL', '- KRAFT FOODS INC']",
+      "verified": null
+    }
+  ],
+  "restored": true
+}

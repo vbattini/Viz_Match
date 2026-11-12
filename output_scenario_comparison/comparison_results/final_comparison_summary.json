@@ -1,0 +1,153 @@
+{
+  "total_scenario_types": 5,
+  "total_page_scenarios_processed": 50,
+  "total_scenarios_executed": 38,
+  "total_scenarios_compared": 20,
+  "passed_scenarios": 4,
+  "failed_scenarios": 13,
+  "unverified_scenarios": 21,
+  "skipped_scenarios": 12,
+  "total_matching_elements": 326,
+  "total_missing_elements": 0,
+  "total_additional_elements": 0,
+  "total_renamed_elements": 0,
+  "total_value_differences": 1,
+  "total_order_differences": 0,
+  "total_visual_differences": 29,
+  "total_behavior_differences": 2,
+  "total_unverified_findings": 32,
+  "scenario_summaries": [
+    {
+      "scenario_id": "01",
+      "scenario_name": "Default Filter State",
+      "page_count": 10,
+      "status_counts": {
+        "PASS": 0,
+        "FAIL": 4,
+        "UNVERIFIED": 6,
+        "SKIPPED": 0
+      },
+      "category_counts": {
+        "ADDITIONAL": 0,
+        "BEHAVIOR_DIFFERENCE": 0,
+        "DIFFERENT_ORDER": 0,
+        "DIFFERENT_VALUE": 0,
+        "MATCH": 115,
+        "MISSING": 0,
+        "RENAMED": 0,
+        "UNVERIFIED": 10,
+        "VISUAL_DIFFERENCE": 8
+      }
+    },
+    {
+      "scenario_id": "02",
+      "scenario_name": "Single Filter Selection",
+      "page_count": 10,
+      "status_counts": {
+        "PASS": 0,
+        "FAIL": 5,
+        "UNVERIFIED": 5,
+        "SKIPPED": 0
+      },
+      "category_counts": {
+        "ADDITIONAL": 0,
+        "BEHAVIOR_DIFFERENCE": 0,
+        "DIFFERENT_ORDER": 0,
+        "DIFFERENT_VALUE": 0,
+        "MATCH": 59,
+        "MISSING": 0,
+        "RENAMED": 0,
+        "UNVERIFIED": 12,
+        "VISUAL_DIFFERENCE": 14
+      }
+    },
+    {
+      "scenario_id": "03",
+      "scenario_name": "Multiple Filter Selection",
+      "page_count": 10,
+      "status_counts": {
+        "PASS": 0,
+        "FAIL": 4,
+        "UNVERIFIED": 6,
+        "SKIPPED": 0
+      },
+      "category_counts": {
+        "ADDITIONAL": 0,
+        "BEHAVIOR_DIFFERENCE": 2,
+        "DIFFERENT_ORDER": 0,
+        "DIFFERENT_VALUE": 1,
+        "MATCH": 66,
+        "MISSING": 0,
+        "RENAMED": 0,
+        "UNVERIFIED": 10,
+        "VISUAL_DIFFERENCE": 7
+      }
+    },
+    {
+      "scenario_id": "04",
+      "scenario_name": "Drilldown",
+      "page_count": 10,
+      "status_counts": {
+        "PASS": 0,
+        "FAIL": 0,
+        "UNVERIFIED": 4,
+        "SKIPPED": 6
+      },
+      "category_counts": {
+        "ADDITIONAL": 0,
+        "BEHAVIOR_DIFFERENCE": 0,
+        "DIFFERENT_ORDER": 0,
+        "DIFFERENT_VALUE": 0,
+        "MATCH": 0,
+        "MISSING": 0,
+        "RENAMED": 0,
+        "UNVERIFIED": 0,
+        "VISUAL_DIFFERENCE": 0
+      }
+    },
+    {
+      "scenario_id": "05",
+      "scenario_name": "Table and Matrix Headers",
+      "page_count": 10,
+      "status_counts": {
+        "PASS": 4,
+        "FAIL": 0,
+        "UNVERIFIED": 0,
+        "SKIPPED": 6
+      },
+      "category_counts": {
+        "ADDITIONAL": 0,
+        "BEHAVIOR_DIFFERENCE": 0,
+        "DIFFERENT_ORDER": 0,
+        "DIFFERENT_VALUE": 0,
+        "MATCH": 86,
+        "MISSING": 0,
+        "RENAMED": 0,
+        "UNVERIFIED": 0,
+        "VISUAL_DIFFERENCE": 0
+      }
+    }
+  ],
+  "overall_dashboard_result": "FAIL",
+  "visual_validation_scope_note": "Numeric chart/KPI values and table cell records were not validated; this report covers visual rendering, labels, filters, and headers.",
+  "reference_documents": {
+    "workbook": {
+      "path": "C:\\Users\\VijayBattini\\Documents\\Dashboard_Comparison.xlsx",
+      "sheets": [
+        "Visual_Validation"
+      ]
+    },
+    "docx": {
+      "path": "C:\\Users\\VijayBattini\\Documents\\Inventory Insights.docx",
+      "title": "Inventory Insights",
+      "sections": [
+        "1. Dashboard & Environment Details",
+        "2. Filter Validation Log",
+        "2.1 Page-by-Page Screenshots (Snowflake vs. GCP)",
+        "3. Visual & Functional Validation Log",
+        "3.1 Page-by-Page Screenshots (Snowflake vs. GCP)",
+        "4. Summary & Sign-off"
+      ]
+    }
+  }
+}

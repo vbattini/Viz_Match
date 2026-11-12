@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "08 - St. Cloud",
+    "value_b": "08 - St. Cloud"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "08 - St. Cloud"
+        ],
+        "applied": true,
+        "selected": [
+          "08 - St. Cloud"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Executive_Summary\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    },
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "08 - St. Cloud"
+        ],
+        "applied": true,
+        "selected": [
+          "08 - St. Cloud"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Executive_Summary\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    }
+  ]
+}

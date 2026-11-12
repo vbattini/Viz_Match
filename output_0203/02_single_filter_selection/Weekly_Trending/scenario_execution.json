@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "01 - Grand Rapids",
+    "value_b": "01 - Grand Rapids"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "01 - Grand Rapids"
+        ],
+        "applied": true,
+        "selected": [
+          "01 - Grand Rapids"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    },
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "01 - Grand Rapids"
+        ],
+        "applied": true,
+        "selected": [
+          "01 - Grand Rapids"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    }
+  ]
+}

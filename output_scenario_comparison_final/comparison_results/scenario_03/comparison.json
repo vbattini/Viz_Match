@@ -1,0 +1,1663 @@
+{
+  "scenario_id": "03",
+  "scenario_name": "Multiple Filter Selection",
+  "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+  "pages": [
+    {
+      "page_name": "Executive Summary",
+      "scenario_execution_status": "FAIL",
+      "scenario_execution_reason": null,
+      "comparison_status": "FAIL",
+      "filter_comparison": {
+        "status": "FAIL",
+        "state_equivalent": false,
+        "expected_state_applied": false,
+        "items": [
+          {
+            "category": "DIFFERENT_VALUE",
+            "element_type": "Filter Selection",
+            "element_a": "['All']",
+            "element_b": "['BAKERY']",
+            "observation": "Selected values differ for Department."
+          },
+          {
+            "category": "MATCH",
+            "element_type": "Base Filter Selection",
+            "element_a": "Facility: ['08 - St. Cloud']",
+            "element_b": "Facility: ['08 - St. Cloud']",
+            "observation": "The retained Scenario 02 filter state matches."
+          },
+          {
+            "category": "BEHAVIOR_DIFFERENCE",
+            "element_type": "Multiple Filter Action",
+            "element_a": "['All']",
+            "element_b": "['BAKERY']",
+            "observation": "Evidence does not verify either two selected values in one filter or a verified retained base filter plus an additional selection."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Department",
+          "requested": [
+            "BAKERY"
+          ],
+          "applied": true,
+          "selected": [
+            "All"
+          ],
+          "verified": false,
+          "base_selection": {
+            "filter": "Facility",
+            "requested": [
+              "08 - St. Cloud"
+            ],
+            "selected": [
+              "08 - St. Cloud"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "dashboard_B": {
+          "filter": "Department",
+          "requested": [
+            "BAKERY"
+          ],
+          "applied": true,
+          "selected": [
+            "BAKERY"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Facility",
+            "requested": [
+              "08 - St. Cloud"
+            ],
+            "selected": [
+              "08 - St. Cloud"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "Department",
+              "name_b": "Department",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "DIFFERENT_VALUE",
+          "element_type": "Filter Selection",
+          "element_a": "['All']",
+          "element_b": "['BAKERY']",
+          "observation": "Selected values differ for Department."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Base Filter Selection",
+          "element_a": "Facility: ['08 - St. Cloud']",
+          "element_b": "Facility: ['08 - St. Cloud']",
+          "observation": "The retained Scenario 02 filter state matches."
+        },
+        {
+          "category": "BEHAVIOR_DIFFERENCE",
+          "element_type": "Multiple Filter Action",
+          "element_a": "['All']",
+          "element_b": "['BAKERY']",
+          "observation": "Evidence does not verify either two selected values in one filter or a verified retained base filter plus an additional selection."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Department",
+          "element_b": "Department",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "page_name": "Weekly Trending",
+      "scenario_execution_status": "PASS",
+      "scenario_execution_reason": null,
+      "comparison_status": "FAIL",
+      "filter_comparison": {
+        "status": "PASS",
+        "state_equivalent": true,
+        "expected_state_applied": true,
+        "items": [
+          {
+            "category": "MATCH",
+            "element_type": "Filter Selection",
+            "element_a": "['A']",
+            "element_b": "['A']",
+            "observation": "Both dashboards show the same selected value(s) for Rank."
+          },
+          {
+            "category": "MATCH",
+            "element_type": "Base Filter Selection",
+            "element_a": "Facility: ['01 - Grand Rapids']",
+            "element_b": "Facility: ['01 - Grand Rapids']",
+            "observation": "The retained Scenario 02 filter state matches."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Rank",
+          "requested": [
+            "A"
+          ],
+          "applied": true,
+          "selected": [
+            "A"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Facility",
+            "requested": [
+              "01 - Grand Rapids"
+            ],
+            "selected": [
+              "01 - Grand Rapids"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "dashboard_B": {
+          "filter": "Rank",
+          "requested": [
+            "A"
+          ],
+          "applied": true,
+          "selected": [
+            "A"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Facility",
+            "requested": [
+              "01 - Grand Rapids"
+            ],
+            "selected": [
+              "01 - Grand Rapids"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "inventory": {
+          "status": "FAIL",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "DOH Bands",
+              "name_b": "DOH Bands",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "VISUAL_DIFFERENCE",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Rank",
+              "name_b": "Rank",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "VISUAL_DIFFERENCE",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "page_name": "Weekly Trending",
+        "status": "FAIL",
+        "matching_elements": [
+          "Page title 'Inventory Insights Weekly Trending'",
+          "Facility slicer ('01 - Grand Rapids')",
+          "Master Vendor slicer ('All')",
+          "Supply Planner Hierarchy slicer ('All')",
+          "Vendor slicer ('All')",
+          "DOH Bands slicer ('All')",
+          "Rank slicer ('A')"
+        ],
+        "findings": [
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by DOH Band",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Top-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by Rank",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Top-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "On Hand Cases Trending",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Bottom-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          },
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "chart",
+            "element_a": "Inventory by DOH Band",
+            "element_b": "Error fetching data for this visual",
+            "observation": "Bottom-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+          }
+        ],
+        "notes": [
+          "All four chart visuals on Dashboard B encountered query execution errors."
+        ]
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Filter Selection",
+          "element_a": "['A']",
+          "element_b": "['A']",
+          "observation": "Both dashboards show the same selected value(s) for Rank."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Base Filter Selection",
+          "element_a": "Facility: ['01 - Grand Rapids']",
+          "element_b": "Facility: ['01 - Grand Rapids']",
+          "observation": "The retained Scenario 02 filter state matches."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "DOH Bands",
+          "element_b": "DOH Bands",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Page title 'Inventory Insights Weekly Trending'",
+          "element_b": "Page title 'Inventory Insights Weekly Trending'",
+          "observation": "LLM Vision reported a match for Page title 'Inventory Insights Weekly Trending'."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Facility slicer ('01 - Grand Rapids')",
+          "element_b": "Facility slicer ('01 - Grand Rapids')",
+          "observation": "LLM Vision reported a match for Facility slicer ('01 - Grand Rapids')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Master Vendor slicer ('All')",
+          "element_b": "Master Vendor slicer ('All')",
+          "observation": "LLM Vision reported a match for Master Vendor slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Supply Planner Hierarchy slicer ('All')",
+          "element_b": "Supply Planner Hierarchy slicer ('All')",
+          "observation": "LLM Vision reported a match for Supply Planner Hierarchy slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Vendor slicer ('All')",
+          "element_b": "Vendor slicer ('All')",
+          "observation": "LLM Vision reported a match for Vendor slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "DOH Bands slicer ('All')",
+          "element_b": "DOH Bands slicer ('All')",
+          "observation": "LLM Vision reported a match for DOH Bands slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Rank slicer ('A')",
+          "element_b": "Rank slicer ('A')",
+          "observation": "LLM Vision reported a match for Rank slicer ('A')."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by DOH Band",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Top-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by Rank",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Top-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "On Hand Cases Trending",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Bottom-left chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "chart",
+          "element_a": "Inventory by DOH Band",
+          "element_b": "Error fetching data for this visual",
+          "observation": "Bottom-right chart failed to render in Dashboard B with 'Error fetching data for this visual'."
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Weekly_Trending\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "page_name": "All Items",
+      "scenario_execution_status": "PASS",
+      "scenario_execution_reason": null,
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "PASS",
+        "state_equivalent": true,
+        "expected_state_applied": true,
+        "items": [
+          {
+            "category": "MATCH",
+            "element_type": "Filter Selection",
+            "element_a": "['38 - Bloomington']",
+            "element_b": "['38 - Bloomington']",
+            "observation": "Both dashboards show the same selected value(s) for Facility."
+          },
+          {
+            "category": "MATCH",
+            "element_type": "Base Filter Selection",
+            "element_a": "Vendor: ['- DACOTAH PAPER CO']",
+            "element_b": "Vendor: ['- DACOTAH PAPER CO']",
+            "observation": "The retained Scenario 02 filter state matches."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Facility",
+          "requested": [
+            "38 - Bloomington"
+          ],
+          "applied": true,
+          "selected": [
+            "38 - Bloomington"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Vendor",
+            "requested": [
+              "- DACOTAH PAPER CO"
+            ],
+            "selected": [
+              "- DACOTAH PAPER CO"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "dashboard_B": {
+          "filter": "Facility",
+          "requested": [
+            "38 - Bloomington"
+          ],
+          "applied": true,
+          "selected": [
+            "38 - Bloomington"
+          ],
+          "verified": true,
+          "base_selection": {
+            "filter": "Vendor",
+            "requested": [
+              "- DACOTAH PAPER CO"
+            ],
+            "selected": [
+              "- DACOTAH PAPER CO"
+            ],
+            "verified": true,
+            "source": "dom_readback"
+          }
+        },
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "Department",
+              "name_b": "Department",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "DOH Band",
+              "name_b": "DOH Band",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Purchase Status",
+              "name_b": "Purchase Status",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Rank",
+              "name_b": "Rank",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "page_name": "All Items",
+        "status": "PASS",
+        "matching_elements": [
+          "Page title 'Inventory Insights All Items'",
+          "Facility slicer ('38 - Bloomington')",
+          "Master Vendor slicer ('All')",
+          "Supply Planner Hierarchy slicer ('All')",
+          "Vendor slicer ('- DACOTAH PAPER CO')",
+          "DOH Band slicer ('All')",
+          "Rank slicer ('All')",
+          "Purchase Status slicer ('All')",
+          "Department slicer ('All')",
+          "Table column headers ('2nd Lvl Manager', 'Manager', 'Supply Planner', 'Facility', 'Item Nbr HS', 'Case UPC', 'Unit UPC', 'Description', 'Dept', 'Master Vendor', 'Vendor', 'Item Rank', 'Code Date Max')"
+        ],
+        "findings": [],
+        "notes": [
+          "Layout, slicer selections, and table structure match identically across both dashboards."
+        ]
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Filter Selection",
+          "element_a": "['38 - Bloomington']",
+          "element_b": "['38 - Bloomington']",
+          "observation": "Both dashboards show the same selected value(s) for Facility."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Base Filter Selection",
+          "element_a": "Vendor: ['- DACOTAH PAPER CO']",
+          "element_b": "Vendor: ['- DACOTAH PAPER CO']",
+          "observation": "The retained Scenario 02 filter state matches."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Department",
+          "element_b": "Department",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "DOH Band",
+          "element_b": "DOH Band",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Purchase Status",
+          "element_b": "Purchase Status",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Page title 'Inventory Insights All Items'",
+          "element_b": "Page title 'Inventory Insights All Items'",
+          "observation": "LLM Vision reported a match for Page title 'Inventory Insights All Items'."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Facility slicer ('38 - Bloomington')",
+          "element_b": "Facility slicer ('38 - Bloomington')",
+          "observation": "LLM Vision reported a match for Facility slicer ('38 - Bloomington')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Master Vendor slicer ('All')",
+          "element_b": "Master Vendor slicer ('All')",
+          "observation": "LLM Vision reported a match for Master Vendor slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Supply Planner Hierarchy slicer ('All')",
+          "element_b": "Supply Planner Hierarchy slicer ('All')",
+          "observation": "LLM Vision reported a match for Supply Planner Hierarchy slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Vendor slicer ('- DACOTAH PAPER CO')",
+          "element_b": "Vendor slicer ('- DACOTAH PAPER CO')",
+          "observation": "LLM Vision reported a match for Vendor slicer ('- DACOTAH PAPER CO')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "DOH Band slicer ('All')",
+          "element_b": "DOH Band slicer ('All')",
+          "observation": "LLM Vision reported a match for DOH Band slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Rank slicer ('All')",
+          "element_b": "Rank slicer ('All')",
+          "observation": "LLM Vision reported a match for Rank slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Purchase Status slicer ('All')",
+          "element_b": "Purchase Status slicer ('All')",
+          "observation": "LLM Vision reported a match for Purchase Status slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Department slicer ('All')",
+          "element_b": "Department slicer ('All')",
+          "observation": "LLM Vision reported a match for Department slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Table column headers ('2nd Lvl Manager', 'Manager', 'Supply Planner', 'Facility', 'Item Nbr HS', 'Case UPC', 'Unit UPC', 'Description', 'Dept', 'Master Vendor', 'Vendor', 'Item Rank', 'Code Date Max')",
+          "element_b": "Table column headers ('2nd Lvl Manager', 'Manager', 'Supply Planner', 'Facility', 'Item Nbr HS', 'Case UPC', 'Unit UPC', 'Description', 'Dept', 'Master Vendor', 'Vendor', 'Item Rank', 'Code Date Max')",
+          "observation": "LLM Vision reported a match for Table column headers ('2nd Lvl Manager', 'Manager', 'Supply Planner', 'Facility', 'Item Nbr HS', 'Case UPC', 'Unit UPC', 'Description', 'Dept', 'Master Vendor', 'Vendor', 'Item Rank', 'Code Date Max')."
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\All_Items",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\All_Items\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\All_Items\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\All_Items\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\All_Items\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\All_Items\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "page_name": "Health Index",
+      "scenario_execution_status": "PASS",
+      "scenario_execution_reason": null,
+      "comparison_status": "FAIL",
+      "filter_comparison": {
+        "status": "PASS",
+        "state_equivalent": true,
+        "expected_state_applied": true,
+        "items": [
+          {
+            "category": "MATCH",
+            "element_type": "Filter Selection",
+            "element_a": "['27 - Pensacola', '39 - Oklahoma City']",
+            "element_b": "['27 - Pensacola', '39 - Oklahoma City']",
+            "observation": "Both dashboards show the same selected value(s) for Facility."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Facility",
+          "requested": [
+            "39 - Oklahoma City",
+            "27 - Pensacola"
+          ],
+          "applied": true,
+          "selected": [
+            "27 - Pensacola",
+            "39 - Oklahoma City"
+          ],
+          "verified": true
+        },
+        "dashboard_B": {
+          "filter": "Facility",
+          "requested": [
+            "39 - Oklahoma City",
+            "27 - Pensacola"
+          ],
+          "applied": true,
+          "selected": [
+            "27 - Pensacola",
+            "39 - Oklahoma City"
+          ],
+          "verified": true
+        },
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Time Hierarchy",
+              "name_b": "Time Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "page_name": "Health Index",
+        "status": "FAIL",
+        "matching_elements": [
+          "Page title 'Inventory Insights Health Index'",
+          "Facility slicer ('Multiple selections')",
+          "Time Hierarchy slicer ('All')",
+          "Supply Planner Hierarchy slicer ('All')"
+        ],
+        "findings": [
+          {
+            "category": "VISUAL_DIFFERENCE",
+            "element_type": "table",
+            "element_a": "Health Index Summary Table",
+            "element_b": "Error fetching data for this visual",
+            "observation": "The main table visual failed to render in Dashboard B with 'Error fetching data for this visual'."
+          }
+        ],
+        "notes": [
+          "The filter states match, but the primary matrix visual on Dashboard B threw an error."
+        ]
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Filter Selection",
+          "element_a": "['27 - Pensacola', '39 - Oklahoma City']",
+          "element_b": "['27 - Pensacola', '39 - Oklahoma City']",
+          "observation": "Both dashboards show the same selected value(s) for Facility."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Time Hierarchy",
+          "element_b": "Time Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Page title 'Inventory Insights Health Index'",
+          "element_b": "Page title 'Inventory Insights Health Index'",
+          "observation": "LLM Vision reported a match for Page title 'Inventory Insights Health Index'."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Facility slicer ('Multiple selections')",
+          "element_b": "Facility slicer ('Multiple selections')",
+          "observation": "LLM Vision reported a match for Facility slicer ('Multiple selections')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Time Hierarchy slicer ('All')",
+          "element_b": "Time Hierarchy slicer ('All')",
+          "observation": "LLM Vision reported a match for Time Hierarchy slicer ('All')."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Visual",
+          "element_a": "Supply Planner Hierarchy slicer ('All')",
+          "element_b": "Supply Planner Hierarchy slicer ('All')",
+          "observation": "LLM Vision reported a match for Supply Planner Hierarchy slicer ('All')."
+        },
+        {
+          "category": "VISUAL_DIFFERENCE",
+          "element_type": "table",
+          "element_a": "Health Index Summary Table",
+          "element_b": "Error fetching data for this visual",
+          "observation": "The main table visual failed to render in Dashboard B with 'Error fetching data for this visual'."
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Health_Index",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Health_Index\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Health_Index\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Health_Index\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Health_Index\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Health_Index\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "page_name": "Inventory Bands",
+      "scenario_execution_status": "FAIL",
+      "scenario_execution_reason": null,
+      "comparison_status": "FAIL",
+      "filter_comparison": {
+        "status": "FAIL",
+        "state_equivalent": true,
+        "expected_state_applied": false,
+        "items": [
+          {
+            "category": "MATCH",
+            "element_type": "Filter Selection",
+            "element_a": "['- HEINZ NORTH AMERICA']",
+            "element_b": "['- HEINZ NORTH AMERICA']",
+            "observation": "Both dashboards show the same selected value(s) for Vendor."
+          },
+          {
+            "category": "BEHAVIOR_DIFFERENCE",
+            "element_type": "Multiple Filter Action",
+            "element_a": "['- HEINZ NORTH AMERICA']",
+            "element_b": "['- HEINZ NORTH AMERICA']",
+            "observation": "Evidence does not verify either two selected values in one filter or a verified retained base filter plus an additional selection."
+          }
+        ],
+        "dashboard_A": {
+          "filter": "Vendor",
+          "requested": [
+            "- BARREL O FUN",
+            "- HEINZ NORTH AMERICA"
+          ],
+          "applied": true,
+          "selected": [
+            "- HEINZ NORTH AMERICA"
+          ],
+          "verified": false
+        },
+        "dashboard_B": {
+          "filter": "Vendor",
+          "requested": [
+            "- BARREL O FUN",
+            "- HEINZ NORTH AMERICA"
+          ],
+          "applied": true,
+          "selected": [
+            "- HEINZ NORTH AMERICA"
+          ],
+          "verified": false
+        },
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "Department",
+              "name_b": "Department",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "DOH Bands",
+              "name_b": "DOH Bands",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Purchase Status",
+              "name_b": "Purchase Status",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Rank",
+              "name_b": "Rank",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Filter Selection",
+          "element_a": "['- HEINZ NORTH AMERICA']",
+          "element_b": "['- HEINZ NORTH AMERICA']",
+          "observation": "Both dashboards show the same selected value(s) for Vendor."
+        },
+        {
+          "category": "BEHAVIOR_DIFFERENCE",
+          "element_type": "Multiple Filter Action",
+          "element_a": "['- HEINZ NORTH AMERICA']",
+          "element_b": "['- HEINZ NORTH AMERICA']",
+          "observation": "Evidence does not verify either two selected values in one filter or a verified retained base filter plus an additional selection."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Department",
+          "element_b": "Department",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "DOH Bands",
+          "element_b": "DOH Bands",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Purchase Status",
+          "element_b": "Purchase Status",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Rank",
+          "element_b": "Rank",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Inventory_Bands",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Inventory_Bands\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Inventory_Bands\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Inventory_Bands\\comparison_result.json",
+        "dashboard_A_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Inventory_Bands\\dashboard_A.png"
+          }
+        ],
+        "dashboard_B_screenshots": [
+          {
+            "label": "state",
+            "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Inventory_Bands\\dashboard_B.png"
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "page_name": "Item Counts",
+      "scenario_execution_status": "UNVERIFIED",
+      "scenario_execution_reason": "03_multiple_filter_selection failed: TargetClosedError: Locator.click: Target page, context or browser has been closed\nCall log:\n  - waiting for get_by_role(\"combobox\").nth(4)\n",
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "UNVERIFIED",
+        "state_equivalent": null,
+        "expected_state_applied": null,
+        "items": [],
+        "reason": "filter selection records are missing",
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "Department",
+              "name_b": "Department",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Purchase Status",
+              "name_b": "Purchase Status",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Department",
+          "element_b": "Department",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Purchase Status",
+          "element_b": "Purchase Status",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Counts",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Counts\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Counts\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Counts\\comparison_result.json",
+        "dashboard_A_screenshots": [],
+        "dashboard_B_screenshots": [],
+        "errors": [
+          "a corresponding screenshot pair is unavailable",
+          "03_multiple_filter_selection failed: TargetClosedError: Locator.click: Target page, context or browser has been closed\nCall log:\n  - waiting for get_by_role(\"combobox\").nth(4)\n"
+        ]
+      }
+    },
+    {
+      "page_name": "Vendor-Item Counts",
+      "scenario_execution_status": "UNVERIFIED",
+      "scenario_execution_reason": "03_multiple_filter_selection failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed",
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "UNVERIFIED",
+        "state_equivalent": null,
+        "expected_state_applied": null,
+        "items": [],
+        "reason": "filter selection records are missing",
+        "inventory": {
+          "status": "PASS",
+          "items": [
+            {
+              "category": "MATCH",
+              "name_a": "Department",
+              "name_b": "Department",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Facility",
+              "name_b": "Facility",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Master Vendor",
+              "name_b": "Master Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Purchase Status",
+              "name_b": "Purchase Status",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Supply Planner Hierarchy",
+              "name_b": "Supply Planner Hierarchy",
+              "control_type_a": "dropdown",
+              "control_type_b": "dropdown"
+            },
+            {
+              "category": "MATCH",
+              "name_a": "Vendor",
+              "name_b": "Vendor",
+              "control_type_a": "checkbox_dropdown",
+              "control_type_b": "checkbox_dropdown"
+            }
+          ],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Department",
+          "element_b": "Department",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Facility",
+          "element_b": "Facility",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Master Vendor",
+          "element_b": "Master Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Purchase Status",
+          "element_b": "Purchase Status",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Supply Planner Hierarchy",
+          "element_b": "Supply Planner Hierarchy",
+          "observation": "Control types: A=dropdown; B=dropdown."
+        },
+        {
+          "category": "MATCH",
+          "element_type": "Filter Control",
+          "element_a": "Vendor",
+          "element_b": "Vendor",
+          "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+        },
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Vendor-Item_Counts",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Vendor-Item_Counts\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Vendor-Item_Counts\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Vendor-Item_Counts\\comparison_result.json",
+        "dashboard_A_screenshots": [],
+        "dashboard_B_screenshots": [],
+        "errors": [
+          "a corresponding screenshot pair is unavailable",
+          "03_multiple_filter_selection failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+        ]
+      }
+    },
+    {
+      "page_name": "To Be Discontinued",
+      "scenario_execution_status": "UNVERIFIED",
+      "scenario_execution_reason": "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed",
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "UNVERIFIED",
+        "state_equivalent": null,
+        "expected_state_applied": null,
+        "items": [],
+        "reason": "Dashboard A and Dashboard B selection records are incomplete",
+        "inventory": {
+          "status": "UNVERIFIED",
+          "items": [],
+          "available_options_status": "UNVERIFIED",
+          "reason": "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\planning\\To_Be_Discontinued\\dashboard_A_plan.json"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\planning\\To_Be_Discontinued\\dashboard_A_plan.json"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\To_Be_Discontinued",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\To_Be_Discontinued\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\To_Be_Discontinued\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\To_Be_Discontinued\\comparison_result.json",
+        "dashboard_A_screenshots": [],
+        "dashboard_B_screenshots": [],
+        "errors": [
+          "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\To_Be_Discontinued\\scenario_execution.json",
+          "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\To_Be_Discontinued\\comparison_result.json",
+          "comparison evidence is missing",
+          "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed"
+        ]
+      }
+    },
+    {
+      "page_name": "Current On Hand",
+      "scenario_execution_status": "UNVERIFIED",
+      "scenario_execution_reason": "dashboard_A filter inventory failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed",
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "UNVERIFIED",
+        "state_equivalent": null,
+        "expected_state_applied": null,
+        "items": [],
+        "reason": "filter selection records are missing",
+        "inventory": {
+          "status": "UNVERIFIED",
+          "items": [],
+          "available_options_status": "UNVERIFIED",
+          "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Current_On_Hand",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Current_On_Hand\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Current_On_Hand\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Current_On_Hand\\comparison_result.json",
+        "dashboard_A_screenshots": [],
+        "dashboard_B_screenshots": [],
+        "errors": [
+          "a corresponding screenshot pair is unavailable",
+          "dashboard_A filter inventory failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+        ]
+      }
+    },
+    {
+      "page_name": "Item Level Order Mods",
+      "scenario_execution_status": "UNVERIFIED",
+      "scenario_execution_reason": "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed",
+      "comparison_status": "UNVERIFIED",
+      "filter_comparison": {
+        "status": "UNVERIFIED",
+        "state_equivalent": null,
+        "expected_state_applied": null,
+        "items": [],
+        "reason": "Dashboard A and Dashboard B selection records are incomplete",
+        "inventory": {
+          "status": "UNVERIFIED",
+          "items": [],
+          "available_options_status": "UNVERIFIED",
+          "reason": "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\planning\\Item_Level_Order_Mods\\dashboard_A_plan.json"
+        }
+      },
+      "visual_comparison": {
+        "status": "UNVERIFIED",
+        "reason": "no equivalent, verified screenshot pair is available"
+      },
+      "findings": [
+        {
+          "category": "UNVERIFIED",
+          "element_type": "Available Filter Options",
+          "element_a": null,
+          "element_b": null,
+          "observation": "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\planning\\Item_Level_Order_Mods\\dashboard_A_plan.json"
+        }
+      ],
+      "evidence": {
+        "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+        "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Level_Order_Mods",
+        "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Level_Order_Mods\\execution_status.json",
+        "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Level_Order_Mods\\scenario_execution.json",
+        "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Level_Order_Mods\\comparison_result.json",
+        "dashboard_A_screenshots": [],
+        "dashboard_B_screenshots": [],
+        "errors": [
+          "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Level_Order_Mods\\scenario_execution.json",
+          "missing evidence file: C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Item_Level_Order_Mods\\comparison_result.json",
+          "comparison evidence is missing",
+          "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "page_count": 10,
+    "status_counts": {
+      "PASS": 0,
+      "FAIL": 4,
+      "UNVERIFIED": 6,
+      "SKIPPED": 0
+    },
+    "category_counts": {
+      "ADDITIONAL": 0,
+      "BEHAVIOR_DIFFERENCE": 2,
+      "DIFFERENT_ORDER": 0,
+      "DIFFERENT_VALUE": 1,
+      "MATCH": 66,
+      "MISSING": 0,
+      "RENAMED": 0,
+      "UNVERIFIED": 10,
+      "VISUAL_DIFFERENCE": 7
+    }
+  }
+}

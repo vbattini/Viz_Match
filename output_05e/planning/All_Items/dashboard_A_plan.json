@@ -1,0 +1,83 @@
+{
+  "dashboard": "dashboard_A",
+  "page_name": "All Items",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "DOH Band",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Rank",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Purchase Status",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Department",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "rank",
+    "name_a": "Rank",
+    "name_b": "Rank",
+    "value_a": "B",
+    "value_b": "B"
+  },
+  "multi_filter_plan": {
+    "filter_key": "master vendor",
+    "name_a": "Master Vendor",
+    "name_b": "Master Vendor",
+    "values_a": [
+      "000010 - FAUCET QUEEN INC"
+    ],
+    "values_b": [
+      "000010 - FAUCET QUEEN INC"
+    ]
+  },
+  "drill_candidates": []
+}

@@ -1,0 +1,183 @@
+{
+  "scenario_id": "03",
+  "scenario_name": "Multiple Filter Selection",
+  "page_name": "Executive Summary",
+  "scenario_execution_status": "FAIL",
+  "scenario_execution_reason": null,
+  "comparison_status": "FAIL",
+  "filter_comparison": {
+    "status": "FAIL",
+    "state_equivalent": false,
+    "expected_state_applied": false,
+    "items": [
+      {
+        "category": "DIFFERENT_VALUE",
+        "element_type": "Filter Selection",
+        "element_a": "['All']",
+        "element_b": "['BAKERY']",
+        "observation": "Selected values differ for Department."
+      },
+      {
+        "category": "MATCH",
+        "element_type": "Base Filter Selection",
+        "element_a": "Facility: ['08 - St. Cloud']",
+        "element_b": "Facility: ['08 - St. Cloud']",
+        "observation": "The retained Scenario 02 filter state matches."
+      },
+      {
+        "category": "BEHAVIOR_DIFFERENCE",
+        "element_type": "Multiple Filter Action",
+        "element_a": "['All']",
+        "element_b": "['BAKERY']",
+        "observation": "Evidence does not verify either two selected values in one filter or a verified retained base filter plus an additional selection."
+      }
+    ],
+    "dashboard_A": {
+      "filter": "Department",
+      "requested": [
+        "BAKERY"
+      ],
+      "applied": true,
+      "selected": [
+        "All"
+      ],
+      "verified": false,
+      "base_selection": {
+        "filter": "Facility",
+        "requested": [
+          "08 - St. Cloud"
+        ],
+        "selected": [
+          "08 - St. Cloud"
+        ],
+        "verified": true,
+        "source": "dom_readback"
+      }
+    },
+    "dashboard_B": {
+      "filter": "Department",
+      "requested": [
+        "BAKERY"
+      ],
+      "applied": true,
+      "selected": [
+        "BAKERY"
+      ],
+      "verified": true,
+      "base_selection": {
+        "filter": "Facility",
+        "requested": [
+          "08 - St. Cloud"
+        ],
+        "selected": [
+          "08 - St. Cloud"
+        ],
+        "verified": true,
+        "source": "dom_readback"
+      }
+    },
+    "inventory": {
+      "status": "PASS",
+      "items": [
+        {
+          "category": "MATCH",
+          "name_a": "Department",
+          "name_b": "Department",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Facility",
+          "name_b": "Facility",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Supply Planner Hierarchy",
+          "name_b": "Supply Planner Hierarchy",
+          "control_type_a": "dropdown",
+          "control_type_b": "dropdown"
+        }
+      ],
+      "available_options_status": "UNVERIFIED",
+      "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  },
+  "visual_comparison": {
+    "status": "UNVERIFIED",
+    "reason": "no equivalent, verified screenshot pair is available"
+  },
+  "findings": [
+    {
+      "category": "DIFFERENT_VALUE",
+      "element_type": "Filter Selection",
+      "element_a": "['All']",
+      "element_b": "['BAKERY']",
+      "observation": "Selected values differ for Department."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Base Filter Selection",
+      "element_a": "Facility: ['08 - St. Cloud']",
+      "element_b": "Facility: ['08 - St. Cloud']",
+      "observation": "The retained Scenario 02 filter state matches."
+    },
+    {
+      "category": "BEHAVIOR_DIFFERENCE",
+      "element_type": "Multiple Filter Action",
+      "element_a": "['All']",
+      "element_b": "['BAKERY']",
+      "observation": "Evidence does not verify either two selected values in one filter or a verified retained base filter plus an additional selection."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Department",
+      "element_b": "Department",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Control types: A=dropdown; B=dropdown."
+    },
+    {
+      "category": "UNVERIFIED",
+      "element_type": "Available Filter Options",
+      "element_a": null,
+      "element_b": null,
+      "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  ],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\comparison_result.json",
+    "dashboard_A_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\dashboard_A.png"
+      }
+    ],
+    "dashboard_B_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\03_multiple_filter_selection\\Executive_Summary\\dashboard_B.png"
+      }
+    ],
+    "errors": []
+  }
+}

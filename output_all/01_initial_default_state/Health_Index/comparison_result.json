@@ -1,0 +1,40 @@
+{
+  "filters": [
+    {
+      "filter_key": "facility",
+      "name_a": "Facility",
+      "name_b": "Facility",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "supply planner hierarchy",
+      "name_a": "Supply Planner Hierarchy",
+      "name_b": "Supply Planner Hierarchy",
+      "selected_a": [
+        "All"
+      ],
+      "selected_b": [
+        "All"
+      ],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "time hierarchy",
+      "name_a": "Time Hierarchy",
+      "name_b": "Time Hierarchy",
+      "selected_a": [
+        "All"
+      ],
+      "selected_b": [
+        "All"
+      ],
+      "status": "MATCH"
+    }
+  ],
+  "screenshots": {
+    "dashboard_A": "output_all\\01_initial_default_state\\Health_Index\\dashboard_A.png",
+    "dashboard_B": "output_all\\01_initial_default_state\\Health_Index\\dashboard_B.png"
+  }
+}

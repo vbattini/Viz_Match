@@ -1,0 +1,392 @@
+{
+  "page_name": "Executive Summary",
+  "status": "FAIL",
+  "dashboard_A": {
+    "report_title": "Inventory Insights",
+    "dashboard_title": "Executive Summary",
+    "filters": [
+      {
+        "name": "Facility",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Supply Planner Hierarchy",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Department",
+        "control_type": "Dropdown"
+      }
+    ],
+    "titles": [
+      {
+        "role": "report_title",
+        "text": "Inventory Insights"
+      },
+      {
+        "role": "dashboard_title",
+        "text": "Executive Summary"
+      },
+      {
+        "role": "section_title",
+        "text": "Active Dashboard Alerts:"
+      },
+      {
+        "role": "filter_title",
+        "text": "Facility"
+      },
+      {
+        "role": "filter_title",
+        "text": "Supply Planner Hierarchy"
+      },
+      {
+        "role": "filter_title",
+        "text": "Department"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Hand $"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Order $"
+      },
+      {
+        "role": "visual_title",
+        "text": "Fill Rate"
+      },
+      {
+        "role": "visual_title",
+        "text": "Health Index"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Hand $ by Facility"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Hand $ Trending"
+      },
+      {
+        "role": "visual_title",
+        "text": "Fill Rate"
+      },
+      {
+        "role": "visual_title",
+        "text": "Buy-Side Shrink"
+      },
+      {
+        "role": "visual_title",
+        "text": "Health Index by Facility"
+      }
+    ],
+    "visuals": [
+      {
+        "title": "On Hand $",
+        "visual_type": "Card",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "On Order $",
+        "visual_type": "Card",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Fill Rate",
+        "visual_type": "KPI",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Health Index",
+        "visual_type": "KPI",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "On Hand $ by Facility",
+        "visual_type": "Horizontal Bar Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "On Hand $ Trending",
+        "visual_type": "Area Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Fill Rate",
+        "visual_type": "Column Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Buy-Side Shrink",
+        "visual_type": "Column Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Health Index by Facility",
+        "visual_type": "Column Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      }
+    ]
+  },
+  "dashboard_B": {
+    "report_title": "Inventory Insights",
+    "dashboard_title": "Executive Summary",
+    "filters": [
+      {
+        "name": "Facility",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Supply Planner Hierarchy",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Department",
+        "control_type": "Dropdown"
+      }
+    ],
+    "titles": [
+      {
+        "role": "report_title",
+        "text": "Inventory Insights"
+      },
+      {
+        "role": "dashboard_title",
+        "text": "Executive Summary"
+      },
+      {
+        "role": "section_title",
+        "text": "Active Dashboard Alerts:"
+      },
+      {
+        "role": "filter_title",
+        "text": "Facility"
+      },
+      {
+        "role": "filter_title",
+        "text": "Supply Planner Hierarchy"
+      },
+      {
+        "role": "filter_title",
+        "text": "Department"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Hand $"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Order $"
+      },
+      {
+        "role": "visual_title",
+        "text": "Fill Rate"
+      },
+      {
+        "role": "visual_title",
+        "text": "Health Index"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Hand $ by Facility"
+      },
+      {
+        "role": "visual_title",
+        "text": "On Hand $ Trending"
+      },
+      {
+        "role": "visual_title",
+        "text": "Fill Rate"
+      },
+      {
+        "role": "visual_title",
+        "text": "Buy-Side Shrink"
+      },
+      {
+        "role": "visual_title",
+        "text": "Health Index by Facility"
+      }
+    ],
+    "visuals": [
+      {
+        "title": "On Hand $",
+        "visual_type": "Card",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "On Order $",
+        "visual_type": "Card",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Fill Rate",
+        "visual_type": "KPI",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Health Index",
+        "visual_type": "KPI",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "On Hand $ by Facility",
+        "visual_type": "Horizontal Bar Chart",
+        "rendering_status": "Blank",
+        "table_headers": []
+      },
+      {
+        "title": "On Hand $ Trending",
+        "visual_type": "Area Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      },
+      {
+        "title": "Fill Rate",
+        "visual_type": "Column Chart",
+        "rendering_status": "Blank",
+        "table_headers": []
+      },
+      {
+        "title": "Buy-Side Shrink",
+        "visual_type": "Column Chart",
+        "rendering_status": "Blank",
+        "table_headers": []
+      },
+      {
+        "title": "Health Index by Facility",
+        "visual_type": "Column Chart",
+        "rendering_status": "Rendered",
+        "table_headers": []
+      }
+    ]
+  },
+  "findings": [
+    {
+      "element_type": "Report Title",
+      "status": "PASS",
+      "element_a": "Inventory Insights",
+      "element_b": "Inventory Insights",
+      "observation": "Report titles match exactly."
+    },
+    {
+      "element_type": "Dashboard Title",
+      "status": "PASS",
+      "element_a": "Executive Summary",
+      "element_b": "Executive Summary",
+      "observation": "Dashboard titles match exactly."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Facility (Dropdown)",
+      "element_b": "Facility (Dropdown)",
+      "observation": "Facility filter control is identical across dashboards."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Supply Planner Hierarchy (Dropdown)",
+      "element_b": "Supply Planner Hierarchy (Dropdown)",
+      "observation": "Supply Planner Hierarchy filter control is identical across dashboards."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Department (Dropdown)",
+      "element_b": "Department (Dropdown)",
+      "observation": "Department filter control is identical across dashboards."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "On Hand $ (Card)",
+      "element_b": "On Hand $ (Card)",
+      "observation": "Visual title, type, and rendering match."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "On Order $ (Card)",
+      "element_b": "On Order $ (Card)",
+      "observation": "Visual title, type, and rendering match."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "Fill Rate (KPI)",
+      "element_b": "Fill Rate (KPI)",
+      "observation": "Visual title and type match; both are rendered."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "Health Index (KPI)",
+      "element_b": "Health Index (KPI)",
+      "observation": "Visual title and type match; both are rendered."
+    },
+    {
+      "element_type": "Visual",
+      "status": "FAIL",
+      "element_a": "On Hand $ by Facility (Horizontal Bar Chart)",
+      "element_b": "On Hand $ by Facility (Horizontal Bar Chart)",
+      "observation": "Visual renders bar series data in Dashboard A but is blank without data bars in Dashboard B."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "On Hand $ Trending (Area Chart)",
+      "element_b": "On Hand $ Trending (Area Chart)",
+      "observation": "Visual title, type, and rendering match."
+    },
+    {
+      "element_type": "Visual",
+      "status": "FAIL",
+      "element_a": "Fill Rate (Column Chart)",
+      "element_b": "Fill Rate (Column Chart)",
+      "observation": "Visual renders column data in Dashboard A but is blank without data bars in Dashboard B."
+    },
+    {
+      "element_type": "Visual",
+      "status": "FAIL",
+      "element_a": "Buy-Side Shrink (Column Chart)",
+      "element_b": "Buy-Side Shrink (Column Chart)",
+      "observation": "Visual renders column data in Dashboard A but is blank without data bars in Dashboard B."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "Health Index by Facility (Column Chart)",
+      "element_b": "Health Index by Facility (Column Chart)",
+      "observation": "Visual title, type, and rendering match."
+    }
+  ],
+  "notes": [
+    "Dashboard B has three chart visuals ('On Hand $ by Facility', 'Fill Rate', and 'Buy-Side Shrink') that render with empty plot areas."
+  ],
+  "evidence": {
+    "dashboard_A_screenshots": {
+      "initial": {
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Executive_Summary\\dashboard_A\\initial.png"
+      }
+    },
+    "dashboard_B_screenshots": {
+      "initial": {
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Executive_Summary\\dashboard_B\\initial.png"
+      }
+    },
+    "errors": []
+  }
+}

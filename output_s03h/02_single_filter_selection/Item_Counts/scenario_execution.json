@@ -1,0 +1,30 @@
+{
+  "plan": {
+    "filter_key": "master vendor",
+    "name_a": "Master Vendor",
+    "name_b": "Master Vendor",
+    "value_a": "000017 - G&W LABORATORIES",
+    "value_b": "000017 - G&W LABORATORIES"
+  },
+  "steps": [
+    {
+      "filter": "Master Vendor",
+      "requested": [
+        "000017 - G&W LABORATORIES"
+      ],
+      "applied": false,
+      "error": "UnavailableFilterOptionError: Option '000017 - G&W LABORATORIES' is unavailable for filter 'Master Vendor' in filter popup after waiting for the option list and popup search; available options: ['Select all', '(Blank)', '000003 - ADVANTAGE SALES & MARKETING', '000004 - AMERICAN FOODS GROUP', '000005 - CALICO BRANDS INC', '000006 - PETKING INC', '000008 - GLOVE SPECIALTIES INC', '000009 - WM BARR COMPANY', '000010 - FAUCET QUEEN INC', '000011 - CALIFORNIA SCENTS', '000012 - CANDLE LITE', '000014 - BEAUMONT PRODUCTS INC']",
+      "verified": null
+    },
+    {
+      "filter": "Master Vendor",
+      "requested": [
+        "000017 - G&W LABORATORIES"
+      ],
+      "applied": false,
+      "error": "UnavailableFilterOptionError: Option '000017 - G&W LABORATORIES' is unavailable for filter 'Master Vendor' in filter popup after waiting for the option list and popup search; available options: ['Select all', '(Blank)', '000003 - ADVANTAGE SALES & MARKETING', '000004 - AMERICAN FOODS GROUP', '000005 - CALICO BRANDS INC', '000006 - PETKING INC', '000008 - GLOVE SPECIALTIES INC', '000009 - WM BARR COMPANY', '000010 - FAUCET QUEEN INC', '000011 - CALIFORNIA SCENTS', '000012 - CANDLE LITE', '000014 - BEAUMONT PRODUCTS INC']",
+      "verified": null
+    }
+  ],
+  "restored": true
+}

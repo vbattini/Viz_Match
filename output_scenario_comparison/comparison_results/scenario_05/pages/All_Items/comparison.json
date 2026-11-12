@@ -1,0 +1,415 @@
+{
+  "scenario_id": "05",
+  "scenario_name": "Table and Matrix Headers",
+  "page_name": "All Items",
+  "scenario_execution_status": "PASS",
+  "scenario_execution_reason": null,
+  "comparison_status": "PASS",
+  "filter_comparison": {
+    "status": "NOT_APPLICABLE",
+    "state_equivalent": null,
+    "items": []
+  },
+  "visual_comparison": {
+    "status": "PASS",
+    "headers_a": [
+      "2nd Lvl Manager",
+      "Manager",
+      "Supply Planner",
+      "Facility",
+      "Item Nbr HS",
+      "Case UPC",
+      "Unit UPC",
+      "Description",
+      "Dept",
+      "Master Vendor",
+      "Vendor",
+      "Item Rank",
+      "Code Date Max",
+      "Code Date Min",
+      "Shelf Life",
+      "List Cost",
+      "On Hand $",
+      "On Hand Cases",
+      "Cases Per Day",
+      "On Order Cases",
+      "Days on Hand",
+      "DOH Band",
+      "Purchase Status",
+      "DFAI Forcast Ind",
+      "Reserve Committed",
+      "Stock Facility",
+      "Set Code"
+    ],
+    "headers_b": [
+      "2nd Lvl Manager",
+      "Manager",
+      "Supply Planner",
+      "Facility",
+      "Item Nbr HS",
+      "Case UPC",
+      "Unit UPC",
+      "Description",
+      "Dept",
+      "Master Vendor",
+      "Vendor",
+      "Item Rank",
+      "Code Date Max",
+      "Code Date Min",
+      "Shelf Life",
+      "List Cost",
+      "On Hand $",
+      "On Hand Cases",
+      "Cases Per Day",
+      "On Order Cases",
+      "Days on Hand",
+      "DOH Band",
+      "Purchase Status",
+      "DFAI Forcast Ind",
+      "Reserve Committed",
+      "Stock Facility",
+      "Set Code"
+    ],
+    "notes": [
+      "All 27 column headers match exactly in label and order across both dashboards."
+    ],
+    "source_result": {
+      "status": "PASS",
+      "tables_found_a": true,
+      "tables_found_b": true,
+      "headers_a": [
+        "2nd Lvl Manager",
+        "Manager",
+        "Supply Planner",
+        "Facility",
+        "Item Nbr HS",
+        "Case UPC",
+        "Unit UPC",
+        "Description",
+        "Dept",
+        "Master Vendor",
+        "Vendor",
+        "Item Rank",
+        "Code Date Max",
+        "Code Date Min",
+        "Shelf Life",
+        "List Cost",
+        "On Hand $",
+        "On Hand Cases",
+        "Cases Per Day",
+        "On Order Cases",
+        "Days on Hand",
+        "DOH Band",
+        "Purchase Status",
+        "DFAI Forcast Ind",
+        "Reserve Committed",
+        "Stock Facility",
+        "Set Code"
+      ],
+      "headers_b": [
+        "2nd Lvl Manager",
+        "Manager",
+        "Supply Planner",
+        "Facility",
+        "Item Nbr HS",
+        "Case UPC",
+        "Unit UPC",
+        "Description",
+        "Dept",
+        "Master Vendor",
+        "Vendor",
+        "Item Rank",
+        "Code Date Max",
+        "Code Date Min",
+        "Shelf Life",
+        "List Cost",
+        "On Hand $",
+        "On Hand Cases",
+        "Cases Per Day",
+        "On Order Cases",
+        "Days on Hand",
+        "DOH Band",
+        "Purchase Status",
+        "DFAI Forcast Ind",
+        "Reserve Committed",
+        "Stock Facility",
+        "Set Code"
+      ],
+      "matching_headers": [
+        "2nd Lvl Manager",
+        "Manager",
+        "Supply Planner",
+        "Facility",
+        "Item Nbr HS",
+        "Case UPC",
+        "Unit UPC",
+        "Description",
+        "Dept",
+        "Master Vendor",
+        "Vendor",
+        "Item Rank",
+        "Code Date Max",
+        "Code Date Min",
+        "Shelf Life",
+        "List Cost",
+        "On Hand $",
+        "On Hand Cases",
+        "Cases Per Day",
+        "On Order Cases",
+        "Days on Hand",
+        "DOH Band",
+        "Purchase Status",
+        "DFAI Forcast Ind",
+        "Reserve Committed",
+        "Stock Facility",
+        "Set Code"
+      ],
+      "missing_headers": [],
+      "additional_headers": [],
+      "renamed_headers": [],
+      "differently_ordered_headers": [],
+      "notes": [
+        "All 27 column headers match exactly in label and order across both dashboards."
+      ]
+    }
+  },
+  "findings": [
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "2nd Lvl Manager",
+      "element_b": "2nd Lvl Manager",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Manager",
+      "element_b": "Manager",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Supply Planner",
+      "element_b": "Supply Planner",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Item Nbr HS",
+      "element_b": "Item Nbr HS",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Case UPC",
+      "element_b": "Case UPC",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Unit UPC",
+      "element_b": "Unit UPC",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Description",
+      "element_b": "Description",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Dept",
+      "element_b": "Dept",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Master Vendor",
+      "element_b": "Master Vendor",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Vendor",
+      "element_b": "Vendor",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Item Rank",
+      "element_b": "Item Rank",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Code Date Max",
+      "element_b": "Code Date Max",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Code Date Min",
+      "element_b": "Code Date Min",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Shelf Life",
+      "element_b": "Shelf Life",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "List Cost",
+      "element_b": "List Cost",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "On Hand $",
+      "element_b": "On Hand $",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "On Hand Cases",
+      "element_b": "On Hand Cases",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Cases Per Day",
+      "element_b": "Cases Per Day",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "On Order Cases",
+      "element_b": "On Order Cases",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Days on Hand",
+      "element_b": "Days on Hand",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "DOH Band",
+      "element_b": "DOH Band",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Purchase Status",
+      "element_b": "Purchase Status",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "DFAI Forcast Ind",
+      "element_b": "DFAI Forcast Ind",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Reserve Committed",
+      "element_b": "Reserve Committed",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Stock Facility",
+      "element_b": "Stock Facility",
+      "observation": "Header matched by LLM Vision."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Table Header",
+      "element_a": "Set Code",
+      "element_b": "Set Code",
+      "observation": "Header matched by LLM Vision."
+    }
+  ],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\visual_comparison.json",
+    "dashboard_A_screenshots": [
+      {
+        "label": "initial",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_A\\initial.png"
+      },
+      {
+        "label": "horizontal_scroll_01",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_A\\horizontal_scroll_01.png"
+      },
+      {
+        "label": "horizontal_scroll_02",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_A\\horizontal_scroll_02.png"
+      },
+      {
+        "label": "horizontal_scroll_03",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_A\\horizontal_scroll_03.png"
+      },
+      {
+        "label": "horizontal_scroll_04",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_A\\horizontal_scroll_04.png"
+      }
+    ],
+    "dashboard_B_screenshots": [
+      {
+        "label": "initial",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_B\\initial.png"
+      },
+      {
+        "label": "horizontal_scroll_01",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_B\\horizontal_scroll_01.png"
+      },
+      {
+        "label": "horizontal_scroll_02",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_B\\horizontal_scroll_02.png"
+      },
+      {
+        "label": "horizontal_scroll_03",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\All_Items\\dashboard_B\\horizontal_scroll_03.png"
+      }
+    ],
+    "errors": []
+  }
+}

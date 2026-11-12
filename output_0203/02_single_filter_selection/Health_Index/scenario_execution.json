@@ -1,0 +1,47 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "29 - San Antonio",
+    "value_b": "29 - San Antonio"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "29 - San Antonio"
+        ],
+        "applied": true,
+        "selected": [
+          "29 - San Antonio"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Health_Index\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false
+    },
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "29 - San Antonio"
+        ],
+        "applied": true,
+        "selected": [
+          "29 - San Antonio"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\Health_Index\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false
+    }
+  ]
+}

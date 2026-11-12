@@ -1,0 +1,238 @@
+{
+  "dashboard_A": [
+    {
+      "name": "Facility",
+      "selector_name": "Facility",
+      "selected": [],
+      "values": [
+        "Select all",
+        "01 - Grand Rapids",
+        "02 - Sioux Falls",
+        "03 - Fargo",
+        "08 - St. Cloud",
+        "15 - Lumberton",
+        "17 - Menominee",
+        "27 - Pensacola",
+        "29 - San Antonio",
+        "33 - Columbus",
+        "38 - Bloomington",
+        "39 - Oklahoma City"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "selector_name": "2nd Lvl Mgr, Manager, Planner",
+      "selected": [
+        "All"
+      ],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "Alona Florenz",
+        "Amanda Stromgren",
+        "Amy Simeri McClellan",
+        "Andrew Connell",
+        "Andrew T Clausen",
+        "Andrew Van Dort",
+        "Anthony Sattler",
+        "Arpen Shah",
+        "Austin Boehler",
+        "Brandon Pasch"
+      ],
+      "control_type": "dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Master Vendor",
+      "selector_name": "Master Vendor",
+      "selected": [],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "1440 FOODS",
+        "1ST NATIONAL CO",
+        "2 MARKET LLC",
+        "2SAN LLC",
+        "3M COMPANY",
+        "4C FOODS CORP",
+        "5 HOUR ENERGY",
+        "A & F EXPORTS, INC.",
+        "A & R PACKING COMPANY",
+        "A TO Z PORTION MEAT"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Vendor",
+      "selector_name": "Vendor",
+      "selected": [],
+      "values": [
+        "Select all",
+        "1440 FOODS",
+        "1440 FOODS DRY",
+        "1440 FOODS GMS",
+        "1440 FOODS WH3",
+        "1ST NATIONAL CO",
+        "2 MARKET LLC",
+        "2SAN LLC DRY",
+        "3M DRY S&K SALES",
+        "3M COMPANY",
+        "3M COMPANY ACE BANDAGE",
+        "3M COMPANY GMS"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Purchase Status",
+      "selector_name": "Purchase Status",
+      "selected": [],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "A",
+        "D",
+        "DPO",
+        "NAM",
+        "NEW",
+        "PHS",
+        "REJ",
+        "S",
+        "SEA"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Department",
+      "selector_name": "Department",
+      "selected": [],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "BAKERY",
+        "COFFEE SHOPS",
+        "DAIRY",
+        "DELI",
+        "FLORAL",
+        "FROZEN",
+        "GEN MDSE",
+        "GROCERY",
+        "GROCERY NON-FOOD",
+        "HBC"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    }
+  ],
+  "dashboard_B": [
+    {
+      "name": "Facility",
+      "selector_name": "Facility",
+      "selected": [],
+      "values": [
+        "Select all",
+        "01 - Grand Rapids",
+        "02 - Sioux Falls",
+        "03 - Fargo",
+        "08 - St. Cloud",
+        "15 - Lumberton",
+        "17 - Menominee",
+        "27 - Pensacola",
+        "29 - San Antonio",
+        "33 - Columbus",
+        "38 - Bloomington",
+        "39 - Oklahoma City"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "selector_name": "2nd Lvl Mgr, Manager, Planner",
+      "selected": [
+        "All"
+      ],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "Alona Florenz",
+        "Amanda Stromgren",
+        "Amy Simeri McClellan",
+        "Andrew Connell",
+        "Andrew T Clausen",
+        "Andrew Van Dort",
+        "Anthony Sattler",
+        "Arpen Shah",
+        "Austin Boehler",
+        "Brandon Pasch"
+      ],
+      "control_type": "dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Master Vendor",
+      "selector_name": "Master Vendor",
+      "selected": [],
+      "values": [
+        "Select all"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Vendor",
+      "selector_name": "Vendor",
+      "selected": [],
+      "values": [
+        "Select all"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Purchase Status",
+      "selector_name": "Purchase Status",
+      "selected": [],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "A",
+        "D",
+        "DPO",
+        "NAM",
+        "NEW",
+        "PHS",
+        "REJ",
+        "S",
+        "SEA"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Department",
+      "selector_name": "Department",
+      "selected": [],
+      "values": [
+        "Select all",
+        "(Blank)",
+        "BAKERY",
+        "COFFEE SHOPS",
+        "DAIRY",
+        "DELI",
+        "FLORAL",
+        "FROZEN",
+        "GEN MDSE",
+        "GROCERY",
+        "GROCERY NON-FOOD",
+        "HBC"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    }
+  ]
+}

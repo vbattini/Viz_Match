@@ -1,0 +1,29 @@
+{
+  "outcome": "UNVERIFIED",
+  "dashboard_A": {
+    "status": "UNVERIFIED",
+    "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Facility'"
+  },
+  "dashboard_B": {
+    "record": {
+      "filter": "Facility",
+      "requested": [
+        "08 - St. Cloud",
+        "27 - Pensacola"
+      ],
+      "applied": false,
+      "error": "RuntimeError: Power BI dropdown did not open after activating its combobox",
+      "verified": false,
+      "selected": [
+        "08 - St. Cloud"
+      ]
+    },
+    "verified": false,
+    "screenshot": "output_03r\\03_multiple_filter_selection\\Weekly_Trending\\dashboard_B.png",
+    "restored": true
+  },
+  "screenshots": {
+    "dashboard_A": null,
+    "dashboard_B": "output_03r\\03_multiple_filter_selection\\Weekly_Trending\\dashboard_B.png"
+  }
+}

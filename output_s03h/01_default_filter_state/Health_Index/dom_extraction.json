@@ -1,0 +1,145 @@
+{
+  "dashboard_A": [
+    {
+      "name": "Facility",
+      "selector_name": "Facility",
+      "selected": [],
+      "values": [
+        "Select all",
+        "01 - Grand Rapids",
+        "02 - Sioux Falls",
+        "03 - Fargo",
+        "08 - St. Cloud",
+        "15 - Lumberton",
+        "17 - Menominee",
+        "27 - Pensacola",
+        "29 - San Antonio",
+        "33 - Columbus",
+        "38 - Bloomington",
+        "39 - Oklahoma City",
+        "40 - Omaha",
+        "50 - Pensacola DG",
+        "51 - Pensacola DT",
+        "54 - NF Distributors",
+        "58 - Lima",
+        "61 - Bluefield",
+        "66 - Belle Cigs",
+        "67 - Omaha Cigs",
+        "69 - Landover",
+        "70 - Norfolk",
+        "71 - Bellefontaine",
+        "79 - Columbus DT",
+        "80 - Columbus DG",
+        "86 - Severn",
+        "87 - Stockton",
+        "90 - San Antonio DG",
+        "92 - Severn MDV"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Time Hierarchy",
+      "selector_name": "Year, Period End, Week End",
+      "selected": [
+        "All"
+      ],
+      "values": [
+        "Select all",
+        "2026",
+        "2027"
+      ],
+      "control_type": "dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "selector_name": "2nd Lvl Mgr, Manager, Planner",
+      "selected": [
+        "All"
+      ],
+      "values": [],
+      "clear_selection_checked": true,
+      "option_inventory_status": "unavailable",
+      "option_inventory_note": "The popup exposed no readable options; the visible aggregate selection was retained.",
+      "control_type": "dropdown"
+    }
+  ],
+  "dashboard_B": [
+    {
+      "name": "Facility",
+      "selector_name": "Facility",
+      "selected": [],
+      "values": [
+        "Select all",
+        "01 - Grand Rapids",
+        "02 - Sioux Falls",
+        "03 - Fargo",
+        "08 - St. Cloud",
+        "15 - Lumberton",
+        "17 - Menominee",
+        "27 - Pensacola",
+        "29 - San Antonio",
+        "33 - Columbus",
+        "38 - Bloomington",
+        "39 - Oklahoma City",
+        "40 - Omaha",
+        "50 - Pensacola DG",
+        "51 - Pensacola DT",
+        "54 - NF Distributors",
+        "58 - Lima",
+        "61 - Bluefield",
+        "66 - Belle Cigs",
+        "67 - Omaha Cigs",
+        "69 - Landover",
+        "70 - Norfolk",
+        "71 - Bellefontaine",
+        "79 - Columbus DT",
+        "80 - Columbus DG",
+        "86 - Severn",
+        "87 - Stockton",
+        "90 - San Antonio DG",
+        "92 - Severn MDV"
+      ],
+      "control_type": "checkbox_dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Time Hierarchy",
+      "selector_name": "Year, Period End, Week End",
+      "selected": [
+        "All"
+      ],
+      "values": [
+        "Select all",
+        "2026.0000000000000000000000000",
+        "2027.0000000000000000000000000"
+      ],
+      "control_type": "dropdown",
+      "clear_selection_checked": true
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "selector_name": "2nd Lvl Mgr, Manager, Planner",
+      "selected": [
+        "All"
+      ],
+      "values": [
+        "Select all",
+        "Alona Florenz",
+        "Amanda Stromgren",
+        "Amy Simeri McClellan",
+        "Andrew Connell",
+        "Andrew T Clausen",
+        "Andrew Van Dort",
+        "Anthony Sattler",
+        "Arpen Shah",
+        "Austin Boehler",
+        "Brandon Pasch",
+        "Charlotte Mascowski"
+      ],
+      "control_type": "dropdown",
+      "clear_selection_checked": true
+    }
+  ]
+}

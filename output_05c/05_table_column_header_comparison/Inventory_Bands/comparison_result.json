@@ -1,0 +1,1400 @@
+{
+  "visuals": [
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 3,
+        "B": 3
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "#",
+          "header_b": "#",
+          "index_a": 1,
+          "index_b": 1
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "%",
+          "header_b": "%",
+          "index_a": 2,
+          "index_b": 2
+        }
+      ],
+      "outcome": "PASS"
+    },
+    {
+      "visual": "",
+      "visual_status": "MATCH",
+      "matched_by": "position",
+      "confidence": {
+        "A": "medium",
+        "B": "medium"
+      },
+      "column_count": {
+        "A": 2,
+        "B": 2
+      },
+      "rows": [
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 0,
+          "index_b": 0
+        },
+        {
+          "status": "MATCH",
+          "reason": "same_name_and_position",
+          "header_a": "",
+          "header_b": "",
+          "index_a": 1,
+          "index_b": 1
+        }
+      ],
+      "outcome": "PASS"
+    }
+  ],
+  "table_visuals": {
+    "A": 35,
+    "B": 35
+  }
+}

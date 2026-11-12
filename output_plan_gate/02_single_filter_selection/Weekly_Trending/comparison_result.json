@@ -1,0 +1,35 @@
+{
+  "outcome": "UNVERIFIED",
+  "dashboard_A": {
+    "record": {
+      "filter": "Supply Planner Hierarchy",
+      "requested": [
+        "Amanda Stromgren"
+      ],
+      "applied": false,
+      "error": "RuntimeError: Clicking option 'Amanda Stromgren' did not change filter 'Supply Planner Hierarchy'; selected values: ['All']",
+      "verified": null
+    },
+    "verified": null,
+    "screenshot": "output_plan_gate\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png",
+    "restored": true
+  },
+  "dashboard_B": {
+    "record": {
+      "filter": "Supply Planner Hierarchy",
+      "requested": [
+        "Amanda Stromgren"
+      ],
+      "applied": false,
+      "error": "RuntimeError: Clicking option 'Amanda Stromgren' did not change filter 'Supply Planner Hierarchy'; selected values: ['All']",
+      "verified": null
+    },
+    "verified": null,
+    "screenshot": "output_plan_gate\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png",
+    "restored": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_plan_gate\\02_single_filter_selection\\Weekly_Trending\\dashboard_A.png",
+    "dashboard_B": "output_plan_gate\\02_single_filter_selection\\Weekly_Trending\\dashboard_B.png"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "scenario_id": "04",
+  "scenario_name": "Drilldown",
+  "page_name": "Executive Summary",
+  "scenario_execution_status": "SKIPPED",
+  "scenario_execution_reason": "no drill-capable visual in DOM",
+  "comparison_status": "SKIPPED",
+  "filter_comparison": {
+    "status": "NOT_APPLICABLE",
+    "state_equivalent": null,
+    "items": []
+  },
+  "visual_comparison": null,
+  "findings": [],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Executive_Summary",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Executive_Summary\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Executive_Summary\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\04_drilldown\\Executive_Summary\\comparison_result.json",
+    "dashboard_A_screenshots": [],
+    "dashboard_B_screenshots": [],
+    "errors": []
+  }
+}

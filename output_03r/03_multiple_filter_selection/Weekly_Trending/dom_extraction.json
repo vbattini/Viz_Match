@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "08 - St. Cloud",
+      "27 - Pensacola"
+    ],
+    "values_b": [
+      "08 - St. Cloud",
+      "27 - Pensacola"
+    ]
+  }
+}

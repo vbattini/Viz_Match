@@ -1,0 +1,29 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "filter": "Vendor",
+    "requested": [
+      "- DACOTAH PAPER CO"
+    ],
+    "applied": true,
+    "selected": [
+      "- DACOTAH PAPER CO"
+    ],
+    "verified": true
+  },
+  "dashboard_B": {
+    "filter": "Vendor",
+    "requested": [
+      "- DACOTAH PAPER CO"
+    ],
+    "applied": true,
+    "selected": [
+      "- DACOTAH PAPER CO"
+    ],
+    "verified": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_live_full\\02_single_filter_selection\\Current_On_Hand\\dashboard_A.png",
+    "dashboard_B": "output_live_full\\02_single_filter_selection\\Current_On_Hand\\dashboard_B.png"
+  }
+}

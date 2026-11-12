@@ -1,0 +1,25 @@
+{
+  "plan": {
+    "filter_key": "department",
+    "name_a": "Department",
+    "name_b": "Department",
+    "values_a": [
+      "BAKERY",
+      "DAIRY"
+    ],
+    "values_b": [
+      "BAKERY",
+      "DAIRY"
+    ]
+  },
+  "steps": [
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Department'"
+    },
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Department'"
+    }
+  ]
+}

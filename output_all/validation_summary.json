@@ -1,0 +1,108 @@
+{
+  "pages": [
+    {
+      "page": "Executive Summary",
+      "statuses": {
+        "01_initial_default_state": "PASS",
+        "02_single_filter_selection": "PASS",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "SKIPPED",
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Weekly Trending",
+      "statuses": {
+        "01_initial_default_state": "PASS",
+        "02_single_filter_selection": "PASS",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "SKIPPED",
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "All Items",
+      "statuses": {
+        "01_initial_default_state": "PASS",
+        "02_single_filter_selection": "PASS",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "SKIPPED",
+        "05_table_column_header_comparison": "FAIL"
+      }
+    },
+    {
+      "page": "Health Index",
+      "statuses": {
+        "01_initial_default_state": "PASS",
+        "02_single_filter_selection": "PASS",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "SKIPPED",
+        "05_table_column_header_comparison": "FAIL"
+      }
+    },
+    {
+      "page": "Inventory Bands",
+      "statuses": {
+        "01_initial_default_state": "PASS",
+        "02_single_filter_selection": "PASS",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "SKIPPED",
+        "05_table_column_header_comparison": "PASS"
+      }
+    },
+    {
+      "page": "Item Counts",
+      "statuses": {
+        "01_initial_default_state": "PASS",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "SKIPPED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Vendor-Item Counts",
+      "statuses": {
+        "01_initial_default_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "page": "To Be Discontinued",
+      "statuses": {
+        "01_initial_default_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Current On Hand",
+      "statuses": {
+        "01_initial_default_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_function: Target page, context or browser has been closed"
+    },
+    {
+      "page": "Item Level Order Mods",
+      "statuses": {
+        "01_initial_default_state": "UNVERIFIED",
+        "02_single_filter_selection": "UNVERIFIED",
+        "03_multiple_filter_selection": "UNVERIFIED",
+        "04_drilldown": "UNVERIFIED",
+        "05_table_column_header_comparison": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_function: Target page, context or browser has been closed"
+    }
+  ]
+}

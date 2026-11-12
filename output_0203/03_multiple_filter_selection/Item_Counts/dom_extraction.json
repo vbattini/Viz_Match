@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "purchase status",
+    "name_a": "Purchase Status",
+    "name_b": "Purchase Status",
+    "values_a": [
+      "NEW",
+      "A"
+    ],
+    "values_b": [
+      "NEW",
+      "A"
+    ]
+  }
+}

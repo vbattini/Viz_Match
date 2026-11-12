@@ -1,0 +1,25 @@
+{
+  "outcome": "UNVERIFIED",
+  "dashboard_A": {
+    "filter": "Supply Planner Hierarchy",
+    "requested": [
+      "Andrew Connell"
+    ],
+    "applied": false,
+    "error": "RuntimeError: Clicking option 'Andrew Connell' did not change filter 'Supply Planner Hierarchy'; selected values: ['All']",
+    "verified": null
+  },
+  "dashboard_B": {
+    "filter": "Supply Planner Hierarchy",
+    "requested": [
+      "Andrew Connell"
+    ],
+    "applied": false,
+    "error": "RuntimeError: Clicking option 'Andrew Connell' did not change filter 'Supply Planner Hierarchy'; selected values: ['All']",
+    "verified": null
+  },
+  "screenshots": {
+    "dashboard_A": "output_s03h\\02_single_filter_selection\\To_Be_Discontinued\\dashboard_A.png",
+    "dashboard_B": "output_s03h\\02_single_filter_selection\\To_Be_Discontinued\\dashboard_B.png"
+  }
+}

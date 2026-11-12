@@ -1,0 +1,39 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "record": {
+      "filter": "Master Vendor",
+      "requested": [
+        "000004 - AMERICAN FOODS GROUP"
+      ],
+      "applied": true,
+      "selected": [
+        "000004 - AMERICAN FOODS GROUP"
+      ],
+      "verified": true
+    },
+    "verified": true,
+    "screenshot": "output_all\\02_single_filter_selection\\Inventory_Bands\\dashboard_A.png",
+    "restored": true
+  },
+  "dashboard_B": {
+    "record": {
+      "filter": "Master Vendor",
+      "requested": [
+        "000004 - AMERICAN FOODS GROUP"
+      ],
+      "applied": true,
+      "selected": [
+        "000004 - AMERICAN FOODS GROUP"
+      ],
+      "verified": true
+    },
+    "verified": true,
+    "screenshot": "output_all\\02_single_filter_selection\\Inventory_Bands\\dashboard_B.png",
+    "restored": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_all\\02_single_filter_selection\\Inventory_Bands\\dashboard_A.png",
+    "dashboard_B": "output_all\\02_single_filter_selection\\Inventory_Bands\\dashboard_B.png"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "dashboard": "dashboard_B",
+  "page_name": "Weekly Trending",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "DOH Bands",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Rank",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "master vendor",
+    "name_a": "Master Vendor",
+    "name_b": "Master Vendor",
+    "value_a": "000003 - ADVANTAGE SALES & MARKETING",
+    "value_b": "000003 - ADVANTAGE SALES & MARKETING"
+  },
+  "multi_filter_plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "01 - Grand Rapids"
+    ],
+    "values_b": [
+      "01 - Grand Rapids"
+    ]
+  },
+  "drill_candidates": []
+}

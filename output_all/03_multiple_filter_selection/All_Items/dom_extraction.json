@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "rank",
+    "name_a": "Rank",
+    "name_b": "Rank",
+    "values_a": [
+      "C",
+      "U"
+    ],
+    "values_b": [
+      "C",
+      "U"
+    ]
+  }
+}

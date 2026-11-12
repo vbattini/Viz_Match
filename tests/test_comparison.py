@@ -4,7 +4,7 @@ from dataclasses import replace
 
 from openpyxl import load_workbook
 
-from powerbi_dashboard_comparator.comparison import (
+from Backend.comparison import (
     _apply_bookmark_associations,
     _bookmark_association_labels,
     _merge_metadata_label_values,
@@ -12,8 +12,8 @@ from powerbi_dashboard_comparator.comparison import (
     merge_incremental_comparisons,
     write_comparison,
 )
-from powerbi_dashboard_comparator.docx_report import write_docx_report
-from powerbi_dashboard_comparator.models import (
+from Backend.docx_report import write_docx_report
+from Backend.models import (
     DashboardState,
     FilterCombination,
     FilterSelection,
@@ -420,7 +420,7 @@ def test_comparison_docx_formats_filter_validation_log_and_result_dropdowns(
         assert [
             item.get(qn("w:displayText"))
             for item in dropdown.findall(qn("w:listItem"))
-        ] == ["Pass", "Fail", "Unable to Verify"]
+        ] == ["Pass", "Fail"]
         assert dropdown.get(qn("w:lastValue")) == expected_status
         assert "".join(
             node.text or ""
@@ -462,7 +462,7 @@ def test_comparison_docx_formats_filter_validation_log_and_result_dropdowns(
         )
         cell = worksheet.cell(row, 7)
         assert cell.fill.fill_type is None
-        assert cell.font.size == 14 and cell.font.bold
+        assert cell.font.size == 11 and not cell.font.bold
         assert cell.font.color.rgb[-6:] == (
             "C00000" if expected_status == "Fail" else "008000"
         )
@@ -470,6 +470,38 @@ def test_comparison_docx_formats_filter_validation_log_and_result_dropdowns(
     workbook.close()
     text = _docx_text(output)
     assert "\u2705" not in text and "\u274c" not in text
+
+
+def test_comparison_docx_uses_submitted_dashboard_metadata(
+    tmp_path: Path,
+) -> None:
+    import docx
+
+    result = compare_dashboards([_state("A", "Snowflake")], [_state("B", "GCP")])
+    output = tmp_path / "metadata.docx"
+    write_docx_report(
+        result,
+        output,
+        "Dashboard A",
+        "Dashboard B",
+        report_metadata={
+            "inputs": {
+                "report_name": "Active Items",
+                "semantic_model": "Wholesale Data Model",
+            },
+            "dashboard_a": {"workspace_name": "Supply Chain Dashboards"},
+            "dashboard_b": {
+                "workspace_name": "Tredence Supply Chain Dashboards"
+            },
+        },
+    )
+
+    document = docx.Document(output)
+    assert document.paragraphs[0].text == "Active Items"
+    assert document.tables[0].cell(0, 1).text == "Active Items"
+    assert document.tables[0].cell(1, 1).text == "Wholesale Data Model"
+    assert document.tables[0].cell(2, 1).text == "Supply Chain Dashboards"
+    assert document.tables[0].cell(3, 1).text == "Tredence Supply Chain Dashboards"
 
 
 def test_comparison_docx_populates_only_template_sections(
@@ -504,40 +536,53 @@ def test_comparison_docx_populates_only_template_sections(
     output = tmp_path / "comparison.docx"
 
     write_docx_report(
-        result, output, "Dashboard A", "Dashboard B", report_date="04-Nov-2026"
+        result,
+        output,
+        "Dashboard A",
+        "Dashboard B",
+        report_date="04-Nov-2026",
+        report_metadata={
+            "inputs": {
+                "report_name": "Active Items",
+                "semantic_model": "Wholesale Data Model",
+            },
+            "dashboard_a": {"workspace_name": "Supply Chain Dashboards"},
+            "dashboard_b": {
+                "workspace_name": "Tredence Supply Chain Dashboards"
+            },
+        },
     )
 
     document = docx.Document(output)
     text = _docx_text(output)
-    assert document.paragraphs[0].text == "Snowflake Sales"
-    assert document.tables[0].cell(0, 1).text == "Snowflake Sales"
-    assert document.tables[0].cell(1, 1).text == "Snowflake Sales"
-    assert document.tables[0].cell(2, 1).text == "Snowflake Sales"
-    assert document.tables[0].cell(3, 1).text == "GCP Sales"
+    assert document.paragraphs[0].text == "Active Items"
+    assert document.tables[0].cell(0, 1).text == "Active Items"
+    assert document.tables[0].cell(1, 1).text == "Wholesale Data Model"
+    assert document.tables[0].cell(2, 0).text == "Snowflake Workspace Name"
+    assert document.tables[0].cell(3, 0).text == "GCP Workspace Name"
+    assert document.tables[0].cell(2, 1).text == "Supply Chain Dashboards"
+    assert document.tables[0].cell(3, 1).text == "Tredence Supply Chain Dashboards"
     assert "Snowflake vs. GCP Power BI Report Validation" in text
     assert "BigQuery" not in text
-    assert "GCP Sales" in text
+    assert "GCP Sales" not in text
     assert "Snowflake Model" not in text and "GCP Model" not in text
-    assert "Snowflake Workspace" not in text and "GCP Workspace" not in text
+    assert "Snowflake Workspace Name" in text
+    assert "GCP Workspace Name" in text
+    assert "Snowflake Work Space Name" not in text
+    assert "GCP Work Space Name" not in text
     assert "5. Filter / Slicer Value Comparison" not in text
     assert "6. Screenshot Evidence" not in text
     assert "7. Data Export Validation Log" not in text
     assert document.tables[1].cell(0, 0)._tc.tcPr.xml == template_header_style
     assert len(document.tables) == 4
     assert len(document.inline_shapes) == 0
-    assert "Current screenshots are not available" in text
+    assert "Page / Scenario:" not in text
+    assert "Current screenshots are not available" not in text
+    assert "Current screenshot not available" not in text
     filter_log = document.tables[1]
-    assert filter_log.cell(1, 2).text == "No filter selections captured."
-    assert filter_log.cell(1, 3).text == (
-        "Filters are applied and visuals are working as expected."
-    )
-    filter_status_control = filter_log.cell(1, 4)._tc.xpath(".//w:sdt")[0]
-    assert "".join(
-        node.text or ""
-        for node in filter_status_control.find(
-            qn("w:sdtContent")
-        ).iter(qn("w:t"))
-    ) == "Unable to Verify"
+    assert len(filter_log.rows) == 1
+    assert "No filter selections captured." not in text
+
     signoff = document.tables[3]
     assert signoff.cell(0, 0).text == "Result Status Dropdown (Pass/Fail)"
     status_control = signoff.cell(0, 1)._tc.xpath(".//w:sdt")[0]
@@ -545,21 +590,21 @@ def test_comparison_docx_populates_only_template_sections(
     dropdown = properties.find(qn("w:dropDownList"))
     assert [
         node.text for node in status_control.find(qn("w:sdtContent")).iter(qn("w:t"))
-    ] == ["Fail"]
+    ] == ["Pass"]
     assert properties.find(qn("w:alias")).get(qn("w:val")) == (
         "Result Status Dropdown (Pass/Fail)"
     )
     assert [
         item.get(qn("w:displayText"))
         for item in dropdown.findall(qn("w:listItem"))
-    ] == ["Pass", "Fail"]
+    ] == ["Pass", "Fail", "Unable to Verify"]
     for cell in (document.tables[0].cell(6, 1), signoff.cell(0, 1)):
         control = cell._tc.xpath(".//w:sdt")[0]
         assert "".join(
             node.text or ""
             for node in control.find(qn("w:sdtContent")).iter(qn("w:t"))
-        ) == "Fail"
-        _assert_status_cell_style(cell, "C00000")
+        ) == "Pass"
+        _assert_status_cell_style(cell, "008000")
     assert "☐" not in text and "☑" not in text
 
 
@@ -687,52 +732,25 @@ def test_comparison_docx_includes_screenshots_for_every_page(
         elif child.tag == qn("w:tbl"):
             blocks.append(("table", Table(child, document)))
 
-    def section_content(heading: str, next_heading: str):
-        start = next(
-            index
-            for index, (kind, block) in enumerate(blocks)
-            if kind == "paragraph" and block.text.strip() == heading
-        )
-        end = next(
-            index
-            for index in range(start + 1, len(blocks))
-            if blocks[index][0] == "paragraph"
-            and blocks[index][1].text.strip() == next_heading
-        )
-        return blocks[start + 1 : end]
-
-    sections = (
-        (
-            "2.1 Page-by-Page Screenshots (Snowflake vs. GCP)",
-            "3. Visual & Functional Validation Log",
-        ),
-        (
-            "3.1 Page-by-Page Screenshots (Snowflake vs. GCP)",
-            "4. Summary & Sign-off",
-        ),
-    )
-    for heading, next_heading in sections:
-        content = section_content(heading, next_heading)
-        captions = [
-            block.text.strip()
-            for kind, block in content
-            if kind == "paragraph" and block.text.startswith("Page/Tab Name:")
+    page_captions = [
+        (index, block)
+        for index, (kind, block) in enumerate(blocks)
+        if kind == "paragraph" and block.text.strip() in screenshot_paths
+    ]
+    assert [block.text.strip() for _index, block in page_captions] == [
+        "Inventory",
+        "Sales",
+        "Inventory",
+        "Sales",
+    ]
+    for index, _caption in page_captions:
+        following = blocks[index + 1 : index + 5]
+        assert [block.text for kind, block in following if kind == "paragraph" and block.text] == [
+            "Snowflake",
+            "GCP",
         ]
-        assert captions == ["Page/Tab Name: Sales", "Page/Tab Name: Inventory"]
-        for index, (kind, block) in enumerate(content):
-            if kind != "paragraph" or not block.text.startswith("Page/Tab Name:"):
-                continue
-            snowflake_label = content[index + 1][1]
-            snowflake_image = content[index + 2][1]
-            gcp_label = content[index + 3][1]
-            gcp_image = content[index + 4][1]
-            assert [snowflake_label.text, gcp_label.text] == ["Snowflake", "GCP"]
-            assert len(snowflake_image._p.xpath(".//w:drawing")) == 1
-            assert len(gcp_image._p.xpath(".//w:drawing")) == 1
-            assert all(
-                kind == "paragraph"
-                for kind, _block in content[index + 1 : index + 5]
-            )
+        assert len(following[1][1]._p.xpath(".//w:drawing")) == 1
+        assert len(following[3][1]._p.xpath(".//w:drawing")) == 1
 
     assert all(
         shape.width <= Inches(6.0) and shape.height <= Inches(4.5)
@@ -807,7 +825,7 @@ def test_comparison_docx_omits_slicer_comparison_appendix(
     assert len(document.tables) == 4
     assert "Filter / Slicer Value Comparison" not in text
     assert "Associated Visual A" not in text
-    assert "No filter selections captured." in text
+    assert "No filter selections captured." not in text
 
 
 def test_comparison_normalizes_currency_zero() -> None:
@@ -3479,8 +3497,9 @@ def test_visual_validation_tab_compares_visuals_and_embeds_page_screenshots(
     workbook = load_workbook(tmp_path / "Dashboard_Comparison.xlsx")
     assert "Visual_Validation" in workbook.sheetnames
     sheet = workbook["Visual_Validation"]
-    assert [sheet.cell(1, column).value for column in range(1, 8)] == [
+    assert [sheet.cell(1, column).value for column in range(1, 9)] == [
         "Visual Differences Summary",
+        None,
         None,
         None,
         None,
@@ -3492,26 +3511,26 @@ def test_visual_validation_tab_compares_visuals_and_embeds_page_screenshots(
         row
         for row in range(1, sheet.max_row + 1)
         if sheet.cell(row, 1).value == "ID"
-        and sheet.cell(row, 5).value == "Visual / Check"
+        and sheet.cell(row, 5).value == "Visual Name"
+        and sheet.cell(row, 6).value == "Visual / Check"
     )
-    assert [sheet.cell(summary_header_row, column).value for column in range(1, 8)] == [
+    assert [sheet.cell(summary_header_row, column).value for column in range(1, 9)] == [
         "ID",
         "Page / Area",
         "Compare Dashboard",
         "Base Dashboard",
+        "Visual Name",
         "Visual / Check",
         "Observation",
         "Result",
     ]
-    technical_title_row = next(
-        row
-        for row in range(1, sheet.max_row + 1)
-        if sheet.cell(row, 1).value == "Visual Inventory & Screenshots"
-    )
+    technical_title_row = sheet.max_row + 1
     summary_rows = {
-        sheet.cell(row, 3).value: row
-        for row in range(summary_header_row + 1, technical_title_row)
+        sheet.cell(row, column).value: row
+        for row in range(1, technical_title_row)
         if str(sheet.cell(row, 1).value or "").isdigit()
+        for column in (3, 5)
+        if sheet.cell(row, column).value
     }
     summary_sections = {
         sheet.cell(row, 1).value
@@ -3530,10 +3549,17 @@ def test_visual_validation_tab_compares_visuals_and_embeds_page_screenshots(
     }
     assert sheet.cell(summary_rows["Facility"], 4).value == "All"
     assert sheet.cell(summary_rows["Supply Planner Hierarchy"], 5).value == "All"
-    assert sheet.cell(summary_rows["Department"], 6).value == "Filter selection matches."
+    assert sheet.cell(summary_rows["Department"], 6).value == (
+        "Filter selection successfully verified on both dashboards."
+    )
     assert "Data Refresh Date" not in summary_rows
-    assert sheet.cell(summary_rows["On Hand $"], 7).value == "Pass"
-    assert sheet.cell(summary_rows["On Order $"], 7).value == "Fail"
+    assert sheet.cell(summary_rows["On Order $"], 5).value == "On Order $"
+    assert (
+        sheet.cell(summary_rows["On Order $"], 6).value
+        == sheet.cell(summary_rows["On Order $"], 4).value
+    )
+    assert sheet.cell(summary_rows["On Hand $"], 8).value == "Pass"
+    assert sheet.cell(summary_rows["On Order $"], 8).value == "Fail"
     assert "Filters Pane" not in summary_rows
     result_summary_row = next(
         row
@@ -3549,37 +3575,15 @@ def test_visual_validation_tab_compares_visuals_and_embeds_page_screenshots(
     for label in ("Pass", "Fail", "Unable to Verify"):
         assert sheet.cell(result_count_rows[label], 2).value.startswith("=COUNTIF(")
     assert sheet.cell(result_count_rows["Total Checks"], 2).value.startswith("=SUM(")
-
-    technical_header_row = next(
-        row
-        for row in range(technical_title_row + 1, sheet.max_row + 1)
-        if sheet.cell(row, 1).value == "ID"
-        and sheet.cell(row, 3).value == "Visual Name"
+    assert not any(
+        sheet.cell(row, 1).value == "Visual Inventory & Screenshots"
+        for row in range(1, sheet.max_row + 1)
     )
-    assert sheet.cell(technical_header_row, 2).value == "Page / Area"
-    assert sheet.cell(technical_header_row + 1, 2).value == "Executive Summary"
-    assert sheet.cell(technical_header_row + 1, 3).value == "On Hand $"
-    assert sheet.cell(technical_header_row + 1, 4).value == (
-        "Facility: All\nSupply Planner Hierarchy: All\nDepartment: All"
-    )
-    assert sheet.cell(technical_header_row + 1, 6).value == "KPI"
-    assert sheet.cell(technical_header_row + 1, 7).value == "KPI"
-    assert sheet.cell(technical_header_row + 1, 13).value == "Pass"
-    assert sheet.cell(technical_header_row + 2, 3).value == "On Order $"
-    assert sheet.cell(technical_header_row + 2, 13).value == "Fail"
-    assert len(sheet._images) == 2
-    assert all(
-        image.anchor._from.row == technical_header_row
-        for image in sheet._images
-    )
-    summary_validation, technical_validation = sheet.data_validations.dataValidation
+    assert len(sheet._images) == 0
+    (summary_validation,) = sheet.data_validations.dataValidation
     assert summary_validation.type == "list"
     assert summary_validation.formula1 == '"Pass,Fail,Unable to Verify"'
-    assert f"G{summary_rows['On Hand $']}" in str(summary_validation.sqref)
-    assert technical_validation.type == "list"
-    assert technical_validation.formula1 == '"Pass,Fail,Unable to Verify"'
-    assert f"M{technical_header_row + 1}" in str(technical_validation.sqref)
-    assert f"M{technical_header_row + 2}" in str(technical_validation.sqref)
+    assert f"H{summary_rows['On Hand $']}" in str(summary_validation.sqref)
     workbook.close()
 
 
@@ -3603,7 +3607,7 @@ def test_visual_validation_omits_uncaptured_dashboard_page_checks(
     workbook.close()
 
 
-def test_docx_visual_validation_log_uses_unique_visual_types_and_default_filters(
+def test_docx_visual_validation_log_uses_excel_visual_check_values_and_filters(
     tmp_path: Path,
 ) -> None:
     from docx import Document
@@ -3639,7 +3643,36 @@ def test_docx_visual_validation_log_uses_unique_visual_types_and_default_filters
                 "page": "Sales",
                 "visual_name": "Customer Matrix",
                 "visual_type_a": "Matrix",
-                "visual_type_b": "Table",
+                "visual_type_b": "Line Chart",
+                "status": "MATCH",
+            },
+            {
+                "page": "Sales",
+                "visual_name": "-",
+                "visual_id_a": "3 visuals",
+                "visual_id_b": "2 visuals",
+                "visual_type_a": "-",
+                "visual_type_b": "-",
+                "status": "INFO",
+                "comparison_notes": "Visual count differs between dashboards",
+            },
+            {
+                "page": "Sales",
+                "visual_name": "Calendar",
+                "visual_type_a": "Missing",
+                "visual_type_b": "Slicer / Dropdown",
+                "status": "DIFFERENT",
+                "comparison_notes": (
+                    "Visual is present in Dashboard B and no corresponding "
+                    "visual is present in Dashboard A"
+                ),
+                "state": state_a.state_key,
+            },
+            {
+                "page": "Sales",
+                "visual_name": "Department Dropdown",
+                "visual_type_a": "Slicer / Dropdown",
+                "visual_type_b": "Slicer / Dropdown",
                 "status": "MATCH",
             },
         ],
@@ -3650,6 +3683,8 @@ def test_docx_visual_validation_log_uses_unique_visual_types_and_default_filters
                 "filter_name": "Calendar",
                 "selected_values_a": "All",
                 "selected_values_b": "All",
+                "filter_type_a": "Unknown",
+                "filter_type_b": "Unknown",
                 "aligned_position": 1,
                 "status": "MATCH",
             },
@@ -3671,32 +3706,129 @@ def test_docx_visual_validation_log_uses_unique_visual_types_and_default_filters
     assert [cell.text for cell in table.rows[1].cells[:4]] == [
         "01",
         "Sales",
-        "Column Chart (100% stacked)",
+        "Table",
         "Calendar: All",
     ]
     assert [cell.text for cell in table.rows[2].cells[:4]] == [
         "02",
         "Sales",
-        "Table",
+        "Column Chart",
         "Calendar: All",
     ]
-    assert len(table.rows) == 3
-    assert table.cell(1, 4).text.startswith(
+    assert [cell.text for cell in table.rows[3].cells[:4]] == [
+        "03",
+        "Sales",
+        "KPI",
+        "Calendar: All",
+    ]
+    assert [cell.text for cell in table.rows[4].cells[:4]] == [
+        "04",
+        "Sales",
+        "Matrix",
+        "Calendar: All",
+    ]
+    assert len(table.rows) == 5
+    assert table.cell(2, 4).text.startswith(
         "Visual type differs: Base Column Chart; Compare Column Chart"
     )
-    assert table.cell(2, 4).text.startswith(
-        "Visual type differs: Base Matrix; Compare Table."
+    assert table.cell(4, 4).text.startswith(
+        "Visual type differs: Base Matrix; Compare Line Chart."
     )
-    assert "Sales Card" not in _docx_text(output)
-    for row in (1, 2):
+    for row, expected_status in ((1, "Unable to Verify"), (2, "Fail")):
         result_cell = table.cell(row, 5)
         content = result_cell._tc.xpath(".//w:sdtContent//w:t")
-        assert "".join(node.text or "" for node in content) == "Fail"
+        assert "".join(node.text or "" for node in content) == expected_status
         dropdown = result_cell._tc.xpath(".//w:sdtPr/w:dropDownList")[0]
         assert [
             item.get(qn("w:displayText"))
             for item in dropdown.findall(qn("w:listItem"))
-        ] == ["Pass", "Fail"]
+        ] == ["Pass", "Fail", "Unable to Verify"]
+
+
+def test_docx_unable_to_verify_keeps_overall_pass_and_uses_small_orange_text(
+    tmp_path: Path,
+) -> None:
+    from docx import Document
+    from docx.oxml.ns import qn
+
+    result = compare_dashboards([_state("A", 100)], [_state("B", 100)])
+    result["comparisons"] = []
+    result["visual_filter"] = {
+        "visual_rows": [
+            {
+                "page": "Sales",
+                "visual_name": "Revenue",
+                "visual_type_a": "Card",
+                "visual_type_b": "Card",
+                "status": "MATCH",
+            },
+            {
+                "page": "Sales",
+                "visual_name": "Forecast",
+                "visual_type_a": "Line Chart",
+                "visual_type_b": "Line Chart",
+                "status": "UNVERIFIED",
+            },
+        ],
+        "filter_rows": [],
+    }
+
+    output = tmp_path / "comparison.docx"
+    write_docx_report(result, output, "Dashboard A", "Dashboard B")
+
+    document = Document(output)
+    overall_text = "".join(
+        node.text or ""
+        for node in document.tables[3]
+        .cell(0, 1)
+        ._tc.xpath(".//w:sdtContent//w:t")
+    )
+    assert overall_text == "Pass"
+
+    unverified_cell = document.tables[2].cell(2, 5)
+    unverified_text = "".join(
+        node.text or ""
+        for node in unverified_cell._tc.xpath(".//w:sdtContent//w:t")
+    )
+    assert unverified_text == "Unable to Verify"
+    run_properties = unverified_cell._tc.xpath(".//w:r/w:rPr")[0]
+    assert run_properties.find(qn("w:color")).get(qn("w:val")) == "ED7D31"
+    assert run_properties.find(qn("w:sz")).get(qn("w:val")) == "20"
+
+
+
+    from docx import Document
+
+    result = compare_dashboards([_state("A", 100)], [_state("B", 100)])
+    result["comparisons"] = []
+    result["visual_filter"] = {
+        "visual_rows": [
+            {
+                "page": "This Week's Recap",
+                "visual_name": "Active Dashboard Alerts:",
+                "visual_type_a": "Text Box",
+                "visual_type_b": "Text Box",
+                "status": "MATCH",
+            },
+            {
+                "page": "This Week's Recap",
+                "visual_name": "Inbound Pallet Forecast",
+                "visual_type_a": "Header",
+                "visual_type_b": "Header",
+                "status": "MATCH",
+            },
+        ],
+        "filter_rows": [],
+    }
+
+    output = tmp_path / "comparison.docx"
+    write_docx_report(result, output, "Dashboard A", "Dashboard B")
+
+    table = Document(output).tables[2]
+    assert [row.cells[2].text for row in table.rows[1:]] == [
+        "Text Box",
+        "Header",
+    ]
 
 
 def test_docx_omits_exported_cell_details(

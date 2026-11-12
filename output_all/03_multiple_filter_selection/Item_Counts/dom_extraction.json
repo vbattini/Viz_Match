@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "03 - Fargo",
+      "01 - Grand Rapids"
+    ],
+    "values_b": [
+      "03 - Fargo",
+      "01 - Grand Rapids"
+    ]
+  }
+}

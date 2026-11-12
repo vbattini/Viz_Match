@@ -1,0 +1,25 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "38 - Bloomington",
+      "29 - San Antonio"
+    ],
+    "values_b": [
+      "38 - Bloomington",
+      "29 - San Antonio"
+    ]
+  },
+  "steps": [
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Facility'"
+    },
+    {
+      "status": "UNVERIFIED",
+      "reason": "03_multiple_filter_selection failed: RuntimeError: Cannot read current selections for filter 'Facility'"
+    }
+  ]
+}

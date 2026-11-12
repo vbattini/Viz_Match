@@ -1,0 +1,13 @@
+{
+  "plan": null,
+  "steps": [
+    {
+      "status": "UNVERIFIED",
+      "reason": "dashboard_A filter inventory failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+    },
+    {
+      "status": "UNVERIFIED",
+      "reason": "dashboard_A filter inventory failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+    }
+  ]
+}

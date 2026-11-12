@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "master vendor",
+    "name_a": "Master Vendor",
+    "name_b": "Master Vendor",
+    "values_a": [
+      "(Blank)",
+      "000178 - FLAVORCRAFT LLC"
+    ],
+    "values_b": [
+      "(Blank)",
+      "000178 - FLAVORCRAFT LLC"
+    ]
+  }
+}

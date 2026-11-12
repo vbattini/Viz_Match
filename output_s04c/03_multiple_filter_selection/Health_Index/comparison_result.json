@@ -1,0 +1,33 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "filter": "Facility",
+    "requested": [
+      "90 - San Antonio DG",
+      "86 - Severn"
+    ],
+    "applied": true,
+    "selected": [
+      "86 - Severn",
+      "90 - San Antonio DG"
+    ],
+    "verified": true
+  },
+  "dashboard_B": {
+    "filter": "Facility",
+    "requested": [
+      "90 - San Antonio DG",
+      "86 - Severn"
+    ],
+    "applied": true,
+    "selected": [
+      "86 - Severn",
+      "90 - San Antonio DG"
+    ],
+    "verified": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_s04c\\03_multiple_filter_selection\\Health_Index\\dashboard_A.png",
+    "dashboard_B": "output_s04c\\03_multiple_filter_selection\\Health_Index\\dashboard_B.png"
+  }
+}

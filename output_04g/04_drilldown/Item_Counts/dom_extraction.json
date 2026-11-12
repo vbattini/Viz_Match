@@ -1,0 +1,18 @@
+{
+  "candidates_A": [
+    {
+      "key": "visual-1",
+      "title": "",
+      "visual_type": "",
+      "control_label": "Go to the next level in the hierarchy"
+    }
+  ],
+  "candidates_B": [
+    {
+      "key": "visual-1",
+      "title": "",
+      "visual_type": "",
+      "control_label": "Go to the next level in the hierarchy"
+    }
+  ]
+}

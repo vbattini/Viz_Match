@@ -1,0 +1,34 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "39 - Oklahoma City",
+    "value_b": "39 - Oklahoma City"
+  },
+  "steps": [
+    {
+      "filter": "Facility",
+      "requested": [
+        "39 - Oklahoma City"
+      ],
+      "applied": true,
+      "selected": [
+        "39 - Oklahoma City"
+      ],
+      "verified": true
+    },
+    {
+      "filter": "Facility",
+      "requested": [
+        "39 - Oklahoma City"
+      ],
+      "applied": true,
+      "selected": [
+        "39 - Oklahoma City"
+      ],
+      "verified": true
+    }
+  ],
+  "restored": true
+}

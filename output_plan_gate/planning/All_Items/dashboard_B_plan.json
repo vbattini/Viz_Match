@@ -1,0 +1,85 @@
+{
+  "dashboard": "dashboard_B",
+  "page_name": "All Items",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "DOH Band",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "Rank",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "Purchase Status",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    },
+    {
+      "name": "Department",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": false,
+      "reason": "no matching filter on the other dashboard"
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "rank",
+    "name_a": "Rank",
+    "name_b": "Rank",
+    "value_a": "D",
+    "value_b": "D"
+  },
+  "multi_filter_plan": {
+    "filter_key": "department",
+    "name_a": "Department",
+    "name_b": "Department",
+    "values_a": [
+      "BAKERY",
+      "HBC"
+    ],
+    "values_b": [
+      "BAKERY",
+      "HBC"
+    ]
+  },
+  "drill_candidates": []
+}

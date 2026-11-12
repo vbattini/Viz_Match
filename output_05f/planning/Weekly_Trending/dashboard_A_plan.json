@@ -1,0 +1,71 @@
+{
+  "dashboard": "dashboard_A",
+  "page_name": "Weekly Trending",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "dropdown",
+      "option_inventory_status": "unavailable",
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": "unavailable",
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Vendor",
+      "control_type": "dropdown",
+      "option_inventory_status": "unavailable",
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "DOH Bands",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Rank",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "rank",
+    "name_a": "Rank",
+    "name_b": "Rank",
+    "value_a": "E",
+    "value_b": "E"
+  },
+  "multi_filter_plan": {
+    "filter_key": "rank",
+    "name_a": "Rank",
+    "name_b": "Rank",
+    "values_a": [
+      "U",
+      "E"
+    ],
+    "values_b": [
+      "U",
+      "E"
+    ]
+  },
+  "drill_candidates": []
+}

@@ -1,0 +1,83 @@
+{
+  "dashboard": "dashboard_B",
+  "page_name": "Current On Hand",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "DOH Band",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Rank",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Purchase Status",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Department",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "department",
+    "name_a": "Department",
+    "name_b": "Department",
+    "value_a": "FROZEN",
+    "value_b": "FROZEN"
+  },
+  "multi_filter_plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "39 - Oklahoma City"
+    ],
+    "values_b": [
+      "39 - Oklahoma City"
+    ]
+  },
+  "drill_candidates": []
+}

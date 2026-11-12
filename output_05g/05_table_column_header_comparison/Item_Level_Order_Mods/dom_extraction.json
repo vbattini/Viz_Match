@@ -1,0 +1,82 @@
+{
+  "dashboard_A": {
+    "page": "Item Level Order Mods",
+    "tables": [
+      {
+        "key": "visual-1",
+        "title": "",
+        "visual_type": "",
+        "positions": {
+          "initial": {
+            "requested_fraction": 0.0,
+            "requested_scroll_left": -0.0,
+            "scroll_left": 0,
+            "max_scroll": 98,
+            "client_width": 1,
+            "scrollable": true,
+            "screenshot": "output_05g\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A_table0_initial.png"
+          },
+          "middle": {
+            "requested_fraction": 0.5,
+            "requested_scroll_left": 49,
+            "scroll_left": 49,
+            "max_scroll": 98,
+            "client_width": 1,
+            "scrollable": true,
+            "screenshot": "output_05g\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A_table0_middle.png"
+          },
+          "end": {
+            "requested_fraction": 1.0,
+            "requested_scroll_left": 98,
+            "scroll_left": 98,
+            "max_scroll": 98,
+            "client_width": 1,
+            "scrollable": true,
+            "screenshot": "output_05g\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_A_table0_end.png"
+          }
+        },
+        "restored": true
+      }
+    ]
+  },
+  "dashboard_B": {
+    "page": "Item Level Order Mods",
+    "tables": [
+      {
+        "key": "visual-1",
+        "title": "",
+        "visual_type": "",
+        "positions": {
+          "initial": {
+            "requested_fraction": 0.0,
+            "requested_scroll_left": -0.0,
+            "scroll_left": 0,
+            "max_scroll": 98,
+            "client_width": 1,
+            "scrollable": true,
+            "screenshot": "output_05g\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B_table0_initial.png"
+          },
+          "middle": {
+            "requested_fraction": 0.5,
+            "requested_scroll_left": 49,
+            "scroll_left": 49,
+            "max_scroll": 98,
+            "client_width": 1,
+            "scrollable": true,
+            "screenshot": "output_05g\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B_table0_middle.png"
+          },
+          "end": {
+            "requested_fraction": 1.0,
+            "requested_scroll_left": 98,
+            "scroll_left": 98,
+            "max_scroll": 98,
+            "client_width": 1,
+            "scrollable": true,
+            "screenshot": "output_05g\\05_table_column_header_comparison\\Item_Level_Order_Mods\\dashboard_B_table0_end.png"
+          }
+        },
+        "restored": true
+      }
+    ]
+  }
+}

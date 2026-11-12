@@ -1,0 +1,65 @@
+{
+  "pages": [
+    {
+      "page": "Executive Summary",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Weekly Trending",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "All Items",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Health Index",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Inventory Bands",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Item Counts",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Vendor-Item Counts",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      },
+      "reason": "page failed: TargetClosedError: Page.wait_for_timeout: Target page, context or browser has been closed"
+    },
+    {
+      "page": "To Be Discontinued",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Current On Hand",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    },
+    {
+      "page": "Item Level Order Mods",
+      "statuses": {
+        "03_multiple_filter_selection": "UNVERIFIED"
+      }
+    }
+  ]
+}

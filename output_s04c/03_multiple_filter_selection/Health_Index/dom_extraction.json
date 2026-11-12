@@ -1,0 +1,15 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "values_a": [
+      "90 - San Antonio DG",
+      "86 - Severn"
+    ],
+    "values_b": [
+      "90 - San Antonio DG",
+      "86 - Severn"
+    ]
+  }
+}

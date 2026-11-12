@@ -1,0 +1,68 @@
+{
+  "filters": [
+    {
+      "filter_key": "doh bands",
+      "name_a": "DOH Bands",
+      "name_b": "DOH Bands",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "facility",
+      "name_a": "Facility",
+      "name_b": "Facility",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "master vendor",
+      "name_a": "Master Vendor",
+      "name_b": "Master Vendor",
+      "selected_a": [
+        "All"
+      ],
+      "selected_b": [],
+      "status": "DIFFERENT"
+    },
+    {
+      "filter_key": "rank",
+      "name_a": "Rank",
+      "name_b": "Rank",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "supply planner hierarchy",
+      "name_a": "Supply Planner Hierarchy",
+      "name_b": "Supply Planner Hierarchy",
+      "selected_a": [
+        "All"
+      ],
+      "selected_b": [
+        "All"
+      ],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "vendor",
+      "name_a": "Vendor",
+      "name_b": "Vendor",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    }
+  ],
+  "screenshots": {
+    "dashboard_A": {
+      "path": "output_live_full\\01_default_filter_state\\Weekly_Trending\\dashboard_A.png",
+      "sha256": "dec65d631fb72ed1de401a74cf68611128183aa5a5ead7dce778c57fd34c300f"
+    },
+    "dashboard_B": {
+      "path": "output_live_full\\01_default_filter_state\\Weekly_Trending\\dashboard_B.png",
+      "sha256": "f70c3ac853791fd030557ec2effb0d53b6ec0506c365fdcf2f2bf5d0aac1a536"
+    }
+  }
+}

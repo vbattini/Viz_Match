@@ -1,0 +1,285 @@
+{
+  "scenario_id": "01",
+  "scenario_name": "Default Filter State",
+  "page_name": "Executive Summary",
+  "scenario_execution_status": "PASS",
+  "scenario_execution_reason": null,
+  "comparison_status": "FAIL",
+  "filter_comparison": {
+    "status": "PASS",
+    "state_equivalent": true,
+    "items": [
+      {
+        "category": "MATCH",
+        "filter_key": "department",
+        "name_a": "Department",
+        "name_b": "Department",
+        "selected_a": [],
+        "selected_b": []
+      },
+      {
+        "category": "MATCH",
+        "filter_key": "facility",
+        "name_a": "Facility",
+        "name_b": "Facility",
+        "selected_a": [],
+        "selected_b": []
+      },
+      {
+        "category": "MATCH",
+        "filter_key": "supply planner hierarchy",
+        "name_a": "Supply Planner Hierarchy",
+        "name_b": "Supply Planner Hierarchy",
+        "selected_a": [
+          "All"
+        ],
+        "selected_b": [
+          "All"
+        ]
+      }
+    ],
+    "inventory": {
+      "status": "PASS",
+      "items": [
+        {
+          "category": "MATCH",
+          "name_a": "Department",
+          "name_b": "Department",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Facility",
+          "name_b": "Facility",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Supply Planner Hierarchy",
+          "name_b": "Supply Planner Hierarchy",
+          "control_type_a": "dropdown",
+          "control_type_b": "dropdown"
+        }
+      ],
+      "available_options_status": "UNVERIFIED",
+      "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  },
+  "visual_comparison": {
+    "page_name": "Executive Summary",
+    "status": "FAIL",
+    "matching_elements": [
+      "Header title",
+      "Facility slicer",
+      "Supply Planner Hierarchy slicer",
+      "Department slicer",
+      "On Hand $ Card",
+      "On Order $ Card",
+      "On Hand $ Trending area chart",
+      "Health Index by Facility bar chart"
+    ],
+    "findings": [
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "visual",
+        "element_a": "On Hand $ by Facility bar chart",
+        "element_b": "On Hand $ by Facility bar chart",
+        "observation": "Chart is blank with no data bars rendered in Dashboard B."
+      },
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "visual",
+        "element_a": "Fill Rate bar chart",
+        "element_b": "Fill Rate bar chart",
+        "observation": "Chart is blank with no data bars rendered in Dashboard B."
+      },
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "visual",
+        "element_a": "Buy-Side Shrink bar chart",
+        "element_b": "Buy-Side Shrink bar chart",
+        "observation": "Chart is blank with no data bars rendered in Dashboard B."
+      },
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "card",
+        "element_a": "Fill Rate KPI card",
+        "element_b": "Fill Rate KPI card",
+        "observation": "Fill Rate card displays '(Blank)!' alert state in Dashboard B."
+      },
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "card",
+        "element_a": "Health Index KPI card",
+        "element_b": "Health Index KPI card",
+        "observation": "Health Index card displays '0.00!' alert state in Dashboard B."
+      }
+    ],
+    "notes": []
+  },
+  "findings": [
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Header title",
+      "element_b": "Header title",
+      "observation": "LLM Vision reported a match for Header title."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Facility slicer",
+      "element_b": "Facility slicer",
+      "observation": "LLM Vision reported a match for Facility slicer."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Supply Planner Hierarchy slicer",
+      "element_b": "Supply Planner Hierarchy slicer",
+      "observation": "LLM Vision reported a match for Supply Planner Hierarchy slicer."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Department slicer",
+      "element_b": "Department slicer",
+      "observation": "LLM Vision reported a match for Department slicer."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "On Hand $ Card",
+      "element_b": "On Hand $ Card",
+      "observation": "LLM Vision reported a match for On Hand $ Card."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "On Order $ Card",
+      "element_b": "On Order $ Card",
+      "observation": "LLM Vision reported a match for On Order $ Card."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "On Hand $ Trending area chart",
+      "element_b": "On Hand $ Trending area chart",
+      "observation": "LLM Vision reported a match for On Hand $ Trending area chart."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Health Index by Facility bar chart",
+      "element_b": "Health Index by Facility bar chart",
+      "observation": "LLM Vision reported a match for Health Index by Facility bar chart."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "visual",
+      "element_a": "On Hand $ by Facility bar chart",
+      "element_b": "On Hand $ by Facility bar chart",
+      "observation": "Chart is blank with no data bars rendered in Dashboard B."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "visual",
+      "element_a": "Fill Rate bar chart",
+      "element_b": "Fill Rate bar chart",
+      "observation": "Chart is blank with no data bars rendered in Dashboard B."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "visual",
+      "element_a": "Buy-Side Shrink bar chart",
+      "element_b": "Buy-Side Shrink bar chart",
+      "observation": "Chart is blank with no data bars rendered in Dashboard B."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "card",
+      "element_a": "Fill Rate KPI card",
+      "element_b": "Fill Rate KPI card",
+      "observation": "Fill Rate card displays '(Blank)!' alert state in Dashboard B."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "card",
+      "element_a": "Health Index KPI card",
+      "element_b": "Health Index KPI card",
+      "observation": "Health Index card displays '0.00!' alert state in Dashboard B."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Default Filter Selection",
+      "element_a": "Department",
+      "element_b": "Department",
+      "observation": "Recorded default values: A=[]; B=[]."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Default Filter Selection",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Recorded default values: A=[]; B=[]."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Default Filter Selection",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Recorded default values: A=['All']; B=['All']."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Department",
+      "element_b": "Department",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Control types: A=dropdown; B=dropdown."
+    },
+    {
+      "category": "UNVERIFIED",
+      "element_type": "Available Filter Options",
+      "element_a": null,
+      "element_b": null,
+      "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  ],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Executive_Summary",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Executive_Summary\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Executive_Summary\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Executive_Summary\\comparison_result.json",
+    "dashboard_A_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Executive_Summary\\dashboard_A.png"
+      }
+    ],
+    "dashboard_B_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_all\\01_initial_default_state\\Executive_Summary\\dashboard_B.png"
+      }
+    ],
+    "errors": []
+  },
+  "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+}

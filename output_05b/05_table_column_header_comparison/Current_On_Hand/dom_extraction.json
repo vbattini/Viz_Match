@@ -1,0 +1,466 @@
+{
+  "dashboard_A": {
+    "page": "Current On Hand",
+    "visuals": [
+      {
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 425,
+          "y": 98,
+          "width": 102,
+          "height": 102
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 527,
+          "y": 98,
+          "width": 678,
+          "height": 100
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 1137,
+          "y": 164,
+          "width": 287,
+          "height": 39
+        },
+        "headers": []
+      },
+      {
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 419,
+          "y": 198,
+          "width": 2312,
+          "height": 20
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 219,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 703,
+          "y": 218,
+          "width": 1431,
+          "height": 837
+        },
+        "headers": [
+          {
+            "text": "Facility",
+            "index": 0,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 11,
+              "y": 11,
+              "width": 207,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Hand $",
+            "index": 1,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 218,
+              "y": 11,
+              "width": 105,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Hand Cases",
+            "index": 2,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 323,
+              "y": 11,
+              "width": 141,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Order $",
+            "index": 3,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 464,
+              "y": 11,
+              "width": 108,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Order Cases",
+            "index": 4,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 571,
+              "y": 11,
+              "width": 144,
+              "height": 43
+            }
+          }
+        ]
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 306,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "Supply Planner Hierarchy",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 394,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 482,
+          "width": 268,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 569,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 656,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 743,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 831,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      }
+    ]
+  },
+  "dashboard_B": {
+    "page": "Current On Hand",
+    "visuals": [
+      {
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 425,
+          "y": 98,
+          "width": 102,
+          "height": 102
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 527,
+          "y": 98,
+          "width": 678,
+          "height": 100
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 1137,
+          "y": 164,
+          "width": 287,
+          "height": 39
+        },
+        "headers": []
+      },
+      {
+        "title": "Image",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 419,
+          "y": 198,
+          "width": 2312,
+          "height": 20
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 219,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 703,
+          "y": 218,
+          "width": 1431,
+          "height": 837
+        },
+        "headers": [
+          {
+            "text": "Facility",
+            "index": 0,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 11,
+              "y": 11,
+              "width": 86,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Hand $",
+            "index": 1,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 97,
+              "y": 11,
+              "width": 105,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Hand Cases",
+            "index": 2,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 202,
+              "y": 11,
+              "width": 141,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Order $",
+            "index": 3,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 343,
+              "y": 11,
+              "width": 108,
+              "height": 43
+            }
+          },
+          {
+            "text": "On Order Cases",
+            "index": 4,
+            "header_row": 0,
+            "colspan": 1,
+            "visible": true,
+            "alignment": "left",
+            "bounds": {
+              "x": 450,
+              "y": 11,
+              "width": 144,
+              "height": 43
+            }
+          }
+        ]
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 306,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "Supply Planner Hierarchy",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 394,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 482,
+          "width": 268,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 569,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 656,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 743,
+          "width": 269,
+          "height": 88
+        },
+        "headers": []
+      },
+      {
+        "title": "",
+        "visual_type": "",
+        "visible": true,
+        "bounds": {
+          "x": 426,
+          "y": 831,
+          "width": 269,
+          "height": 87
+        },
+        "headers": []
+      }
+    ]
+  }
+}

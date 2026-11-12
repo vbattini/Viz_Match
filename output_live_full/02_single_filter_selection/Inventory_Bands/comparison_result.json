@@ -1,0 +1,29 @@
+{
+  "outcome": "PASS",
+  "dashboard_A": {
+    "filter": "Facility",
+    "requested": [
+      "39 - Oklahoma City"
+    ],
+    "applied": true,
+    "selected": [
+      "39 - Oklahoma City"
+    ],
+    "verified": true
+  },
+  "dashboard_B": {
+    "filter": "Facility",
+    "requested": [
+      "39 - Oklahoma City"
+    ],
+    "applied": true,
+    "selected": [
+      "39 - Oklahoma City"
+    ],
+    "verified": true
+  },
+  "screenshots": {
+    "dashboard_A": "output_live_full\\02_single_filter_selection\\Inventory_Bands\\dashboard_A.png",
+    "dashboard_B": "output_live_full\\02_single_filter_selection\\Inventory_Bands\\dashboard_B.png"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "plan": {
+    "filter_key": "department",
+    "name_a": "Department",
+    "name_b": "Department",
+    "value_a": "HBC",
+    "value_b": "HBC"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Department",
+        "requested": [
+          "HBC"
+        ],
+        "applied": true,
+        "selected": [
+          "HBC"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_plan_gate\\02_single_filter_selection\\Executive_Summary\\dashboard_A.png",
+      "restored": true
+    },
+    {
+      "record": {
+        "filter": "Department",
+        "requested": [
+          "HBC"
+        ],
+        "applied": true,
+        "selected": [
+          "HBC"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_plan_gate\\02_single_filter_selection\\Executive_Summary\\dashboard_B.png",
+      "restored": true
+    }
+  ]
+}

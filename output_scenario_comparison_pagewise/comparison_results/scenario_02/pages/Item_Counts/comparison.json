@@ -1,0 +1,221 @@
+{
+  "scenario_id": "02",
+  "scenario_name": "Single Filter Selection",
+  "page_name": "Item Counts",
+  "scenario_execution_status": "UNVERIFIED",
+  "scenario_execution_reason": null,
+  "comparison_status": "FAIL",
+  "filter_comparison": {
+    "status": "PASS",
+    "state_equivalent": true,
+    "expected_state_applied": true,
+    "items": [
+      {
+        "category": "MATCH",
+        "element_type": "Filter Selection",
+        "element_a": "['02 - Sioux Falls']",
+        "element_b": "['02 - Sioux Falls']",
+        "observation": "Both dashboards show the same selected value(s) for Facility."
+      }
+    ],
+    "dashboard_A": {
+      "filter": "Facility",
+      "requested": [
+        "02 - Sioux Falls"
+      ],
+      "applied": true,
+      "selected": [
+        "02 - Sioux Falls"
+      ],
+      "verified": true
+    },
+    "dashboard_B": {
+      "filter": "Facility",
+      "requested": [
+        "02 - Sioux Falls"
+      ],
+      "applied": true,
+      "selected": [
+        "02 - Sioux Falls"
+      ],
+      "verified": true
+    },
+    "inventory": {
+      "status": "PASS",
+      "items": [
+        {
+          "category": "MATCH",
+          "name_a": "Department",
+          "name_b": "Department",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Facility",
+          "name_b": "Facility",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Master Vendor",
+          "name_b": "Master Vendor",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Purchase Status",
+          "name_b": "Purchase Status",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Supply Planner Hierarchy",
+          "name_b": "Supply Planner Hierarchy",
+          "control_type_a": "dropdown",
+          "control_type_b": "dropdown"
+        },
+        {
+          "category": "MATCH",
+          "name_a": "Vendor",
+          "name_b": "Vendor",
+          "control_type_a": "checkbox_dropdown",
+          "control_type_b": "checkbox_dropdown"
+        }
+      ],
+      "available_options_status": "UNVERIFIED",
+      "reason": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  },
+  "visual_comparison": {
+    "page_name": "Item Counts",
+    "status": "FAIL",
+    "matching_elements": [
+      "Page title and header banner",
+      "Slicers (Facility, Supply Planner Hierarchy, Master Vendor, Vendor, Purchase Status, Department)",
+      "Item Counts matrix table column headers"
+    ],
+    "findings": [
+      {
+        "category": "VISUAL_DIFFERENCE",
+        "element_type": "table",
+        "element_a": "Item Counts matrix displaying facility row and populated Total row",
+        "element_b": "Item Counts matrix with missing facility row and empty Total row",
+        "observation": "Dashboard B does not render the facility row for '02 - Sioux Falls' and the Total row values are blank."
+      }
+    ],
+    "notes": [
+      "Filter state for Facility '02 - Sioux Falls' matches on both dashboards."
+    ]
+  },
+  "findings": [
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Page title and header banner",
+      "element_b": "Page title and header banner",
+      "observation": "LLM Vision reported a match for Page title and header banner."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Slicers (Facility, Supply Planner Hierarchy, Master Vendor, Vendor, Purchase Status, Department)",
+      "element_b": "Slicers (Facility, Supply Planner Hierarchy, Master Vendor, Vendor, Purchase Status, Department)",
+      "observation": "LLM Vision reported a match for Slicers (Facility, Supply Planner Hierarchy, Master Vendor, Vendor, Purchase Status, Department)."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Visual",
+      "element_a": "Item Counts matrix table column headers",
+      "element_b": "Item Counts matrix table column headers",
+      "observation": "LLM Vision reported a match for Item Counts matrix table column headers."
+    },
+    {
+      "category": "VISUAL_DIFFERENCE",
+      "element_type": "table",
+      "element_a": "Item Counts matrix displaying facility row and populated Total row",
+      "element_b": "Item Counts matrix with missing facility row and empty Total row",
+      "observation": "Dashboard B does not render the facility row for '02 - Sioux Falls' and the Total row values are blank."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Selection",
+      "element_a": "['02 - Sioux Falls']",
+      "element_b": "['02 - Sioux Falls']",
+      "observation": "Both dashboards show the same selected value(s) for Facility."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Department",
+      "element_b": "Department",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Master Vendor",
+      "element_b": "Master Vendor",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Purchase Status",
+      "element_b": "Purchase Status",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Control types: A=dropdown; B=dropdown."
+    },
+    {
+      "category": "MATCH",
+      "element_type": "Filter Control",
+      "element_a": "Vendor",
+      "element_b": "Vendor",
+      "observation": "Control types: A=checkbox_dropdown; B=checkbox_dropdown."
+    },
+    {
+      "category": "UNVERIFIED",
+      "element_type": "Available Filter Options",
+      "element_a": null,
+      "element_b": null,
+      "observation": "the saved planning evidence contains filter names and control types, but not available option lists"
+    }
+  ],
+  "evidence": {
+    "source_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203",
+    "scenario_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Item_Counts",
+    "execution_status_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Item_Counts\\execution_status.json",
+    "scenario_execution_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Item_Counts\\scenario_execution.json",
+    "comparison_json": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Item_Counts\\comparison_result.json",
+    "dashboard_A_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Item_Counts\\dashboard_A.png"
+      }
+    ],
+    "dashboard_B_screenshots": [
+      {
+        "label": "state",
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_0203\\02_single_filter_selection\\Item_Counts\\dashboard_B.png"
+      }
+    ],
+    "errors": []
+  },
+  "comparison_provenance": "REUSED_UNCHANGED_SAVED_COMPARISON"
+}

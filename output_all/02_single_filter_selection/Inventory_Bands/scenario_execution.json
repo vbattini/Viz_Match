@@ -1,0 +1,43 @@
+{
+  "plan": {
+    "filter_key": "master vendor",
+    "name_a": "Master Vendor",
+    "name_b": "Master Vendor",
+    "value_a": "000004 - AMERICAN FOODS GROUP",
+    "value_b": "000004 - AMERICAN FOODS GROUP"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Master Vendor",
+        "requested": [
+          "000004 - AMERICAN FOODS GROUP"
+        ],
+        "applied": true,
+        "selected": [
+          "000004 - AMERICAN FOODS GROUP"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_all\\02_single_filter_selection\\Inventory_Bands\\dashboard_A.png",
+      "restored": true
+    },
+    {
+      "record": {
+        "filter": "Master Vendor",
+        "requested": [
+          "000004 - AMERICAN FOODS GROUP"
+        ],
+        "applied": true,
+        "selected": [
+          "000004 - AMERICAN FOODS GROUP"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_all\\02_single_filter_selection\\Inventory_Bands\\dashboard_B.png",
+      "restored": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "visuals": [],
+  "table_visuals": {
+    "A": 0,
+    "B": 0
+  },
+  "text_verified": false,
+  "method": "screenshot header-band similarity; header names are not read"
+}

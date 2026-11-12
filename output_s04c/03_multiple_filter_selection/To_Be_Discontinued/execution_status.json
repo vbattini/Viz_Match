@@ -1,0 +1,4 @@
+{
+  "status": "UNVERIFIED",
+  "reason": "dashboard_B filter inventory failed: RuntimeError: Power BI dropdown did not open after activating its combobox"
+}

@@ -1,0 +1,230 @@
+{
+  "page_name": "Current On Hand",
+  "status": "PASS",
+  "dashboard_A": {
+    "report_title": "Inventory Insights",
+    "dashboard_title": "Current On Hand",
+    "filters": [
+      {
+        "name": "Facility",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Master Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Supply Planner Hierarchy",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "DOH Band",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Rank",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Purchase Status",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Department",
+        "control_type": "Dropdown"
+      }
+    ],
+    "titles": [
+      {
+        "role": "report_title",
+        "text": "Inventory Insights"
+      },
+      {
+        "role": "dashboard_title",
+        "text": "Current On Hand"
+      }
+    ],
+    "visuals": [
+      {
+        "title": null,
+        "visual_type": "Matrix",
+        "rendering_status": "Rendered",
+        "table_headers": [
+          "Facility",
+          "On Hand $",
+          "On Hand Cases",
+          "On Order $",
+          "On Order Cases"
+        ]
+      }
+    ]
+  },
+  "dashboard_B": {
+    "report_title": "Inventory Insights",
+    "dashboard_title": "Current On Hand",
+    "filters": [
+      {
+        "name": "Facility",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Master Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Supply Planner Hierarchy",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "DOH Band",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Rank",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Purchase Status",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Department",
+        "control_type": "Dropdown"
+      }
+    ],
+    "titles": [
+      {
+        "role": "report_title",
+        "text": "Inventory Insights"
+      },
+      {
+        "role": "dashboard_title",
+        "text": "Current On Hand"
+      }
+    ],
+    "visuals": [
+      {
+        "title": null,
+        "visual_type": "Matrix",
+        "rendering_status": "Rendered",
+        "table_headers": [
+          "Facility",
+          "On Hand $",
+          "On Hand Cases",
+          "On Order $",
+          "On Order Cases"
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "element_type": "Report Title",
+      "status": "PASS",
+      "element_a": "Inventory Insights",
+      "element_b": "Inventory Insights",
+      "observation": "Report titles match across both dashboards."
+    },
+    {
+      "element_type": "Dashboard Title",
+      "status": "PASS",
+      "element_a": "Current On Hand",
+      "element_b": "Current On Hand",
+      "observation": "Page header titles match across both dashboards."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Master Vendor",
+      "element_b": "Master Vendor",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Vendor",
+      "element_b": "Vendor",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "DOH Band",
+      "element_b": "DOH Band",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Rank",
+      "element_b": "Rank",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Purchase Status",
+      "element_b": "Purchase Status",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Department",
+      "element_b": "Department",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Visual",
+      "status": "PASS",
+      "element_a": "Matrix",
+      "element_b": "Matrix",
+      "observation": "Matrix visual is present and rendered on both dashboards."
+    },
+    {
+      "element_type": "Table Header",
+      "status": "PASS",
+      "element_a": "Facility, On Hand $, On Hand Cases, On Order $, On Order Cases",
+      "element_b": "Facility, On Hand $, On Hand Cases, On Order $, On Order Cases",
+      "observation": "Column header text and sequence match exactly between dashboards."
+    }
+  ],
+  "notes": [
+    "A Matrix visual has no visible title."
+  ],
+  "evidence": {
+    "dashboard_A_screenshots": {
+      "initial": {
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Current_On_Hand\\dashboard_A\\initial.png"
+      }
+    },
+    "dashboard_B_screenshots": {
+      "initial": {
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Current_On_Hand\\dashboard_B\\initial.png"
+      }
+    },
+    "errors": []
+  }
+}

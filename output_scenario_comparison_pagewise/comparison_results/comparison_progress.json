@@ -1,0 +1,22 @@
+{
+  "status": "COMPLETED",
+  "current_page": null,
+  "current_page_number": null,
+  "page_count": 10,
+  "current_scenario_id": null,
+  "current_scenario": null,
+  "dashboard_A_evidence_status": "AVAILABLE",
+  "dashboard_B_evidence_status": "AVAILABLE",
+  "comparison_status": "COMPLETED",
+  "completed_comparisons": 50,
+  "remaining_comparisons": 0,
+  "total_comparisons": 50,
+  "identified_differences": 33,
+  "unverified_findings": 31,
+  "comparison_cache_directory": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_scenario_comparison_v2\\comparison_results",
+  "updated_at": "2026-11-11T15:52:14.624675+00:00",
+  "comparison_source": "REUSED_UNCHANGED_SAVED_COMPARISON",
+  "scenario_number": 5,
+  "scenario_count": 5,
+  "report_status": "READY"
+}

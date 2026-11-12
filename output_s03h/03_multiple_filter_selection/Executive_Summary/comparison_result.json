@@ -1,0 +1,31 @@
+{
+  "outcome": "FAIL",
+  "dashboard_A": {
+    "filter": "Department",
+    "requested": [
+      "VIDEO RENTAL & SALES",
+      "GROCERY NON-FOOD"
+    ],
+    "applied": true,
+    "selected": [
+      "VIDEO RENTAL & SALES"
+    ],
+    "verified": false
+  },
+  "dashboard_B": {
+    "filter": "Department",
+    "requested": [
+      "VIDEO RENTAL & SALES",
+      "GROCERY NON-FOOD"
+    ],
+    "applied": true,
+    "selected": [
+      "VIDEO RENTAL & SALES"
+    ],
+    "verified": false
+  },
+  "screenshots": {
+    "dashboard_A": "output_s03h\\03_multiple_filter_selection\\Executive_Summary\\dashboard_A.png",
+    "dashboard_B": "output_s03h\\03_multiple_filter_selection\\Executive_Summary\\dashboard_B.png"
+  }
+}

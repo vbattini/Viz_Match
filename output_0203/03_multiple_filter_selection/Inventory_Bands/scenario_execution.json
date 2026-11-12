@@ -1,0 +1,53 @@
+{
+  "plan": {
+    "filter_key": "vendor",
+    "name_a": "Vendor",
+    "name_b": "Vendor",
+    "values_a": [
+      "- BARREL O FUN",
+      "- HEINZ NORTH AMERICA"
+    ],
+    "values_b": [
+      "- BARREL O FUN",
+      "- HEINZ NORTH AMERICA"
+    ]
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Vendor",
+        "requested": [
+          "- BARREL O FUN",
+          "- HEINZ NORTH AMERICA"
+        ],
+        "applied": true,
+        "selected": [
+          "- HEINZ NORTH AMERICA"
+        ],
+        "verified": false
+      },
+      "verified": false,
+      "screenshot": "output_0203\\03_multiple_filter_selection\\Inventory_Bands\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null
+    },
+    {
+      "record": {
+        "filter": "Vendor",
+        "requested": [
+          "- BARREL O FUN",
+          "- HEINZ NORTH AMERICA"
+        ],
+        "applied": true,
+        "selected": [
+          "- HEINZ NORTH AMERICA"
+        ],
+        "verified": false
+      },
+      "verified": false,
+      "screenshot": "output_0203\\03_multiple_filter_selection\\Inventory_Bands\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null
+    }
+  ]
+}

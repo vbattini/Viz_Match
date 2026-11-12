@@ -1,0 +1,66 @@
+{
+  "filters": [
+    {
+      "filter_key": "department",
+      "name_a": "Department",
+      "name_b": "Department",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "facility",
+      "name_a": "Facility",
+      "name_b": "Facility",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "master vendor",
+      "name_a": "Master Vendor",
+      "name_b": "Master Vendor",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "purchase status",
+      "name_a": "Purchase Status",
+      "name_b": "Purchase Status",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "supply planner hierarchy",
+      "name_a": "Supply Planner Hierarchy",
+      "name_b": "Supply Planner Hierarchy",
+      "selected_a": [
+        "All"
+      ],
+      "selected_b": [
+        "All"
+      ],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "vendor",
+      "name_a": "Vendor",
+      "name_b": "Vendor",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    }
+  ],
+  "screenshots": {
+    "dashboard_A": {
+      "path": "output_live_full\\01_default_filter_state\\Item_Counts\\dashboard_A.png",
+      "sha256": "499159f5596b84a4d68aab80ae984475eaab0bef45f30735052f7a0393576bf1"
+    },
+    "dashboard_B": {
+      "path": "output_live_full\\01_default_filter_state\\Item_Counts\\dashboard_B.png",
+      "sha256": "4f846dec91f993c84dbc170b54b60c5a5b782f3bae63d18a35bbdf84ad772a33"
+    }
+  }
+}

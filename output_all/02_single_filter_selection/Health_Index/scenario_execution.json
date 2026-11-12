@@ -1,0 +1,43 @@
+{
+  "plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "17 - Menominee",
+    "value_b": "17 - Menominee"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "17 - Menominee"
+        ],
+        "applied": true,
+        "selected": [
+          "17 - Menominee"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_all\\02_single_filter_selection\\Health_Index\\dashboard_A.png",
+      "restored": true
+    },
+    {
+      "record": {
+        "filter": "Facility",
+        "requested": [
+          "17 - Menominee"
+        ],
+        "applied": true,
+        "selected": [
+          "17 - Menominee"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_all\\02_single_filter_selection\\Health_Index\\dashboard_B.png",
+      "restored": true
+    }
+  ]
+}

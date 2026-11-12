@@ -15,6 +15,12 @@ from powerbi_dashboard_comparator.models import (
 )
 
 
+def test_unrendered_chart_detection_excludes_slicer_controls() -> None:
+    assert "const isSlicerVisual = visual =>" in browser._REPORT_LOAD_STATE_SCRIPT
+    assert "[role=\"combobox\"]" in browser._REPORT_LOAD_STATE_SCRIPT
+    assert "[aria-haspopup=\"listbox\"]" in browser._REPORT_LOAD_STATE_SCRIPT
+
+
 def test_comparison_page_names_exclude_home_and_view() -> None:
     assert browser._comparison_page_names(
         ["Home", "VIEW", "File", "Summary", "Compliance"]
@@ -43,7 +49,16 @@ def test_screenshot_detection_runs_once_and_reuses_results_across_page_states(
                 "y": 30,
                 "width": 400,
                 "height": 250,
-            }
+            },
+            {
+                "visual_id": "DIVIDER_001",
+                "visual_name": "Header Divider Line",
+                "visual_type": "Shape / Line",
+                "x": 20,
+                "y": 10,
+                "width": 400,
+                "height": 2,
+            },
         ],
     )
     filtered = DashboardState(
@@ -60,7 +75,16 @@ def test_screenshot_detection_runs_once_and_reuses_results_across_page_states(
                 "y": 30,
                 "width": 400,
                 "height": 250,
-            }
+            },
+            {
+                "visual_id": "DIVIDER_001",
+                "visual_name": "Header Divider Line",
+                "visual_type": "Shape / Line",
+                "x": 20,
+                "y": 10,
+                "width": 400,
+                "height": 2,
+            },
         ],
     )
     calls = []
@@ -96,6 +120,9 @@ def test_screenshot_detection_runs_once_and_reuses_results_across_page_states(
     assert len(calls) == 1
     assert calls[0][0] == b"reference screenshot"
     assert calls[0][1] == "Orders"
+    assert [visual["visual_id"] for visual in calls[0][2]] == ["TABLE_001"]
+    assert [visual["visual_id"] for visual in reference.visuals] == ["TABLE_001"]
+    assert [visual["visual_id"] for visual in filtered.visuals] == ["VISUAL_001"]
     assert reference.visuals[0]["visual_name"] == "Open Orders"
     assert filtered.visuals[0]["visual_name"] == "Open Orders"
     assert filtered.visuals[0]["visual_type"] == "Table"
@@ -3106,6 +3133,7 @@ def test_visual_only_inventory_reads_visible_selection_without_opening_dropdown(
         {
             "name": "Relative Time",
             "selector_name": "Relative Time",
+            "control_type": "dropdown",
             "selected": ["Yesterday"],
             "values": [],
             "clear_selection_checked": False,
@@ -3224,6 +3252,7 @@ def test_inventory_preserves_visible_all_when_popup_options_are_unavailable(
         {
             "name": "Supply Planner Hierarchy",
             "selector_name": "2nd Lvl Mgr, Manager, Planner",
+            "control_type": "dropdown",
             "selected": ["All"],
             "values": [],
             "clear_selection_checked": True,
@@ -3793,10 +3822,16 @@ def test_checkbox_inventory_identifies_type_before_clicking_clear(monkeypatch) -
     async def no_bookmarks(_frame):
         return []
 
+    async def current_value(_page, filter_item):
+        assert filter_item["name"] == "Time Period"
+        events.append("verify_clear")
+        return []
+
     monkeypatch.setattr(browser, "_clear_selection_button", clear_button)
     monkeypatch.setattr(browser, "_checkbox_filter_options", no_choices)
     monkeypatch.setattr(browser, "_radio_filter_options", no_choices)
     monkeypatch.setattr(browser, "_bookmark_button_groups", no_bookmarks)
+    monkeypatch.setattr(browser, "_current_filter_value", current_value)
     monkeypatch.setattr(
         browser, "_wait_for_combobox_options", checkbox_options
     )
@@ -3804,9 +3839,18 @@ def test_checkbox_inventory_identifies_type_before_clicking_clear(monkeypatch) -
     class Page:
         frames = [Frame()]
 
+        async def wait_for_timeout(self, _milliseconds):
+            pass
+
     inventory = asyncio.run(browser._accessible_inventory(Page()))
 
-    assert events == ["open", "read_options", "check_clear", "clear"]
+    assert events == [
+        "open",
+        "read_options",
+        "check_clear",
+        "clear",
+        "verify_clear",
+    ]
     assert inventory["filters"] == []
     assert inventory["initial_cleared_slicers"] == ["Time Period"]
 
@@ -3841,7 +3885,6 @@ def test_radio_inventory_checks_clear_then_uses_radio_choices(
 
         async def press(self, key):
             assert key == "Escape"
-            events.append("close")
 
     combo = Combo()
 
@@ -3882,6 +3925,7 @@ def test_radio_inventory_checks_clear_then_uses_radio_choices(
             ["Benefits"],
             [],
             [
+                {"label": "Clear selections", "selected": False},
                 {"label": "Benefits", "selected": True},
                 {"label": "HRIS", "selected": False},
             ],
@@ -3903,7 +3947,7 @@ def test_radio_inventory_checks_clear_then_uses_radio_choices(
 
     inventory = asyncio.run(browser._accessible_inventory(Page()))
 
-    assert events == ["open", "read_options", "check_clear", "close"]
+    assert events == ["open", "read_options", "check_clear"]
     assert inventory["initial_cleared_slicers"] == []
     assert inventory["filters"] == [
         {
@@ -3991,18 +4035,33 @@ def test_radio_inventory_clears_filter_and_skips_it_when_clear_is_available(
     async def no_choices(*_args):
         return []
 
+    async def current_value(_page, filter_item):
+        assert filter_item["name"] == "Service Team"
+        events.append("verify_clear")
+        return []
+
     monkeypatch.setattr(browser, "_wait_for_combobox_options", read_options)
     monkeypatch.setattr(browser, "_clear_selection_button", clear_button)
     monkeypatch.setattr(browser, "_checkbox_filter_options", no_choices)
     monkeypatch.setattr(browser, "_radio_filter_options", no_choices)
     monkeypatch.setattr(browser, "_bookmark_button_groups", no_choices)
+    monkeypatch.setattr(browser, "_current_filter_value", current_value)
 
     class Page:
         frames = [Frame()]
 
+        async def wait_for_timeout(self, _milliseconds):
+            pass
+
     inventory = asyncio.run(browser._accessible_inventory(Page()))
 
-    assert events == ["open", "read_options", "check_clear", "clear"]
+    assert events == [
+        "open",
+        "read_options",
+        "check_clear",
+        "clear",
+        "verify_clear",
+    ]
     assert inventory["filters"] == []
     assert inventory["initial_cleared_slicers"] == ["Service Team"]
 
@@ -4784,6 +4843,17 @@ def test_slicer_dropdown_uses_associated_popup_when_expanded_state_is_stale() ->
     assert not combo.popup_visible
 
 
+def test_slicer_dropdown_timeout_on_detached_combobox_returns_closed() -> None:
+    class DetachedCombo:
+        async def get_attribute(self, _name):
+            raise browser.PlaywrightTimeoutError("combobox detached")
+
+        async def evaluate(self, _script):
+            raise browser.PlaywrightTimeoutError("combobox detached")
+
+    assert not asyncio.run(browser._slicer_dropdown_is_open(DetachedCombo()))
+
+
 def test_filter_selection_uses_real_click_and_verifies_selected_state() -> None:
     class Combo:
         def __init__(self):
@@ -4812,6 +4882,7 @@ def test_filter_selection_uses_real_click_and_verifies_selected_state() -> None:
         async def press(self, key):
             assert key == "Escape"
             self.open = False
+            events.append("close")
 
     class Option:
         def __init__(self, combo, value):
@@ -5149,6 +5220,59 @@ def test_checkbox_dropdown_does_not_select_aggregate_all(
 
     assert clicks == []
     assert selected == {"Last 4 Weeks"}
+
+
+def test_kpi_selection_is_left_at_default_without_clear(monkeypatch) -> None:
+    filter_item = {
+        "name": "KPI Selection",
+        "selector_name": "KPI Selection",
+        "control_type": "checkbox",
+        "selected": ["Cases Selected"],
+        "values": ["Select all", "Cases Selected", "Paid Hours"],
+    }
+    clear_lookups = []
+
+    async def clear_button(_frame, _filter):
+        clear_lookups.append(True)
+        return object()
+
+    monkeypatch.setattr(browser, "_clear_selection_button", clear_button)
+
+    asyncio.run(
+        browser._prepare_slicer_selections(
+            SimpleNamespace(frames=[object()]),
+            [filter_item],
+        )
+    )
+
+    assert clear_lookups == []
+    assert filter_item["reset_strategy"] == "preserve_selection"
+    assert filter_item["skip_filter_cases"]
+
+
+def test_kpi_selection_option_is_never_clicked(monkeypatch) -> None:
+    async def unexpected(*_args, **_kwargs):
+        raise AssertionError("KPI Selection options must not be clicked")
+
+    monkeypatch.setattr(browser, "_wait_for_filter_selection", unexpected)
+    monkeypatch.setattr(browser, "_click_filter_option", unexpected)
+    filter_item = {
+        "name": "KPI Selection",
+        "control_type": "checkbox_dropdown",
+        "selected": ["Cases Selected"],
+        "values": ["Cases Selected", "Paid Hours"],
+    }
+    selection = browser.FilterSelection("KPI Selection", "Paid Hours")
+
+    asyncio.run(browser._select_filter(SimpleNamespace(), selection, [filter_item]))
+
+    asyncio.run(
+        browser._apply_filter_selections(
+            SimpleNamespace(),
+            (selection,),
+            [filter_item],
+        )
+    )
 
 
 def test_radio_filter_selects_individual_values_without_clear(
@@ -6895,6 +7019,46 @@ def test_prepare_slicer_selections_clicks_clear_for_already_cleared_filter(
     assert filter_item["skip_filter_cases"]
 
 
+def test_prepare_slicer_selections_leaves_kpi_selection_default_after_clear() -> None:
+    filter_item = {
+        "name": "KPI Selection",
+        "control_type": "checkbox",
+        "selected": [],
+        "values": ["Select all", "Cases Selected", "Paid Hours"],
+    }
+
+    asyncio.run(
+        browser._prepare_slicer_selections(
+            SimpleNamespace(),
+            [filter_item],
+            already_cleared_slicers=["KPI Selection"],
+        )
+    )
+
+    assert filter_item["reset_strategy"] == "preserve_selection"
+    assert filter_item["skip_filter_cases"]
+
+
+def test_prepare_slicer_selections_skips_kpi_selection_dropdown_after_clear() -> None:
+    filter_item = {
+        "name": "KPI Selection",
+        "control_type": "checkbox_dropdown",
+        "selected": [],
+        "values": ["Select all", "Cases Selected", "Paid Hours"],
+    }
+
+    asyncio.run(
+        browser._prepare_slicer_selections(
+            SimpleNamespace(),
+            [filter_item],
+            already_cleared_slicers=["KPI Selection"],
+        )
+    )
+
+    assert filter_item["reset_strategy"] == "preserve_selection"
+    assert filter_item["skip_filter_cases"]
+
+
 def test_prepare_slicer_selections_defaults_radio_filter_to_last_option(
     monkeypatch,
 ) -> None:
@@ -7281,48 +7445,14 @@ def test_clear_selection_button_is_scoped_to_slicer_group(monkeypatch) -> None:
     assert "visualContainer" in Control.selectors[0]
 
 
-@pytest.mark.parametrize(
-    ("initial_value", "click_changes_value"),
-    [
-        ("Last 4 Weeks", True),
-        ("All", False),
-        ("Last 4 Weeks", False),
-    ],
-)
-def test_page_slicer_clear_click_happens_before_inventory_and_capture(
+def test_page_slicer_combobox_clears_without_opening_or_verifying(
     monkeypatch,
-    initial_value,
-    click_changes_value,
 ) -> None:
     events = []
 
-    class Button:
-        async def click(self, **kwargs):
-            assert kwargs == {"timeout": 5_000, "no_wait_after": True}
-            if click_changes_value:
-                combo.value = "All"
-            events.append("clear")
-
     class Combo:
-        value = initial_value
-        open = False
-
         async def is_visible(self):
             return True
-
-        async def get_attribute(self, name):
-            assert name == "aria-expanded"
-            return "true" if self.open else "false"
-
-        async def click(self, **_kwargs):
-            self.open = True
-
-        async def inner_text(self):
-            return self.value
-
-        async def press(self, key):
-            assert key == "Escape"
-            self.open = False
 
     combo = Combo()
 
@@ -7351,44 +7481,67 @@ def test_page_slicer_clear_click_happens_before_inventory_and_capture(
 
         async def wait_for_timeout(self, milliseconds):
             assert milliseconds == 150
+            events.append("wait")
 
     async def clear_button(_frame, filter_item, control=None):
         assert filter_item["name"] == "Relative Time"
-        assert filter_item["control_type"] == "checkbox_dropdown"
+        assert filter_item["control_type"] == "dropdown"
         assert control is combo
         events.append("locate_clear")
-        return Button()
-
-    async def checkbox_options(_page, _frame, _combo, _filter_probe):
-        raise AssertionError("The clear control must be checked before options")
-
-    async def associated_options(_frame, _combo, _filter_probe):
-        return (
-            ["Last 4 Weeks", "Other Weeks"],
-            [initial_value] if initial_value != "All" else [],
-            "checkbox_dropdown",
-        )
+        return object()
 
     monkeypatch.setattr(browser, "_clear_selection_button", clear_button)
-    monkeypatch.setattr(
-        browser, "_associated_listbox_options", associated_options
-    )
-    monkeypatch.setattr(
-        browser, "_wait_for_combobox_options", checkbox_options
-    )
+
+    async def click_clear(button, name):
+        assert name == "Relative Time"
+        assert button is not None
+        events.append("clear")
+        return True
+
+    async def must_not_open(*_args, **_kwargs):
+        raise AssertionError("Dropdowns must not be opened to clear them")
+
+    monkeypatch.setattr(browser, "_click_clear_selection_button", click_clear)
+    monkeypatch.setattr(browser, "_associated_listbox_options", must_not_open)
+    monkeypatch.setattr(browser, "_wait_for_combobox_options", must_not_open)
+    monkeypatch.setattr(browser, "_current_filter_value", must_not_open)
 
     cleared = asyncio.run(browser._clear_page_slicer_selections(Page()))
-    events.append("initial_screenshot_exports")
-
     assert cleared == ["Relative Time"]
-    assert events == [
-        "locate_clear",
-        "clear",
-        "initial_screenshot_exports",
-    ]
+    assert events == ["locate_clear", "clear", "wait"]
 
 
-def test_clear_page_slicer_selections_skips_single_select_dropdown(
+def test_clear_page_slicer_selections_skips_kpi_selection(monkeypatch) -> None:
+    class Combos:
+        async def evaluate_all(self, _script):
+            return [
+                {
+                    "index": 0,
+                    "name": "KPI Selection",
+                    "selectorName": "KPI Selection",
+                }
+            ]
+
+        def nth(self, _index):
+            raise AssertionError("KPI Selection must not be opened")
+
+    class Frame:
+        def get_by_role(self, role):
+            assert role == "combobox"
+            return Combos()
+
+    class Page:
+        frames = [Frame()]
+
+    async def unexpected(*_args, **_kwargs):
+        raise AssertionError("KPI Selection must not be cleared")
+
+    monkeypatch.setattr(browser, "_clear_selection_button", unexpected)
+
+    assert asyncio.run(browser._clear_page_slicer_selections(Page())) == []
+
+
+def test_clear_page_slicer_selections_does_not_open_dropdown_without_clear_button(
     monkeypatch,
 ) -> None:
     events = []
@@ -7396,10 +7549,6 @@ def test_clear_page_slicer_selections_skips_single_select_dropdown(
     class Combo:
         async def is_visible(self):
             return True
-
-        async def get_attribute(self, name):
-            assert name == "aria-expanded"
-            return "true"
 
     combo = Combo()
 
@@ -7424,34 +7573,19 @@ def test_clear_page_slicer_selections_skips_single_select_dropdown(
     class Page:
         frames = [Frame()]
 
-    async def associated_options(_frame, control, _filter_probe):
+    async def no_clear_action(_frame, filter_item, *, control):
+        assert filter_item["name"] == "Service Team"
+        assert filter_item["control_type"] == "dropdown"
         assert control is combo
-        events.append("inspect_mode")
-        return (
-            ["HR Support Center", "Payroll"],
-            ["HR Support Center"],
-            "radio_dropdown",
-        )
-
-    async def no_clear_action(*_args, **_kwargs):
+        events.append("locate_clear")
         return None
 
-    async def close_dropdown(_page, control):
-        assert control is combo
-        events.append("close")
-
-    monkeypatch.setattr(
-        browser, "_associated_listbox_options", associated_options
-    )
-    monkeypatch.setattr(
-        browser, "_clear_selection_button", no_clear_action
-    )
-    monkeypatch.setattr(browser, "_close_slicer_dropdown", close_dropdown)
+    monkeypatch.setattr(browser, "_clear_selection_button", no_clear_action)
 
     cleared = asyncio.run(browser._clear_page_slicer_selections(Page()))
 
     assert cleared == []
-    assert events == ["inspect_mode", "close"]
+    assert events == ["locate_clear"]
 
 
 def test_clear_page_slicer_selections_uses_single_select_clear_button(
@@ -7462,10 +7596,6 @@ def test_clear_page_slicer_selections_uses_single_select_clear_button(
     class Combo:
         async def is_visible(self):
             return True
-
-        async def get_attribute(self, name):
-            assert name == "aria-expanded"
-            return "true"
 
     combo = Combo()
 
@@ -7491,7 +7621,7 @@ def test_clear_page_slicer_selections_uses_single_select_clear_button(
         frames = [Frame()]
 
         async def wait_for_timeout(self, delay):
-            assert delay == 150
+            assert delay in {100, 150}
             events.append("wait")
 
     class ClearButton:
@@ -7499,40 +7629,27 @@ def test_clear_page_slicer_selections_uses_single_select_clear_button(
             assert kwargs == {"timeout": 5_000, "no_wait_after": True}
             events.append("clear")
 
-    async def associated_options(_frame, control, _filter_probe):
-        assert control is combo
-        return (["Last 4 Weeks", "Last 12 Weeks"], ["Last 4 Weeks"], "radio_dropdown")
-
     async def find_clear_button(_frame, filter_item, *, control):
         assert filter_item["name"] == "Relative Time"
-        assert filter_item["control_type"] == "radio_dropdown"
+        assert filter_item["control_type"] == "dropdown"
         assert control is combo
         events.append("find_clear")
         return ClearButton()
 
-    async def current_value(_page, filter_item):
-        assert filter_item["name"] == "Relative Time"
-        events.append("verify_clear")
-        return []
-
-    async def unexpected_wait_options(*_args, **_kwargs):
-        raise AssertionError("Do not enumerate options after clearing")
-
-    monkeypatch.setattr(
-        browser, "_associated_listbox_options", associated_options
-    )
     monkeypatch.setattr(
         browser, "_clear_selection_button", find_clear_button
     )
-    monkeypatch.setattr(browser, "_current_filter_value", current_value)
-    monkeypatch.setattr(
-        browser, "_wait_for_combobox_options", unexpected_wait_options
-    )
+
+    async def click_clear(_button, _name):
+        events.append("clear")
+        return True
+
+    monkeypatch.setattr(browser, "_click_clear_selection_button", click_clear)
 
     cleared = asyncio.run(browser._clear_page_slicer_selections(Page()))
 
     assert cleared == ["Relative Time"]
-    assert events == ["find_clear", "clear", "wait", "verify_clear"]
+    assert events == ["find_clear", "clear", "wait"]
 
 
 def test_page_start_clears_and_verifies_all_inventory_slicers(monkeypatch) -> None:
@@ -7552,8 +7669,15 @@ def test_page_start_clears_and_verifies_all_inventory_slicers(monkeypatch) -> No
         },
     ]
 
-    async def inventory(_page, diagnostic_directory=None, *, clear_selection_actions):
+    async def inventory(
+        _page,
+        diagnostic_directory=None,
+        *,
+        clear_selection_actions,
+        inspect_filter_options,
+    ):
         assert clear_selection_actions is False
+        assert inspect_filter_options is False
         events.append("inventory")
         return {"filters": filters, "initial_cleared_slicers": []}
 
@@ -7608,6 +7732,60 @@ def test_page_start_clears_and_verifies_all_inventory_slicers(monkeypatch) -> No
     ]
 
 
+def test_page_start_does_not_reopen_cleared_dropdown_for_verification(
+    monkeypatch,
+) -> None:
+    filter_item = {
+        "name": "Facility",
+        "control_type": "dropdown",
+        "selected": [],
+        "values": [],
+        "option_inventory_status": "skipped",
+    }
+
+    async def inventory(
+        _page,
+        diagnostic_directory=None,
+        *,
+        clear_selection_actions,
+        inspect_filter_options,
+    ):
+        assert clear_selection_actions is False
+        assert inspect_filter_options is False
+        return {"filters": [filter_item], "initial_cleared_slicers": []}
+
+    async def clear_slicers(_page, names=None, *, require_all):
+        return ["Facility"] if names is None else []
+
+    async def wait_for_render(_page, settle_seconds):
+        assert settle_seconds == 2.0
+
+    async def current_value(*_args):
+        raise AssertionError("Cleared dropdowns must not be reopened")
+
+    async def set_defaults(*_args, **_kwargs):
+        return None
+
+    class Page:
+        pass
+
+    monkeypatch.setattr(browser, "_accessible_inventory", inventory)
+    monkeypatch.setattr(
+        browser, "_clear_page_slicer_selections", clear_slicers
+    )
+    monkeypatch.setattr(browser, "_wait_for_state_render", wait_for_render)
+    monkeypatch.setattr(browser, "_current_filter_value", current_value)
+    monkeypatch.setattr(browser, "_set_single_select_defaults", set_defaults)
+
+    result = asyncio.run(
+        browser._inventory_page_after_clearing_slicers(Page())
+    )
+
+    assert filter_item["selected"] == ["All"]
+    assert filter_item["clear_selection_checked"] is True
+    assert result["initial_cleared_slicers"] == ["Facility"]
+
+
 def test_page_start_preserves_multiselect_when_no_clear_action_exists(
     monkeypatch,
 ) -> None:
@@ -7618,7 +7796,14 @@ def test_page_start_preserves_multiselect_when_no_clear_action_exists(
         "values": ["Last 4 Weeks", "Other Weeks"],
     }
 
-    async def inventory(_page, diagnostic_directory=None, *, clear_selection_actions):
+    async def inventory(
+        _page,
+        diagnostic_directory=None,
+        *,
+        clear_selection_actions,
+        inspect_filter_options,
+    ):
+        assert inspect_filter_options is False
         return {"filters": [filter_item], "initial_cleared_slicers": []}
 
     async def no_clear_action(_page, _names=None, *, require_all):
@@ -7659,7 +7844,14 @@ def test_page_start_defaults_single_select_to_last_option(
     }
     events = []
 
-    async def inventory(_page, diagnostic_directory=None, *, clear_selection_actions):
+    async def inventory(
+        _page,
+        diagnostic_directory=None,
+        *,
+        clear_selection_actions,
+        inspect_filter_options,
+    ):
+        assert inspect_filter_options is False
         return {"filters": [filter_item], "initial_cleared_slicers": []}
 
     async def clear_slicers(_page, names=None, *, require_all):
@@ -8743,7 +8935,7 @@ def test_filter_case_reapplies_initially_cleared_slicers(
     assert result.selection == selection
     assert clear_calls == [
         (["Relative Time", "Service Team"], False),
-        (["Relative Time"], True),
+        (["Relative Time"], False),
     ]
     assert events.index("select_page") < events.index("clear_before_combination")
     assert events.index("clear_before_combination") < events.index("apply")

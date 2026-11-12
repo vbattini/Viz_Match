@@ -1,0 +1,11 @@
+{
+  "visuals": [],
+  "table_visuals": {
+    "A": 0,
+    "B": 0
+  },
+  "screenshots": {
+    "dashboard_A": "output_plan_gate\\05_table_column_header_comparison\\Weekly_Trending\\dashboard_A.png",
+    "dashboard_B": "output_plan_gate\\05_table_column_header_comparison\\Weekly_Trending\\dashboard_B.png"
+  }
+}

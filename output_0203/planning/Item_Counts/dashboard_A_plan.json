@@ -1,0 +1,71 @@
+{
+  "dashboard": "dashboard_A",
+  "page_name": "Item Counts",
+  "planning_status": "COMPLETED",
+  "inventory_error": null,
+  "filters": [
+    {
+      "name": "Facility",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Supply Planner Hierarchy",
+      "control_type": "dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Master Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Vendor",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Purchase Status",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    },
+    {
+      "name": "Department",
+      "control_type": "checkbox_dropdown",
+      "option_inventory_status": null,
+      "eligible": true,
+      "reason": null
+    }
+  ],
+  "single_filter_plan": {
+    "filter_key": "facility",
+    "name_a": "Facility",
+    "name_b": "Facility",
+    "value_a": "02 - Sioux Falls",
+    "value_b": "02 - Sioux Falls"
+  },
+  "multi_filter_plan": {
+    "filter_key": "purchase status",
+    "name_a": "Purchase Status",
+    "name_b": "Purchase Status",
+    "values_a": [
+      "NEW",
+      "A"
+    ],
+    "values_b": [
+      "NEW",
+      "A"
+    ]
+  },
+  "drill_candidates": []
+}

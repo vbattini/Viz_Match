@@ -1,0 +1,205 @@
+{
+  "page_name": "Item Counts",
+  "status": "FAIL",
+  "dashboard_A": {
+    "report_title": "Inventory Insights",
+    "dashboard_title": "Item Counts",
+    "filters": [
+      {
+        "name": "Facility",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Supply Planner Hierarchy",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Master Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Purchase Status",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Department",
+        "control_type": "Dropdown"
+      }
+    ],
+    "titles": [
+      {
+        "role": "report_title",
+        "text": "Inventory Insights"
+      },
+      {
+        "role": "dashboard_title",
+        "text": "Item Counts"
+      }
+    ],
+    "visuals": [
+      {
+        "title": null,
+        "visual_type": "matrix",
+        "rendering_status": "Rendered",
+        "table_headers": [
+          "Facility",
+          "Active Item Count",
+          "Suspended Item Count",
+          "DWO Item Count",
+          "All Item Count",
+          "Active Vendor Count",
+          "On Hand Cases"
+        ]
+      }
+    ]
+  },
+  "dashboard_B": {
+    "report_title": "Inventory Insights",
+    "dashboard_title": "Item Counts",
+    "filters": [
+      {
+        "name": "Facility",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Supply Planner Hierarchy",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Master Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Vendor",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Purchase Status",
+        "control_type": "Dropdown"
+      },
+      {
+        "name": "Department",
+        "control_type": "Dropdown"
+      }
+    ],
+    "titles": [
+      {
+        "role": "report_title",
+        "text": "Inventory Insights"
+      },
+      {
+        "role": "dashboard_title",
+        "text": "Item Counts"
+      }
+    ],
+    "visuals": [
+      {
+        "title": null,
+        "visual_type": "matrix",
+        "rendering_status": "Blank",
+        "table_headers": [
+          "Facility",
+          "Active Item Count",
+          "Suspended Item Count",
+          "DWO Item Count",
+          "All Item Count",
+          "Active Vendor Count",
+          "On Hand Cases"
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "element_type": "Report Title",
+      "status": "PASS",
+      "element_a": "Inventory Insights",
+      "element_b": "Inventory Insights",
+      "observation": "Report titles match across both dashboards."
+    },
+    {
+      "element_type": "Dashboard Title",
+      "status": "PASS",
+      "element_a": "Item Counts",
+      "element_b": "Item Counts",
+      "observation": "Page/dashboard titles match across both dashboards."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Facility",
+      "element_b": "Facility",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Supply Planner Hierarchy",
+      "element_b": "Supply Planner Hierarchy",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Master Vendor",
+      "element_b": "Master Vendor",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Vendor",
+      "element_b": "Vendor",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Purchase Status",
+      "element_b": "Purchase Status",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Filter",
+      "status": "PASS",
+      "element_a": "Department",
+      "element_b": "Department",
+      "observation": "Filter name and control type match."
+    },
+    {
+      "element_type": "Visual",
+      "status": "FAIL",
+      "element_a": "Rendered matrix",
+      "element_b": "Blank matrix",
+      "observation": "The matrix visual is populated with data rows in Dashboard A, but renders completely blank with no data rows in Dashboard B."
+    },
+    {
+      "element_type": "Table Header",
+      "status": "PASS",
+      "element_a": "Facility, Active Item Count, Suspended Item Count, DWO Item Count, All Item Count, Active Vendor Count, On Hand Cases",
+      "element_b": "Facility, Active Item Count, Suspended Item Count, DWO Item Count, All Item Count, Active Vendor Count, On Hand Cases",
+      "observation": "Column headers and order match across both dashboards."
+    }
+  ],
+  "notes": [
+    "Dashboard B's matrix visual shows headers and an empty Total line, but no rows are populated.",
+    "A matrix visual has no visible title."
+  ],
+  "evidence": {
+    "dashboard_A_screenshots": {
+      "initial": {
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Counts\\dashboard_A\\initial.png"
+      }
+    },
+    "dashboard_B_screenshots": {
+      "initial": {
+        "path": "C:\\Users\\VijayBattini\\Pictures\\test3\\output_05m\\05_table_column_header_comparison\\Item_Counts\\dashboard_B\\initial.png"
+      }
+    },
+    "errors": []
+  }
+}

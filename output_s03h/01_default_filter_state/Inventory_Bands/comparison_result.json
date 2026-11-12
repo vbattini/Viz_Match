@@ -1,0 +1,13 @@
+{
+  "filters": [],
+  "screenshots": {
+    "dashboard_A": {
+      "path": "output_s03h\\01_default_filter_state\\Inventory_Bands\\dashboard_A.png",
+      "sha256": "99db4dc2f6149a3639be97413e77af4e326d469372e1a3bd317ccd77387de806"
+    },
+    "dashboard_B": {
+      "path": "output_s03h\\01_default_filter_state\\Inventory_Bands\\dashboard_B.png",
+      "sha256": "febab55cc381ae60cb99239248dc4197926b14bca40288cfd999797161d85378"
+    }
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "scenario_name": "05_table_column_header_comparison",
+  "dashboard_A_screenshot_paths": {
+    "initial": "output_05k\\05_table_column_header_comparison\\Vendor-Item_Counts\\dashboard_A\\initial.png",
+    "middle": "output_05k\\05_table_column_header_comparison\\Vendor-Item_Counts\\dashboard_A\\middle.png",
+    "extreme_right": "output_05k\\05_table_column_header_comparison\\Vendor-Item_Counts\\dashboard_A\\extreme_right.png"
+  },
+  "dashboard_B_screenshot_paths": {
+    "initial": "output_05k\\05_table_column_header_comparison\\Vendor-Item_Counts\\dashboard_B\\initial.png",
+    "middle": "output_05k\\05_table_column_header_comparison\\Vendor-Item_Counts\\dashboard_B\\middle.png",
+    "extreme_right": "output_05k\\05_table_column_header_comparison\\Vendor-Item_Counts\\dashboard_B\\extreme_right.png"
+  },
+  "captured_scroll_positions": {
+    "dashboard_A": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1396.0374755859375,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 917.3731689453125,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.521777094473928
+          }
+        ]
+      },
+      "middle": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1396.0374755859375,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 917.3731689453125,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.521777094473928
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49912590912464166
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "extreme_right": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1396.0374755859375,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 953.560546875,
+              "y": 1028.130126953125,
+              "width": 917.373291015625,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.5217768919785999
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9982520728263885
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    },
+    "dashboard_B": {
+      "initial": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1408.1373291015625,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1085.2607421875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.29751061137921386
+          }
+        ]
+      },
+      "middle": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1408.1373291015625,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1085.2607421875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.29751061137921386
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.49846408607923237
+          }
+        ],
+        "requested_fraction": 0.5
+      },
+      "extreme_right": {
+        "scroller_count": 1,
+        "controls": [
+          {
+            "kind": "custom",
+            "track": {
+              "x": 714.6468505859375,
+              "y": 1028.130126953125,
+              "width": 1408.1373291015625,
+              "height": 12.10009765625
+            },
+            "thumb": {
+              "x": 875.5892333984375,
+              "y": 1028.130126953125,
+              "width": 1085.2607421875,
+              "height": 12.10009765625
+            },
+            "range_ratio": 0.29751061137921386
+          }
+        ],
+        "actual_custom_positions": [
+          {
+            "kind": "custom",
+            "actual_fraction": 0.9984211744103223
+          }
+        ],
+        "requested_fraction": 1.0
+      }
+    }
+  },
+  "horizontal_scrollbar_presence": {
+    "dashboard_A": true,
+    "dashboard_B": true
+  },
+  "scroll_strategy": "LARGE",
+  "llm_vision_comparison": {
+    "status": "PASS",
+    "tables_found_a": true,
+    "tables_found_b": true,
+    "headers_a": [
+      "Facility",
+      "Whse",
+      "MV #",
+      "Master Vendor",
+      "Vendor #",
+      "Vendor",
+      "EOQ",
+      "EOQ Type",
+      "Max Qty",
+      "Max Type",
+      "Lead Time (Days)",
+      "Order Int (Weeks)",
+      "Active Item Count",
+      "Suspended Item Count",
+      "DWO Item Count",
+      "All Item Count"
+    ],
+    "headers_b": [
+      "Facility",
+      "Whse",
+      "MV #",
+      "Master Vendor",
+      "Vendor #",
+      "Vendor",
+      "EOQ",
+      "EOQ Type",
+      "Max Qty",
+      "Max Type",
+      "Lead Time (Days)",
+      "Order Int (Weeks)",
+      "Active Item Count",
+      "Suspended Item Count",
+      "DWO Item Count",
+      "All Item Count"
+    ],
+    "matching_headers": [
+      "Facility",
+      "Whse",
+      "MV #",
+      "Master Vendor",
+      "Vendor #",
+      "Vendor",
+      "EOQ",
+      "EOQ Type",
+      "Max Qty",
+      "Max Type",
+      "Lead Time (Days)",
+      "Order Int (Weeks)",
+      "Active Item Count",
+      "Suspended Item Count",
+      "DWO Item Count",
+      "All Item Count"
+    ],
+    "missing_headers": [],
+    "additional_headers": [],
+    "renamed_headers": [],
+    "differently_ordered_headers": [],
+    "notes": []
+  },
+  "matching_headers": [
+    "Facility",
+    "Whse",
+    "MV #",
+    "Master Vendor",
+    "Vendor #",
+    "Vendor",
+    "EOQ",
+    "EOQ Type",
+    "Max Qty",
+    "Max Type",
+    "Lead Time (Days)",
+    "Order Int (Weeks)",
+    "Active Item Count",
+    "Suspended Item Count",
+    "DWO Item Count",
+    "All Item Count"
+  ],
+  "missing_headers": [],
+  "additional_headers": [],
+  "renamed_headers": [],
+  "differently_ordered_headers": [],
+  "overall_comparison_status": "PASS",
+  "execution_status": "PASS",
+  "reason": null
+}

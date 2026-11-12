@@ -1,0 +1,64 @@
+{
+  "pages": [
+    {
+      "page": "Executive Summary",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Weekly Trending",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "All Items",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Health Index",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Inventory Bands",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Item Counts",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Vendor-Item Counts",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "To Be Discontinued",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Current On Hand",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    },
+    {
+      "page": "Item Level Order Mods",
+      "statuses": {
+        "05_table_column_header_comparison": "SKIPPED"
+      }
+    }
+  ]
+}

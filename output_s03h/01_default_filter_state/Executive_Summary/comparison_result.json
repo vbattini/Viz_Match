@@ -1,0 +1,42 @@
+{
+  "filters": [
+    {
+      "filter_key": "department",
+      "name_a": "Department",
+      "name_b": "Department",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "facility",
+      "name_a": "Facility",
+      "name_b": "Facility",
+      "selected_a": [],
+      "selected_b": [],
+      "status": "MATCH"
+    },
+    {
+      "filter_key": "supply planner hierarchy",
+      "name_a": "Supply Planner Hierarchy",
+      "name_b": "Supply Planner Hierarchy",
+      "selected_a": [
+        "All"
+      ],
+      "selected_b": [
+        "All"
+      ],
+      "status": "MATCH"
+    }
+  ],
+  "screenshots": {
+    "dashboard_A": {
+      "path": "output_s03h\\01_default_filter_state\\Executive_Summary\\dashboard_A.png",
+      "sha256": "a6c71f645dcce3d954617f55d9e299374c1eb3a78212e89daab7c13b0149c913"
+    },
+    "dashboard_B": {
+      "path": "output_s03h\\01_default_filter_state\\Executive_Summary\\dashboard_B.png",
+      "sha256": "4dedb353de65e442e2590bd2839e5e9a42d1531a52ff2616ce3d3e301d60e288"
+    }
+  }
+}

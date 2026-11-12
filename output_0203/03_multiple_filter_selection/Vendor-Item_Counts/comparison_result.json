@@ -1,0 +1,15 @@
+{
+  "outcome": "UNVERIFIED",
+  "dashboard_A": {
+    "status": "UNVERIFIED",
+    "reason": "03_multiple_filter_selection failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+  },
+  "dashboard_B": {
+    "status": "UNVERIFIED",
+    "reason": "03_multiple_filter_selection failed: TargetClosedError: Locator.evaluate_all: Target page, context or browser has been closed"
+  },
+  "screenshots": {
+    "dashboard_A": null,
+    "dashboard_B": null
+  }
+}

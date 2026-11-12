@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "filter_key": "vendor",
+    "name_a": "Vendor",
+    "name_b": "Vendor",
+    "value_a": "- DACOTAH PAPER CO",
+    "value_b": "- DACOTAH PAPER CO"
+  },
+  "steps": [
+    {
+      "record": {
+        "filter": "Vendor",
+        "requested": [
+          "- DACOTAH PAPER CO"
+        ],
+        "applied": true,
+        "selected": [
+          "- DACOTAH PAPER CO"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\All_Items\\dashboard_A.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    },
+    {
+      "record": {
+        "filter": "Vendor",
+        "requested": [
+          "- DACOTAH PAPER CO"
+        ],
+        "applied": true,
+        "selected": [
+          "- DACOTAH PAPER CO"
+        ],
+        "verified": true
+      },
+      "verified": true,
+      "screenshot": "output_0203\\02_single_filter_selection\\All_Items\\dashboard_B.png",
+      "restored": true,
+      "restore_error": null,
+      "kept_for_next": false,
+      "restore_performed_by": "03_multiple_filter_selection"
+    }
+  ]
+}
