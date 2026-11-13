@@ -1,0 +1,63 @@
+POWER BI DASHBOARD COMPARISON - QUICK START
+==========================================
+
+1. Open PowerShell in the repository root and activate the environment:
+
+   cd C:\Users\VijayBattini\Pictures\test3
+   .\venv\Scripts\Activate.ps1
+
+2. Set the required environment variables:
+
+   $env:POWERBI_HOME_URL = "https://app.powerbi.com/home?ctid=<tenant-id>&experience=power-bi"
+   $env:GOOGLE_CLOUD_PROJECT = "your-gcp-project-id"
+   $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\credentials.json"
+
+3. Start the API:
+
+   uvicorn Backend.api:app --host 127.0.0.1 --port 8001 --reload
+
+4. In another PowerShell window, submit a scenario-enabled comparison:
+
+   $body = @{
+       workspace_name = "Your Workspace"
+       semantic_model = "Your Model"
+       report_name = "Your Report"
+       run_validation_scenarios = $true
+   } | ConvertTo-Json
+
+   $response = Invoke-WebRequest -Uri "http://127.0.0.1:8001/api/compare" `
+       -Method POST `
+       -Headers @{"Content-Type"="application/json"} `
+       -Body $body
+
+   $job_id = ($response.Content | ConvertFrom-Json).job_id
+   Invoke-WebRequest -Uri "http://127.0.0.1:8001/api/jobs/$job_id"
+
+Poll the job endpoint until status is "completed" or "failed".
+
+The API captures and validates scenario evidence before running the existing
+Dashboard Comparison comparator and generating its DOCX and Excel reports.
+There is no separate scenario-comparison report endpoint.
+
+OUTPUT
+======
+
+output\jobs\<job_id>\
+  dashboard_A\<page>\             Scenario screenshots
+  dashboard_A\evidence_manifest.json
+  dashboard_B\<page>\             Scenario screenshots
+  dashboard_B\evidence_manifest.json
+  planning\scenario_evidence\     DOM, execution, and status JSON
+  validation_summary.json
+  Dashboard_Comparison.docx
+  Dashboard_Comparison.xlsx
+
+Five report scenarios:
+  01 - Initial Default State (baseline capture)
+  02 - Single Filter Selection
+  03 - Multiple Filter Selection
+  04 - Drill Down
+  05 - Table Column Header Comparison (screenshot-only Vision)
+
+For detailed instructions see README.md, LOCAL_SETUP_GUIDE.md, and
+API_QUICK_REFERENCE.md.

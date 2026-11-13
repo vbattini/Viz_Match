@@ -2,22 +2,16 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
+import re
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 from docx import Document
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
-
-from .visual_filter_comparison import (
-    DIFFERENT,
-    MATCH,
-    UNVERIFIED,
-    filter_selection_result,
-)
 
 TEMPLATE_PATH = Path(__file__).parent / "assets" / "report_template.docx"
 _PROJECT_COMPARISON_TEMPLATE = (
@@ -33,11 +27,28 @@ RESULT_STATUS_DROPDOWN_LABEL = "Result Status Dropdown (Pass/Fail)"
 FILTER_EXPECTED_BEHAVIOR = (
     "Filters are applied and visuals are working as expected."
 )
+DOCX_FILTER_VALIDATION_HEADERS = [
+    "ID",
+    "Page / Tab Name",
+    "Action / Filter Applied",
+    "Expected Behavior",
+    "Result (Pass/Fail/Unable to Verify)",
+]
+DOCX_VISUAL_VALIDATION_HEADERS = [
+    "ID",
+    "Page / Area",
+    "Visual / Check",
+    "Action / Filter Applied",
+    "Expected Result",
+    "Result",
+]
+NO_FILTER_SELECTIONS_TEXT = "No filter selections captured."
 STATUS_FONT_SIZE_PT = 14
+UNVERIFIED_FONT_SIZE_PT = 10
 STATUS_TEXT_COLORS = {
     "pass": "008000",
     "fail": "C00000",
-    "unable to verify": "666666",
+    "unable to verify": "ED7D31",
 }
 
 NAVY = "1F3864"
@@ -56,8 +67,44 @@ def write_docx_report(
     *,
     tester_name: str = DEFAULT_TESTER_NAME,
     report_date: date | str | None = None,
+    report_metadata: dict[str, Any] | None = None,
+    filter_validation_log: tuple[list[str], list[list[Any]]] | None = None,
+    visual_validation_log: tuple[list[str], list[list[Any]]] | None = None,
+    visual_validation_states: list[str] | None = None,
 ) -> None:
     doc = Document(str(COMPARISON_TEMPLATE_PATH))
+    if (
+        filter_validation_log is None
+        or visual_validation_log is None
+        or visual_validation_states is None
+    ):
+        from .visual_filter_report import (
+            FILTER_VALIDATION_HEADERS,
+            VISUAL_VALIDATION_HEADERS,
+            filter_validation_log_rows,
+            visual_validation_log_data,
+        )
+
+    if filter_validation_log is None:
+        filter_validation_log = (
+            FILTER_VALIDATION_HEADERS,
+            filter_validation_log_rows(result),
+        )
+    if visual_validation_log is None or visual_validation_states is None:
+        generated_visual_rows, generated_visual_states = (
+            visual_validation_log_data(result)
+        )
+    if visual_validation_log is None:
+        visual_validation_log = (
+            VISUAL_VALIDATION_HEADERS,
+            generated_visual_rows,
+        )
+    if visual_validation_states is None:
+        if visual_validation_log[1] != generated_visual_rows:
+            raise ValueError(
+                "Visual validation rows do not match their scenario states."
+            )
+        visual_validation_states = generated_visual_states
 
     summary = result.get("summary") or {}
     comparisons = [row for row in result.get("comparisons") or [] if isinstance(row, dict)]
@@ -69,7 +116,6 @@ def write_docx_report(
     evidence_a = _evidence(result, "dashboard_a")
     evidence_b = _evidence(result, "dashboard_b")
     states = _ordered_states(result, comparisons, exported_rows, summary)
-    rows_by_state = _group_by_state(comparisons)
     a_only = set(summary.get("dashboard_a_only_states") or [])
     b_only = set(summary.get("dashboard_b_only_states") or [])
     overall = _overall_status(result)
@@ -83,12 +129,21 @@ def write_docx_report(
         evidence_a,
         evidence_b,
         states,
-        rows_by_state,
         a_only,
         b_only,
         overall,
+        report_metadata,
+        filter_validation_log,
+        visual_validation_log,
+        visual_validation_states,
     )
-    _replace_template_screenshots(doc, evidence_a, evidence_b, states)
+    _replace_template_screenshots(
+        doc,
+        evidence_a,
+        evidence_b,
+        states,
+        label_initial_default_state=False,
+    )
     doc.save(str(path))
 
 
@@ -102,158 +157,94 @@ def _populate_comparison_template(
     evidence_a: dict[str, dict[str, Any]],
     evidence_b: dict[str, dict[str, Any]],
     states: list[str],
-    rows_by_state: dict[str, list[dict[str, Any]]],
     a_only: set[str],
     b_only: set[str],
     overall: str,
+    report_metadata: dict[str, Any] | None,
+    filter_validation_log: tuple[list[str], list[list[Any]]],
+    visual_validation_log: tuple[list[str], list[list[Any]]],
+    visual_validation_states: list[str],
 ) -> None:
-    report_title = _side_value(evidence_a, "report_title") or dashboard_a
-    report_title_b = _side_value(evidence_b, "report_title") or dashboard_b
+    metadata = report_metadata or {}
+    inputs = metadata.get("inputs") or {}
+    dashboard_a_metadata = metadata.get("dashboard_a") or {}
+    dashboard_b_metadata = metadata.get("dashboard_b") or {}
+    report_title = (
+        inputs.get("report_name")
+        or _side_value(evidence_a, "report_title")
+        or dashboard_a
+    )
+    semantic_model = inputs.get("semantic_model") or ""
+    workspace_a = dashboard_a_metadata.get("workspace_name") or ""
+    workspace_b = dashboard_b_metadata.get("workspace_name") or ""
     summary = result.get("summary") or {}
     tables = doc.tables
+    _set_cell_text(tables[0].cell(2, 0), "Snowflake Workspace Name")
+    _set_cell_text(tables[0].cell(3, 0), "GCP Workspace Name")
     _set_cell_text(tables[0].cell(0, 1), report_title)
-    _set_cell_text(tables[0].cell(1, 1), report_title)
-    _set_cell_text(tables[0].cell(2, 1), report_title)
-    _set_cell_text(tables[0].cell(3, 1), report_title_b)
+    _set_cell_text(tables[0].cell(1, 1), semantic_model)
+    _set_cell_text(tables[0].cell(2, 1), workspace_a)
+    _set_cell_text(tables[0].cell(3, 1), workspace_b)
     _set_dropdown_cell_text(
         tables[0].cell(4, 1),
         tester_name,
         additional_options=("Battini Vijay",),
     )
     _set_cell_text(tables[0].cell(5, 1), _format_date(report_date))
-    overall_cell = tables[0].cell(6, 1)
-    if overall_cell._tc.xpath(".//w:sdtPr/w:dropDownList"):
-        _set_dropdown_cell_text(
-            overall_cell,
-            _docx_status_label(overall),
-            replace_options=("Pass", "Fail"),
-        )
-    else:
-        _set_cell_text(overall_cell, overall)
-    _style_status_cell(overall_cell, overall)
-
-    visual_filter = result.get("visual_filter") or {}
-    captured_filter_rows = [
-        row
-        for row in visual_filter.get("filter_rows") or []
-        if isinstance(row, dict)
-    ]
-    states_by_page: dict[str, tuple[str, list[str]]] = {}
-    for state in states:
-        page, _ = _split_state(state)
-        page_key = page.casefold()
-        if page_key not in states_by_page:
-            states_by_page[page_key] = (page, [])
-        states_by_page[page_key][1].append(state)
-
-    filter_rows = []
-    for index, (page, page_states) in enumerate(states_by_page.values(), start=1):
-        state = next(
-            (
-                candidate
-                for candidate in page_states
-                if _split_state(candidate)[1].casefold() == "default state"
-            ),
-            None,
-        )
-        if state is None:
-            state = next(
-                (
-                    candidate
-                    for candidate in page_states
-                    if candidate in rows_by_state
-                ),
-                page_states[0],
-            )
-        page_filter_rows = sorted(
-            (
-                row
-                for row in captured_filter_rows
-                if str(row.get("state") or "").casefold() == state.casefold()
-            ),
-            key=lambda row: row.get("aligned_position") or 0,
-        )
-        filter_rows.append(
-            [
-                f"{index:02d}",
-                page,
-                _filter_action_summary(page_filter_rows),
-                FILTER_EXPECTED_BEHAVIOR,
-                _filter_validation_status(page_filter_rows),
-            ]
-        )
-    if not filter_rows:
-        filter_rows.append(
-            [
-                "01",
-                "—",
-                "No filter selections captured.",
-                FILTER_EXPECTED_BEHAVIOR,
-                "UNVERIFIED",
-            ]
-        )
-    _set_cell_text(
-        tables[1].cell(0, 4),
-        "Result (Pass/Fail/Unable to Verify)",
-    )
-    _replace_table_data(tables[1], filter_rows)
-    for row_index, row in enumerate(filter_rows, start=1):
-        result_cell = tables[1].cell(row_index, 4)
-        status = _docx_status_label(row[4])
-        if result_cell._tc.xpath(".//w:sdtPr/w:dropDownList"):
+    def apply_overall(status: str) -> None:
+        overall_cell = tables[0].cell(6, 1)
+        if overall_cell._tc.xpath(".//w:sdtPr/w:dropDownList"):
             _set_dropdown_cell_text(
-                result_cell,
-                status,
-                replace_options=("Pass", "Fail", "Unable to Verify"),
+                overall_cell,
+                _docx_status_label(status),
+                replace_options=("Pass", "Fail"),
             )
-            for alias in result_cell._tc.xpath(".//w:sdtPr/w:alias"):
-                alias.set(
-                    qn("w:val"), "Pass / Fail / Unable to Verify"
-                )
         else:
-            _set_dropdown_control(
-                result_cell,
-                status,
-                title="Pass / Fail / Unable to Verify",
-                options=("Pass", "Fail", "Unable to Verify"),
-            )
-        _style_status_cell(result_cell, status)
+            _set_cell_text(overall_cell, status)
+        _style_status_cell(overall_cell, status)
 
-    from .visual_filter_report import visual_functional_log_rows
+    apply_overall(overall)
 
-    page_actions = {str(row[1]).casefold(): str(row[2]) for row in filter_rows}
-    visual_rows = []
-    for log_row in visual_functional_log_rows(result):
-        page = _text(log_row.get("page"))
-        check = _text(log_row.get("visual_check"))
-        base = _text(log_row.get("base"))
-        if check.endswith(" Position & Size") or base.startswith("Position:"):
-            continue
-        status = _docx_status_label(str(log_row.get("status") or ""))
-        if status not in {"Pass", "Fail"}:
-            continue
-        expected = _text(log_row.get("observation")) or FILTER_EXPECTED_BEHAVIOR
-        visual_rows.append(
-            [
-                f"{len(visual_rows) + 1:02d}",
-                page,
-                _text(log_row.get("compare")) or check,
-                page_actions.get(page.casefold(), ""),
-                expected,
-                status,
-            ]
-        )
-    _set_cell_text(tables[2].cell(0, 2), "Visual / Check")
-    _replace_table_data(tables[2], visual_rows)
-    _match_run_format(tables[2], source_column=3, target_columns=(1, 2, 4))
-    for row_index, row in enumerate(visual_rows, start=1):
-        _set_dropdown_control(
-            tables[2].cell(row_index, 5),
-            _docx_status_label(row[5]),
-            title="Pass / Fail",
-            options=("Pass", "Fail"),
-        )
-        _style_status_cell(tables[2].cell(row_index, 5), row[5])
+    filter_headers, source_filter_rows = filter_validation_log
+    filter_rows = _docx_filter_validation_rows(
+        filter_headers, source_filter_rows
+    )
+    _replace_docx_log_table(
+        doc,
+        tables[1],
+        DOCX_FILTER_VALIDATION_HEADERS,
+        filter_rows,
+        column_weights=[0.4, 0.9, 1.7, 2.45, 0.95],
+        status_column=4,
+    )
+
+    visual_headers, source_visual_rows = visual_validation_log
+    visual_rows = _docx_visual_validation_rows(
+        visual_headers,
+        source_visual_rows,
+        visual_validation_states,
+        (result.get("visual_filter") or {}).get("filter_rows") or [],
+        (result.get("visual_filter") or {}).get("visual_rows") or [],
+    )
+    _replace_docx_log_table(
+        doc,
+        tables[2],
+        DOCX_VISUAL_VALIDATION_HEADERS,
+        visual_rows,
+        column_weights=[0.35, 0.8, 1.0, 1.55, 2.0, 0.6],
+        status_column=5,
+    )
+    shown_statuses = [
+        _docx_status_label(str(row[4] or "")) for row in filter_rows
+    ] + [
+        _docx_status_label(str(row[5] or "")) for row in visual_rows
+    ]
+    overall = (
+        "PASS"
+        if shown_statuses and all(status != "Fail" for status in shown_statuses)
+        else "FAIL"
+    )
+    apply_overall(overall)
 
     _set_cell_text(tables[3].cell(0, 0), RESULT_STATUS_DROPDOWN_LABEL)
     _set_dropdown_control(
@@ -396,36 +387,319 @@ def _set_dropdown_control(
     paragraph._p.append(control)
 
 
-def _replace_table_data(table: Any, rows: list[list[str]]) -> None:
-    template_row = deepcopy(table.rows[1]._tr)
-    while len(table.rows) > 1:
-        table._tbl.remove(table.rows[1]._tr)
-    for values in rows:
-        row = deepcopy(template_row)
-        table._tbl.append(row)
-        for cell, value in zip(table.rows[-1].cells, values):
-            text = _text(value, limit=MAX_CELL_CHARS)
-            if cell._tc.xpath(".//w:sdtPr/w:dropDownList"):
-                _set_dropdown_cell_text(cell, text)
-            else:
-                _set_cell_text(cell, text)
+def _replace_docx_log_table(
+    doc: Any,
+    anchor_table: Any,
+    headers: list[str],
+    rows: list[list[Any]],
+    *,
+    column_weights: list[float],
+    status_column: int,
+    font_size: float = 7.5,
+) -> Any:
+    if len(headers) != len(column_weights) or any(
+        len(row) != len(headers) for row in rows
+    ):
+        raise ValueError("DOCX log rows must match their declared columns.")
+
+    section = doc.sections[-1]
+    available_width = (
+        section.page_width - section.left_margin - section.right_margin
+    ) / 914400
+    weight_total = sum(column_weights)
+    widths = [
+        available_width * weight / weight_total for weight in column_weights
+    ]
+
+    table = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    table.autofit = False
+    _set_borders(table)
+    for column, width in enumerate(widths):
+        table.columns[column].width = Inches(width)
+
+    for row_index, values in enumerate([headers, *rows]):
+        table_row = table.rows[row_index]
+        row_properties = table_row._tr.get_or_add_trPr()
+        if row_index == 0:
+            row_properties.append(OxmlElement("w:tblHeader"))
+        else:
+            row_properties.append(OxmlElement("w:cantSplit"))
+        for column, value in enumerate(values):
+            cell = table_row.cells[column]
+            cell.width = Inches(widths[column])
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+            if row_index == 0:
+                _shade(cell, NAVY)
+            _set_cell_text(cell, "" if value is None else str(value))
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
+                for run in paragraph.runs:
+                    run.font.size = Pt(font_size)
+                    if row_index == 0:
+                        run.bold = True
+                        run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+                    elif column == status_column:
+                        run.font.color.rgb = RGBColor.from_string(
+                            _status_text_color(value)
+                        )
+
+    old_table = anchor_table._tbl
+    new_table = table._tbl
+    old_table.addprevious(new_table)
+    old_table.getparent().remove(old_table)
+    return table
 
 
-def _match_run_format(
-    table: Any, source_column: int, target_columns: tuple[int, ...]
-) -> None:
-    for row in table.rows[1:]:
-        source_runs = row.cells[source_column]._tc.xpath(".//w:r")
-        source_props = (
-            source_runs[0].find(qn("w:rPr")) if source_runs else None
+def _docx_filter_validation_rows(
+    source_headers: list[str], source_rows: list[list[Any]]
+) -> list[list[str]]:
+    source_columns = {
+        str(header): index for index, header in enumerate(source_headers)
+    }
+    required_headers = (
+        "ID",
+        "Page / Area",
+        "Compare Dashboard",
+        "Base Dashboard",
+        "Visual / Check",
+        "Result",
+    )
+    if any(header not in source_columns for header in required_headers):
+        raise ValueError(
+            "Source Filter Validation Log is missing a required column."
         )
-        for column in target_columns:
-            for run in row.cells[column]._tc.xpath(".//w:r"):
-                existing = run.find(qn("w:rPr"))
-                if existing is not None:
-                    run.remove(existing)
-                if source_props is not None:
-                    run.insert(0, deepcopy(source_props))
+
+    def value(row: list[Any], column: str) -> str:
+        return "" if row[source_columns[column]] is None else str(
+            row[source_columns[column]]
+        )
+
+    result: list[list[str]] = []
+    for row in source_rows:
+        if len(row) != len(source_headers):
+            raise ValueError(
+                "Source Filter Validation Log row does not match its headers."
+            )
+        filter_name = value(row, "Compare Dashboard")
+        base_selection = value(row, "Base Dashboard")
+        compare_selection = value(row, "Visual / Check")
+        if " ".join(base_selection.split()).casefold() == " ".join(
+            compare_selection.split()
+        ).casefold():
+            action = f"{filter_name}: {base_selection}"
+        else:
+            action = (
+                f"{filter_name}: Base: {base_selection}; "
+                f"Compare: {compare_selection}"
+            )
+        result.append(
+            [
+                value(row, "ID"),
+                value(row, "Page / Area"),
+                action,
+                FILTER_EXPECTED_BEHAVIOR,
+                value(row, "Result"),
+            ]
+        )
+    return result
+
+
+def _docx_visual_validation_rows(
+    source_headers: list[str],
+    source_rows: list[list[Any]],
+    states: list[str],
+    filter_rows: list[dict[str, Any]],
+    visual_metadata: list[dict[str, Any]],
+) -> list[list[str]]:
+    source_columns = {
+        str(header): index for index, header in enumerate(source_headers)
+    }
+    required_headers = (
+        "ID",
+        "Page / Area",
+        "Compare Dashboard",
+        "Base Dashboard",
+        "Visual Name",
+        "Visual / Check",
+        "Observation",
+        "Result",
+    )
+    if any(header not in source_columns for header in required_headers):
+        raise ValueError(
+            "Source Visual & Functional Validation Log is missing a required column."
+        )
+    if len(states) != len(source_rows):
+        raise ValueError(
+            "Visual validation rows must have one matching scenario state each."
+        )
+
+    def value(row: list[Any], column: str) -> str:
+        return "" if row[source_columns[column]] is None else str(
+            row[source_columns[column]]
+        )
+
+    result: list[list[str]] = []
+    for row, state in zip(source_rows, states):
+        if len(row) != len(source_headers):
+            raise ValueError(
+                "Source Visual & Functional Validation Log row does not match its headers."
+            )
+        compare_raw = value(row, "Compare Dashboard")
+        base_raw = value(row, "Base Dashboard")
+        visual_name_raw = value(row, "Visual Name")
+        check_raw = value(row, "Visual / Check")
+        visual_check = _docx_visual_check(
+            visual_name_raw,
+            check_raw,
+            compare_raw,
+            base_raw,
+            state,
+            visual_metadata,
+        )
+        status = value(row, "Result")
+        result.append(
+            [
+                value(row, "ID"),
+                value(row, "Page / Area"),
+                visual_check,
+                _docx_visual_action(state, filter_rows, visual_metadata),
+                value(row, "Observation"),
+                status,
+            ]
+        )
+    return result
+
+
+def _docx_visual_check(
+    visual_name: str,
+    check: str,
+    compare: str,
+    base: str,
+    state: str,
+    visual_metadata: list[dict[str, Any]],
+) -> str:
+    normalized_name = " ".join(visual_name.split())
+    lowered_name = normalized_name.casefold()
+    if (
+        normalized_name
+        and lowered_name not in {"-", "untitled visual", "not available"}
+        and not lowered_name.startswith(
+            ("table_headers", "visual_id", "table_header", "table_visual")
+        )
+        and not (
+            "_" in normalized_name
+            and any(character.isdigit() for character in normalized_name)
+        )
+        and ":" not in normalized_name
+        and len(normalized_name) <= 64
+    ):
+        return normalized_name
+
+    state_key = state.casefold()
+    for row in visual_metadata:
+        if not isinstance(row, dict) or str(row.get("state") or "").casefold() != state_key:
+            continue
+        for key in ("visual_type_a", "visual_type_b"):
+            visual_type = _simple_visual_type(str(row.get(key) or ""))
+            if visual_type:
+                return visual_type
+
+    for candidate in (visual_name, check, compare, base):
+        visual_type = _simple_visual_type(candidate)
+        if visual_type:
+            return visual_type
+    return "Visual"
+
+
+def _simple_visual_type(value: str) -> str:
+    normalized = " ".join(value.split()).casefold()
+    if not normalized or normalized in {"-", "not available", "not captured"}:
+        return ""
+    for token, label in (
+        ("text box", "Text Box"),
+        ("matrix", "Matrix"),
+        ("table", "Table"),
+        ("header", "Header"),
+        ("slicer", "Slicer"),
+        ("dropdown", "Slicer"),
+        ("chart", "Chart"),
+        ("kpi", "KPI"),
+        ("image", "Image"),
+        ("logo", "Image"),
+        ("button", "Button"),
+        ("card", "Card"),
+    ):
+        if token in normalized:
+            return label
+    return ""
+
+
+def _docx_visual_action(
+    state: str,
+    filter_rows: list[dict[str, Any]],
+    visual_metadata: list[dict[str, Any]],
+) -> str:
+    def rows_for_state(candidate_state: str) -> list[dict[str, Any]]:
+        return [
+            row
+            for row in filter_rows
+            if isinstance(row, dict)
+            and str(row.get("state") or "").casefold()
+            == candidate_state.casefold()
+        ]
+
+    matching_rows = rows_for_state(state)
+    if not matching_rows and "|scenario_01|" in state.casefold():
+        page_name = state.split("|", 1)[0]
+        matching_rows = rows_for_state(f"{page_name}|initial")
+
+    if matching_rows:
+        matching_rows.sort(
+            key=lambda row: (
+                row.get("aligned_position")
+                if isinstance(row.get("aligned_position"), (int, float))
+                else float("inf")
+            )
+        )
+        actions = []
+        for row in matching_rows:
+            name = " ".join(str(row.get("filter_name") or "").split())
+            base_value = " ".join(
+                str(row.get("selected_values_a") or "Not captured").split()
+            )
+            compare_value = " ".join(
+                str(row.get("selected_values_b") or "Not captured").split()
+            )
+            if base_value.casefold() == compare_value.casefold():
+                actions.append(f"{name}: {base_value}" if name else base_value)
+            else:
+                actions.append(
+                    f"{name}: Base: {base_value}; Compare: {compare_value}"
+                    if name
+                    else f"Base: {base_value}; Compare: {compare_value}"
+                )
+        return "; ".join(actions)
+
+    state_key = state.casefold()
+    applied_actions = []
+    default_action_found = False
+    for row in visual_metadata:
+        if not isinstance(row, dict) or str(row.get("state") or "").casefold() != state_key:
+            continue
+        action = " ".join(str(row.get("action_applied") or "").split())
+        if action.casefold() == "none (default view)":
+            default_action_found = True
+        elif action:
+            applied_actions.append(action)
+    if applied_actions:
+        return "; ".join(dict.fromkeys(applied_actions))
+    if default_action_found:
+        return "Default filter state"
+    return "Not captured"
+
+
+
 
 
 def _replace_paragraph(doc: Any, old_text: str, new_text: str) -> None:
@@ -555,6 +829,11 @@ def _style_status_cell(cell: Any, status: Any) -> None:
         tc_pr.remove(shd)
 
     color = _status_text_color(status)
+    font_size_pt = (
+        UNVERIFIED_FONT_SIZE_PT
+        if color == STATUS_TEXT_COLORS["unable to verify"]
+        else STATUS_FONT_SIZE_PT
+    )
     for run in cell._tc.xpath(".//w:r"):
         run_properties = run.find(qn("w:rPr"))
         if run_properties is None:
@@ -568,9 +847,16 @@ def _style_status_cell(cell: Any, status: Any) -> None:
             "w:szCs",
             "w:highlight",
             "w:shd",
+            "w:i",
+            "w:iCs",
+            "w:rStyle",
         ):
             for existing in run_properties.findall(qn(tag_name)):
                 run_properties.remove(existing)
+        for tag_name in ("w:i", "w:iCs"):
+            italic_off = OxmlElement(tag_name)
+            italic_off.set(qn("w:val"), "0")
+            run_properties.append(italic_off)
         for tag_name in ("w:b", "w:bCs"):
             bold = OxmlElement(tag_name)
             run_properties.append(bold)
@@ -579,7 +865,7 @@ def _style_status_cell(cell: Any, status: Any) -> None:
         run_properties.append(color_element)
         for tag_name in ("w:sz", "w:szCs"):
             size = OxmlElement(tag_name)
-            size.set(qn("w:val"), str(STATUS_FONT_SIZE_PT * 2))
+            size.set(qn("w:val"), str(font_size_pt * 2))
             run_properties.append(size)
 
 
@@ -600,8 +886,6 @@ def _insert_screenshot(
             if height_in > SCREENSHOT_MAX_HEIGHT_IN:
                 width = SCREENSHOT_MAX_HEIGHT_IN * float(image_width) / float(image_height)
         paragraph.add_run().add_picture(str(path), width=Inches(width))
-        return
-    paragraph.add_run(f"Current screenshot not available for {side_label}.")
 
 
 def _replace_template_screenshots(
@@ -609,18 +893,25 @@ def _replace_template_screenshots(
     evidence_a: dict[str, dict[str, Any]],
     evidence_b: dict[str, dict[str, Any]],
     states: list[str],
+    *,
+    label_initial_default_state: bool = False,
 ) -> None:
+    initial_state_heading = (
+        "Scenario 01 — Initial Default State: Page-by-Page Screenshots"
+        if label_initial_default_state
+        else "2.1 Page-by-Page Screenshots (Snowflake vs. GCP)"
+    )
     sections = (
         (
             "2.1 Snowflake",
             "2.2 GCP",
-            "2.1 Page-by-Page Screenshots (Snowflake vs. GCP)",
+            initial_state_heading,
             "3. Visual & Functional Validation Log",
         ),
         (
             "3.1 Snowflake",
             "3.2 GCP",
-            "3.1 Page-by-Page Screenshots (Snowflake vs. GCP)",
+            initial_state_heading,
             "4. Summary & Sign-off",
         ),
     )
@@ -649,29 +940,26 @@ def _insert_page_screenshot_pairs(
     ],
 ) -> None:
     if not page_pairs:
-        anchor.insert_paragraph_before(
-            "No page screenshots were captured for either dashboard."
-        )
         return
 
     for page, screenshot_a, screenshot_b in page_pairs:
-        caption = anchor.insert_paragraph_before()
-        caption.add_run(f"Page/Tab Name: {page}").bold = True
-        caption.paragraph_format.keep_with_next = True
         available = tuple(
             (path := Path(str((screenshot or {}).get("path") or ""))).name
             and path.is_file()
             for screenshot in (screenshot_a, screenshot_b)
         )
         if not any(available):
-            anchor.insert_paragraph_before(
-                f"Current screenshots are not available for {page}."
-            )
             continue
-        for screenshot, label in (
-            (screenshot_a, "Snowflake"),
-            (screenshot_b, "GCP"),
+        for screenshot, label, screenshot_available in (
+            (screenshot_a, "Snowflake", available[0]),
+            (screenshot_b, "GCP", available[1]),
         ):
+            if not screenshot_available:
+                continue
+            screenshot_path = Path(str((screenshot or {}).get("path") or ""))
+            caption = anchor.insert_paragraph_before()
+            caption.add_run(f"{page} – ({screenshot_path.name})").bold = True
+            caption.paragraph_format.keep_with_next = True
             side_heading = anchor.insert_paragraph_before()
             side_heading.add_run(label).bold = True
             side_heading.paragraph_format.keep_with_next = True
@@ -689,37 +977,34 @@ def _page_screenshot_pairs(
     evidence_a: dict[str, dict[str, Any]],
     evidence_b: dict[str, dict[str, Any]],
 ) -> list[tuple[str, dict[str, Any] | None, dict[str, Any] | None]]:
-    pages: dict[str, str] = {}
     ordered_states = list(dict.fromkeys([*evidence_a, *evidence_b, *states]))
-    for state in ordered_states:
-        page, _ = _split_state(state)
-        pages.setdefault(page.casefold(), page)
 
-    def page_evidence(
-        page_key: str,
-        evidence: dict[str, dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        candidates = [
-            state
-            for state in ordered_states
-            if _split_state(state)[0].casefold() == page_key
-            and state in evidence
-        ]
-        candidates.sort(
-            key=lambda state: (
-                0
-                if Path(str(evidence[state].get("path") or "")).is_file()
-                else 1,
-                0 if _split_state(state)[1].casefold() == "default state" else 1,
-                ordered_states.index(state),
-            )
-        )
-        return evidence[candidates[0]] if candidates else None
+    def ordering(state: str) -> tuple[str, int, str]:
+        page, suffix = _split_state(state)
+        if suffix.casefold() == "default state":
+            scenario_order = 0
+        else:
+            scenario_id = suffix.partition("|")[0].removeprefix("scenario_")
+            try:
+                scenario_order = 5 if scenario_id == "01" else int(scenario_id)
+            except ValueError:
+                scenario_order = 99
+        return page.casefold(), scenario_order, state.casefold()
 
+    ordered_states.sort(key=ordering)
     return [
-        (page, page_evidence(page_key, evidence_a), page_evidence(page_key, evidence_b))
-        for page_key, page in pages.items()
+        (
+            _screenshot_state_label(state),
+            evidence_a.get(state),
+            evidence_b.get(state),
+        )
+        for state in ordered_states
     ]
+
+
+def _screenshot_state_label(state: str) -> str:
+    page, _suffix = _split_state(state)
+    return page
 
 
 def _remove_screenshot_subsection(
@@ -813,18 +1098,14 @@ def _ordered_states(
     return sorted(state for state in states if state)
 
 
-def _group_by_state(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
-    grouped: dict[str, list[dict[str, Any]]] = {}
-    for row in rows:
-        grouped.setdefault(str(row.get("state") or ""), []).append(row)
-    return grouped
-
-
 def _split_state(state: str) -> tuple[str, str]:
     page, _, filter_part = state.partition("|")
     filter_part = filter_part.strip()
     if not filter_part or filter_part.casefold() == "initial":
         filter_part = "Default state"
+    elif filter_part.casefold().startswith("scenario_"):
+        scenario_part, separator, pairing = filter_part.partition("|")
+        filter_part = f"{scenario_part}|{pairing}" if separator else scenario_part
     return page.strip() or "Unknown page", filter_part
 
 
@@ -842,7 +1123,7 @@ def _state_result(
 
 def _filter_action_summary(rows: list[dict[str, Any]]) -> str:
     if not rows:
-        return "No filter selections captured."
+        return NO_FILTER_SELECTIONS_TEXT
     actions = []
     for row in rows:
         name = str(row.get("filter_name") or "").strip()
@@ -857,28 +1138,9 @@ def _filter_action_summary(rows: list[dict[str, Any]]) -> str:
         ).casefold():
             action = f"{name}: {value_a}"
         else:
-            action = (
-                f"{name}: Snowflake: {value_a}; GCP: {value_b}"
-            )
+            action = f"{name}: Snowflake: {value_a}; GCP: {value_b}"
         actions.append(action)
-    return "\n".join(actions) or "No filter selections captured."
-
-
-def _filter_validation_status(rows: list[dict[str, Any]]) -> str:
-    if not rows:
-        return "UNVERIFIED"
-    statuses = {
-        filter_selection_result(
-            row.get("selected_values_a"),
-            row.get("selected_values_b"),
-        )[0]
-        for row in rows
-    }
-    if DIFFERENT in statuses:
-        return "FAIL"
-    if UNVERIFIED in statuses or statuses - {MATCH}:
-        return "UNVERIFIED"
-    return "PASS"
+    return "\n".join(actions) or NO_FILTER_SELECTIONS_TEXT
 
 
 def _overall_status(result: dict[str, Any]) -> str:

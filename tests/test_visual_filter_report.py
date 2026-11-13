@@ -10,13 +10,584 @@ from powerbi_dashboard_comparator.visual_filter_comparison import (
 from powerbi_dashboard_comparator.visual_filter_report import (
     FAIL_LABEL,
     PASS_LABEL,
+    UNVERIFIED_LABEL,
+    _both_visual_types_unavailable,
     _presentation_match,
     _pass_fail,
+    _visual_display_name,
     write_visual_filter_docx,
     write_visual_validation_sheet,
 )
 
 GRID_TL = (0, 0, 400, 300)
+
+
+def test_rows_with_unavailable_types_on_both_sides_are_identified_for_exclusion() -> None:
+    for type_a, type_b in (
+        ("", None),
+        ("Unidentified", "undefined"),
+        ("-", "—"),
+        (" -- ", "---"),
+        ("Missing", "Missing"),
+        ("Missing", "Unidentified"),
+        ("Unidentified", "Missing"),
+    ):
+        assert _both_visual_types_unavailable(
+            {"visual_type_a": type_a, "visual_type_b": type_b}
+        )
+
+    assert not _both_visual_types_unavailable(
+        {"visual_type_a": "Table", "visual_type_b": "—"}
+    )
+
+
+def test_workbook_omits_visuals_unidentified_on_both_sides(
+    tmp_path: Path,
+) -> None:
+    visuals = compare_visual_inventories(
+        "Overview",
+        [
+            {
+                "visual_id": "table",
+                "visual_name": "Orders",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 0,
+                "width": 400,
+                "height": 300,
+            }
+        ],
+        [
+            {
+                "visual_id": "table",
+                "visual_name": "Orders",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 0,
+                "width": 400,
+                "height": 300,
+            }
+        ],
+    )
+    visuals[0]["state"] = "Overview|initial"
+    visuals.append(
+        {
+            "state": "Overview|initial",
+            "page": "Overview",
+            "visual_name": "No identified type",
+            "visual_type_a": "Unidentified",
+            "visual_type_b": "—",
+            "status": "UNVERIFIED",
+        }
+    )
+    visuals.extend(
+        {
+            "state": "Overview|initial",
+            "page": "Overview",
+            "visual_name": f"Unavailable visual {index}",
+            "visual_type_a": type_a,
+            "visual_type_b": type_b,
+            "status": "DIFFERENT",
+        }
+        for index, (type_a, type_b) in enumerate(
+            (
+                ("Missing", "Missing"),
+                ("Missing", "Unidentified"),
+                ("Unidentified", "Missing"),
+            ),
+            start=1,
+        )
+    )
+    workbook_path = tmp_path / "comparison.xlsx"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {"visual_rows": visuals, "filter_rows": []},
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    "Overview|initial": {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+                "dashboard_b": {
+                    "Overview|initial": {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    section_row = next(
+        row
+        for row in range(1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Visual & Functional Validation Log"
+    )
+    visual_names = [
+        sheet.cell(row, 5).value
+        for row in range(section_row + 2, sheet.max_row + 1)
+        if str(sheet.cell(row, 1).value or "").isdigit()
+    ]
+    assert visual_names == ["Orders"]
+    workbook.close()
+
+
+def test_workbook_ids_restart_for_each_validation_section(tmp_path: Path) -> None:
+    state = "LTMO|initial"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    workbook_path = tmp_path / "comparison.xlsx"
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {
+                "visual_rows": [
+                    {
+                        "state": state,
+                        "page": "LTMO",
+                        "visual_name": "Main Table",
+                        "visual_type_a": "Table",
+                        "visual_type_b": "Table",
+                        "status": "MATCH",
+                    },
+                    {
+                        "state": "Inbound POs|initial",
+                        "page": "Inbound POs",
+                        "visual_name": "Inbound Table",
+                        "visual_type_a": "Table",
+                        "visual_type_b": "Table",
+                        "status": "MATCH",
+                    },
+                ],
+                "filter_rows": [
+                    {
+                        "state": state,
+                        "page": "LTMO",
+                        "filter_name": "Facility",
+                        "selected_values_a": "All",
+                        "selected_values_b": "All",
+                        "filter_type_a": "Dropdown",
+                        "filter_type_b": "Dropdown",
+                        "status": "MATCH",
+                    }
+                ],
+            },
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    },
+                    "Inbound POs|initial": {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    },
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    },
+                    "Inbound POs|initial": {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    },
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    filter_section_row = next(
+        row
+        for row in range(1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Filter Validation Log"
+    )
+    visual_section_row = next(
+        row
+        for row in range(filter_section_row + 1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Visual & Functional Validation Log"
+    )
+    filter_ids = [
+        sheet.cell(row, 1).value
+        for row in range(filter_section_row + 2, visual_section_row)
+        if str(sheet.cell(row, 1).value or "").isdigit()
+    ]
+    visual_ids = [
+        sheet.cell(row, 1).value
+        for row in range(visual_section_row + 2, sheet.max_row + 1)
+        if str(sheet.cell(row, 1).value or "").isdigit()
+    ]
+    assert filter_ids == ["01"]
+    assert visual_ids == ["01", "02"]
+    workbook.close()
+
+
+def test_workbook_keeps_rendered_visual_match_despite_unrelated_page_warning(
+    tmp_path: Path,
+) -> None:
+    state = "Expired LTMO|initial"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    workbook_path = tmp_path / "comparison.xlsx"
+    warning = {
+        "reason": "Power BI chart content did not finish rendering",
+        "indicators": [
+            {"unrendered_chart_visuals": [{"title": "DC_NAME\nAll"}]}
+        ],
+    }
+
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {
+                "visual_rows": [
+                    {
+                        "state": state,
+                        "page": "Expired LTMO",
+                        "visual_name": "TABLE_001",
+                        "visual_id_a": "TABLE_001",
+                        "visual_id_b": "TABLE_001",
+                        "visual_type_a": "Table",
+                        "visual_type_b": "Table",
+                        "rendering_status_a": "Rendered",
+                        "rendering_status_b": "Rendered",
+                        "position_a": "(186, 111)",
+                        "position_b": "(186, 111)",
+                        "size_a": "1448 x 736",
+                        "size_b": "1448 x 736",
+                        "status": "MATCH",
+                    }
+                ],
+                "filter_rows": [],
+            },
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                        "render_unverified": warning,
+                    }
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                        "render_unverified": warning,
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    visual_row = next(
+        row
+        for row in sheet.iter_rows(values_only=True)
+        if row[1] == "Expired LTMO" and row[4] == "TABLE_001"
+    )
+    assert visual_row[6] == "Visual types match; screenshot-derived names are informational."
+    assert visual_row[7] == "Pass"
+    workbook.close()
+
+
+def test_workbook_passes_matching_blank_kpis_despite_page_render_warning(
+    tmp_path: Path,
+) -> None:
+    state = "Fill Rate Trend|initial"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    workbook_path = tmp_path / "comparison.xlsx"
+    warning = {
+        "reason": "Power BI chart content did not finish rendering",
+        "indicators": [
+            {
+                "unrendered_chart_visuals": [
+                    {"title": "Fill Rate\n(Blank)\n4 Week Avg: 83.5%"}
+                ]
+            }
+        ],
+    }
+
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {
+                "visual_rows": [
+                    {
+                        "state": state,
+                        "page": "Fill Rate Trend",
+                        "visual_name": "Fill Rate",
+                        "visual_name_a": "Fill Rate",
+                        "visual_name_b": "Fill Rate",
+                        "visual_id_a": "VISUAL_006",
+                        "visual_id_b": "VISUAL_006",
+                        "visual_type_a": "KPI",
+                        "visual_type_b": "KPI",
+                        "visual_confidence_a": "High",
+                        "visual_confidence_b": "High",
+                        "rendering_status_a": "Blank",
+                        "rendering_status_b": "Blank",
+                        "position_a": "(357, 634)",
+                        "position_b": "(357, 634)",
+                        "size_a": "337 x 143",
+                        "size_b": "337 x 143",
+                        "status": "MATCH",
+                    }
+                ],
+                "filter_rows": [],
+            },
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                        "render_unverified": warning,
+                    }
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                        "render_unverified": warning,
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    visual_row = next(
+        row
+        for row in sheet.iter_rows(values_only=True)
+        if row[1] == "Fill Rate Trend" and row[4] == "Fill Rate"
+    )
+    assert visual_row[6] == (
+        "Both dashboards display this KPI as (Blank); it matches the Base dashboard."
+    )
+    assert visual_row[7] == "Pass"
+    workbook.close()
+
+
+def test_workbook_keeps_matched_screenshot_chart_pair_observation(
+    tmp_path: Path,
+) -> None:
+    state = "Fill Rate Trend|initial"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    workbook_path = tmp_path / "comparison.xlsx"
+    observation = (
+        "Both screenshots show the same rendered visual type with matching "
+        "geometry; generated visual labels differ and are not treated as a "
+        "title mismatch."
+    )
+
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {
+                "visual_rows": [
+                    {
+                        "state": state,
+                        "page": "Fill Rate Trend",
+                        "visual_name": (
+                            "Base: Fill Rate and Vendor Adj Fill Rate by "
+                            "Fiscal Year; Compare: Fill Rate Trend Line Chart"
+                        ),
+                        "visual_name_a": (
+                            "Fill Rate and Vendor Adj Fill Rate by Fiscal Year"
+                        ),
+                        "visual_name_b": "Fill Rate Trend Line Chart",
+                        "visual_id_a": "SCREENSHOT_001",
+                        "visual_id_b": "SCREENSHOT_001",
+                        "visual_type_a": "Line Chart",
+                        "visual_type_b": "Line Chart",
+                        "visual_confidence_a": "High",
+                        "visual_confidence_b": "High",
+                        "rendering_status_a": "Rendered",
+                        "rendering_status_b": "Rendered",
+                        "position_a": "(703, 167)",
+                        "position_b": "(705, 161)",
+                        "size_a": "1357 x 375",
+                        "size_b": "1362 x 392",
+                        "status": "MATCH",
+                        "comparison_notes": observation,
+                    }
+                ],
+                "filter_rows": [],
+            },
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    visual_row = next(
+        row
+        for row in sheet.iter_rows(values_only=True)
+        if row[1] == "Fill Rate Trend" and "Fill Rate Trend Line Chart" in row[4]
+    )
+    assert visual_row[6] == observation
+    assert visual_row[7] == "Pass"
+    workbook.close()
+
+
+def test_workbook_keeps_unverified_visual_rows(tmp_path: Path) -> None:
+    state = "Expired LTMO|initial"
+    workbook_path = tmp_path / "comparison.xlsx"
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {
+                "visual_rows": [
+                    {
+                        "state": state,
+                        "page": "Expired LTMO",
+                        "visual_name": "TABLE_001",
+                        "visual_id_a": "TABLE_001",
+                        "visual_id_b": "TABLE_001",
+                        "visual_type_a": "Table",
+                        "visual_type_b": "Table",
+                        "rendering_status_a": "Unable to Verify",
+                        "rendering_status_b": "Unable to Verify",
+                        "status": "UNVERIFIED",
+                    }
+                ],
+                "filter_rows": [],
+            },
+            "screenshot_evidence": {"dashboard_a": {}, "dashboard_b": {}},
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    visual_row = next(
+        row
+        for row in sheet.iter_rows(values_only=True)
+        if row[1] == "Expired LTMO" and row[4] == "TABLE_001"
+    )
+    assert visual_row[7] == "Unable to Verify"
+    workbook.close()
+
+
+def test_workbook_keeps_exact_title_and_types_when_title_matches(
+    tmp_path: Path,
+) -> None:
+    state = "Forecast|initial"
+    visuals = compare_visual_inventories(
+        "Forecast",
+        [
+            {
+                "visual_id": "base-card",
+                "visual_name": "Upcoming Holiday",
+                "visual_type": "Multi-row Card",
+                "x": 0,
+                "y": 0,
+                "width": 400,
+                "height": 300,
+            }
+        ],
+        [
+            {
+                "visual_id": "compare-kpi",
+                "visual_name": "Upcoming Holiday",
+                "visual_type": "KPI",
+                "x": 0,
+                "y": 0,
+                "width": 400,
+                "height": 300,
+            }
+        ],
+    )
+    visuals[0]["state"] = state
+    workbook_path = tmp_path / "comparison.xlsx"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {"visual_rows": visuals, "filter_rows": []},
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    section_row = next(
+        row
+        for row in range(1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Visual & Functional Validation Log"
+    )
+    visual_row = section_row + 2
+    assert sheet.cell(visual_row, 3).value == "KPI"
+    assert sheet.cell(visual_row, 4).value == "Multi-row Card"
+    assert sheet.cell(visual_row, 5).value == "Upcoming Holiday"
+    assert sheet.cell(visual_row, 6).value == "Multi-row Card"
+    assert sheet.cell(visual_row, 8).value == "Pass"
+    assert "type labels differ" in sheet.cell(visual_row, 7).value
+    workbook.close()
+
+
+def test_visual_display_name_preserves_both_changed_titles() -> None:
+    assert _visual_display_name(
+        {
+            "visual_name": "VISUAL_003",
+            "visual_name_a": "In-Out Item Insights",
+            "visual_name_b": "In-Out Item Insights Top Excess Items",
+            "visual_id_a": "VISUAL_003",
+            "visual_id_b": "VISUAL_003",
+        }
+    ) == (
+        "Base: In-Out Item Insights; "
+        "Compare: In-Out Item Insights Top Excess Items"
+    )
 
 
 def _visual_row(status: str) -> dict:
@@ -186,20 +757,21 @@ def test_visual_validation_assesses_filters_data_and_layout_separately(
     workbook = load_workbook(workbook_path)
     assert workbook.sheetnames == ["Visual_Validation"]
     sheet = workbook["Visual_Validation"]
-    technical_title_row = next(
-        row
-        for row in range(1, sheet.max_row + 1)
-        if sheet.cell(row, 1).value == "Visual Inventory & Screenshots"
-    )
+    technical_title_row = sheet.max_row + 1
     checks = {
         sheet.cell(row, 3).value: row
         for row in range(1, technical_title_row)
         if str(sheet.cell(row, 1).value or "").isdigit()
     }
+    visual_title_row = next(
+        row
+        for row in range(1, technical_title_row)
+        if sheet.cell(row, 5).value == visual_name
+    )
     assert "Data Refresh Date" not in checks
     assert sheet.cell(checks["Relative Time"], 7).value == "Fail"
-    assert sheet.cell(checks[visual_name], 7).value == "Pass"
-    assert "row-level data is excluded" in sheet.cell(checks[visual_name], 6).value
+    assert sheet.cell(visual_title_row, 8).value == "Pass"
+    assert "row-level data is excluded" in sheet.cell(visual_title_row, 7).value
     assert "Table Position & Size" not in checks
     assert "Filters Pane" not in checks
     workbook.close()
@@ -361,6 +933,276 @@ def test_visual_name_falls_back_to_visual_id_when_no_title() -> None:
     assert rows[0]["visual_name"] == "a1"
 
 
+def test_visual_count_summary_is_not_written_as_a_visual_check(tmp_path) -> None:
+    visuals = compare_visual_inventories(
+        "Overview",
+        [
+            {
+                "visual_id": "TABLE_001",
+                "visual_name": "Orders",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 0,
+                "width": 400,
+                "height": 300,
+            }
+        ],
+        [
+            {
+                "visual_id": "TABLE_001",
+                "visual_name": "Orders",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 0,
+                "width": 400,
+                "height": 300,
+            }
+        ],
+    )
+    visuals.append(
+        {
+            "page": "Overview",
+            "visual_name": "-",
+            "visual_id_a": "3 visuals",
+            "visual_id_b": "2 visuals",
+            "visual_type_a": "-",
+            "visual_type_b": "-",
+            "status": "INFO",
+            "comparison_notes": "Visual count differs between dashboards",
+        }
+    )
+    path = tmp_path / "comparison.xlsx"
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    write_visual_validation_sheet(
+        path,
+        {
+            "visual_filter": {"visual_rows": visuals, "filter_rows": []},
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    "Overview|initial": {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+                "dashboard_b": {
+                    "Overview|initial": {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    section_row = next(
+        row
+        for row in range(1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Visual & Functional Validation Log"
+    )
+    checks = [
+        tuple(sheet.cell(row, column).value for column in (3, 4, 5))
+        for row in range(section_row + 2, sheet.max_row + 1)
+        if str(sheet.cell(row, 1).value or "").isdigit()
+    ]
+    assert checks == [("Table", "Table", "Orders")]
+    workbook.close()
+
+
+def test_dropdowns_are_not_written_as_visual_checks(tmp_path) -> None:
+    state = "Report|initial"
+    visuals = compare_visual_inventories(
+        "Report",
+        [
+            {
+                "visual_id": "TABLE_001",
+                "visual_name": "Item Master Table",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 226,
+                "width": 1589,
+                "height": 743,
+            }
+        ],
+        [
+            {
+                "visual_id": "TABLE_001",
+                "visual_name": "Item Master Table",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 226,
+                "width": 1589,
+                "height": 743,
+            }
+        ],
+    )
+    visuals[0]["state"] = state
+    visuals.append(
+        {
+            "state": state,
+            "page": "Report",
+            "visual_name": "Facility Nbr Desc",
+            "visual_type_a": "Slicer / Dropdown",
+            "visual_type_b": "Slicer / Dropdown",
+            "status": "MATCH",
+        }
+    )
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    workbook_path = tmp_path / "comparison.xlsx"
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {"visual_rows": visuals, "filter_rows": []},
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    section_row = next(
+        row
+        for row in range(1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Visual & Functional Validation Log"
+    )
+    checks = [
+        sheet.cell(row, 5).value
+        for row in range(section_row + 2, sheet.max_row + 1)
+        if str(sheet.cell(row, 1).value or "").isdigit()
+    ]
+    assert checks == ["Item Master Table"]
+    workbook.close()
+
+
+def test_filter_with_unknown_types_is_unverified_and_not_reported_as_missing_visual(
+    tmp_path,
+) -> None:
+    state = "Report|initial"
+    visuals = compare_visual_inventories(
+        "Report",
+        [
+            {
+                "visual_id": "TABLE_001",
+                "visual_name": "Item Master Table",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 226,
+                "width": 1589,
+                "height": 743,
+            }
+        ],
+        [
+            {
+                "visual_id": "TABLE_001",
+                "visual_name": "Item Master Table",
+                "visual_type": "Table",
+                "x": 0,
+                "y": 226,
+                "width": 1589,
+                "height": 743,
+            }
+        ],
+    )
+    visuals[0]["state"] = state
+    visuals.append(
+        {
+            "state": state,
+            "page": "Report",
+            "visual_name": "Facility Nbr Desc",
+            "visual_type_a": "Missing",
+            "visual_type_b": "Slicer / Dropdown",
+            "status": "DIFFERENT",
+            "comparison_notes": (
+                "Visual is present in Dashboard B and no corresponding "
+                "visual is present in Dashboard A"
+            ),
+        }
+    )
+    filters = [
+        {
+            "state": state,
+            "page": "Report",
+            "filter_name": "Facility Nbr Desc",
+            "filter_type_a": "Unknown",
+            "filter_type_b": "Unknown",
+            "selected_values_a": "All",
+            "selected_values_b": "All",
+            "status": "UNVERIFIED",
+        }
+    ]
+    base_screenshot = tmp_path / "base.png"
+    compare_screenshot = tmp_path / "compare.png"
+    base_screenshot.touch()
+    compare_screenshot.touch()
+    workbook_path = tmp_path / "comparison.xlsx"
+    write_visual_validation_sheet(
+        workbook_path,
+        {
+            "visual_filter": {"visual_rows": visuals, "filter_rows": filters},
+            "screenshot_evidence": {
+                "dashboard_a": {
+                    state: {
+                        "path": str(base_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+                "dashboard_b": {
+                    state: {
+                        "path": str(compare_screenshot),
+                        "capture_status": "captured",
+                    }
+                },
+            },
+        },
+    )
+
+    workbook = load_workbook(workbook_path, data_only=True)
+    sheet = workbook["Visual_Validation"]
+    filter_section_row = next(
+        row
+        for row in range(1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Filter Validation Log"
+    )
+    visual_section_row = next(
+        row
+        for row in range(filter_section_row + 1, sheet.max_row + 1)
+        if sheet.cell(row, 1).value == "Visual & Functional Validation Log"
+    )
+    filter_rows = [
+        row
+        for row in range(filter_section_row + 2, visual_section_row)
+        if sheet.cell(row, 3).value == "Facility Nbr Desc"
+    ]
+    visual_checks = [
+        sheet.cell(row, 5).value
+        for row in range(visual_section_row + 2, sheet.max_row + 1)
+        if str(sheet.cell(row, 1).value or "").isdigit()
+    ]
+    assert len(filter_rows) == 1
+    assert sheet.cell(filter_rows[0], 7).value == UNVERIFIED_LABEL
+    assert visual_checks == ["Item Master Table"]
+    workbook.close()
+
+
 def test_docx_visual_log_shows_base_types_and_only_tables_or_charts(
     tmp_path,
 ) -> None:
@@ -445,7 +1287,7 @@ def test_docx_visual_validation_log_uses_unique_types_and_default_filters(
         for item in dropdown.findall(qn("w:listItem"))
     ] == ["Pass", "Fail"]
     second_result = table.cell(2, 5)._tc.xpath(".//w:sdtContent//w:t")
-    assert "".join(node.text or "" for node in second_result) == "Fail"
+    assert "".join(node.text or "" for node in second_result) == "Pass"
 
 
 def test_docx_defaults_tester_and_uses_status_dropdown(tmp_path) -> None:

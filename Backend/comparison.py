@@ -16,6 +16,8 @@ from .standard_elements import reading_order, standard_element_name
 from .timing import measure_stage, write_operation_event
 from .visual_filter_comparison import build_visual_filter_result
 from .visual_filter_report import (
+    FILTER_VALIDATION_HEADERS,
+    VISUAL_VALIDATION_HEADERS,
     write_visual_validation_sheet,
 )
 
@@ -512,6 +514,18 @@ def _table_headers(element: dict[str, Any]) -> tuple[str, ...] | None:
         return None
     normalized = tuple(_title_signature(header) for header in headers)
     return normalized if all(normalized) else None
+
+
+def _scenario_header_values(element: dict[str, Any] | None) -> tuple[str, ...] | None:
+    if element is None:
+        return None
+    headers = element.get("categories")
+    if not isinstance(headers, list) or not headers:
+        return None
+    normalized = tuple(
+        _title_signature(header) for header in headers if isinstance(header, str)
+    )
+    return normalized if len(normalized) == len(headers) and all(normalized) else None
 
 
 def _pair_elements(
@@ -2729,6 +2743,10 @@ def compare_dashboards(
                 if layout_distance > 0.08
                 else "layout_match"
             )
+            header_only_state = any(
+                state is not None and state.scenario_id == "01"
+                for state in (state_a, state_b)
+            )
             element = element_a or element_b or {}
             title = _element_label(element)
             element_type = element.get("type") or element.get("element_type")
@@ -2789,7 +2807,18 @@ def compare_dashboards(
             type_unverified = bool(
                 element_a and element_b and (not type_a or not type_b)
             )
-            if ambiguous_alignment:
+            if header_only_state:
+                headers_a = _scenario_header_values(element_a)
+                headers_b = _scenario_header_values(element_b)
+                if headers_a is not None and headers_b is not None:
+                    status = "MATCH" if headers_a == headers_b else "DIFFERENT"
+                    if status == "DIFFERENT":
+                        difference_details.append("TABLE_HEADER_MISMATCH")
+                else:
+                    status = "UNVERIFIED"
+                    difference_details.append("TABLE_HEADERS_UNVERIFIED")
+                layout_status = "not_comparable"
+            elif ambiguous_alignment:
                 difference_details.append("AMBIGUOUS_ALIGNMENT")
                 status = "UNVERIFIED"
             elif type_mismatch:
@@ -2841,7 +2870,11 @@ def compare_dashboards(
                         if "UNVERIFIED" in exported_statuses or not exported_statuses
                         else "MATCH"
                     )
-            if layout_status == "layout_mismatch" and not ambiguous_alignment:
+            if (
+                not header_only_state
+                and layout_status == "layout_mismatch"
+                and not ambiguous_alignment
+            ):
                 difference_details.append("LAYOUT_MISMATCH")
                 if status != "UNVERIFIED":
                     status = "DIFFERENT"
@@ -3459,6 +3492,7 @@ def write_comparison(
     dashboard_b: str,
     job_id: str = "standalone",
     operation_log_path: Path | None = None,
+    report_metadata: dict[str, Any] | None = None,
 ) -> None:
     _validate_comparison_output(result)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -3484,8 +3518,15 @@ def write_comparison(
         job_id=job_id,
         operation="write_visual_validation_xlsx",
     ):
+        filter_validation_rows: list[list[Any]] = []
+        visual_validation_rows: list[list[Any]] = []
+        visual_validation_states: list[str] = []
         write_visual_validation_sheet(
-            output_dir / "Dashboard_Comparison.xlsx", result
+            output_dir / "Dashboard_Comparison.xlsx",
+            result,
+            filter_rows_out=filter_validation_rows,
+            visual_rows_out=visual_validation_rows,
+            visual_states_out=visual_validation_states,
         )
     write_operation_event(
         operation_log_path,
@@ -3503,4 +3544,14 @@ def write_comparison(
             output_dir / "Dashboard_Comparison.docx",
             dashboard_a,
             dashboard_b,
+            report_metadata=report_metadata,
+            filter_validation_log=(
+                FILTER_VALIDATION_HEADERS,
+                filter_validation_rows,
+            ),
+            visual_validation_log=(
+                VISUAL_VALIDATION_HEADERS,
+                visual_validation_rows,
+            ),
+            visual_validation_states=visual_validation_states,
         )

@@ -8,14 +8,18 @@ import logging
 import math
 import re
 import time
+from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from itertools import product
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Iterable, Iterator
 from uuid import uuid4
 
 from playwright.async_api import (
+    Browser,
     BrowserContext,
     Error as PlaywrightError,
+    Locator,
     Page,
     TimeoutError as PlaywrightTimeoutError,
     async_playwright,
@@ -28,22 +32,25 @@ from .agents import (
     extract_screenshot,
     extract_screenshots,
     detect_visual_types_from_screenshot,
+    is_kpi_selection_filter,
     plan_from_dom,
 )
 from .config import positive_int_setting
 from .models import DashboardState, FilterCombination, FilterSelection
 from .timing import measure_stage, write_operation_event
-from .visual_filter_comparison import classify_visual_type
+from .visual_filter_comparison import classify_visual_type, is_header_divider
 
 MAX_DOM_CONTROLS = 500
 MAX_RENDER_WAIT_SECONDS = 15.0
 CLASS_ONLY_RENDER_TIMEOUT_MS = 30_000
 UNRENDERED_CHART_TIMEOUT_MS = 30_000
 MAX_PAGE_TAB_WAIT_SECONDS = 60.0
+EMPTY_PAGE_TAB_WAIT_SECONDS = 15.0
 REPORT_READY_TIMEOUT_MS = 300_000
 REPORT_STABLE_SECONDS = 4.0
 REPORT_POLL_MS = 500
 SLICER_CONTROL_ACTION_TIMEOUT_MS = 15_000
+COMBOBOX_LOCATOR_TIMEOUT_MS = 2_000
 CLEAR_SELECTION_VISIBLE_TIMEOUT_MS = 2_000
 EXPORT_DIALOG_BUTTON_TIMEOUT_MS = 5_000
 EXPORT_DOWNLOAD_TIMEOUT_MS = 60_000
@@ -398,13 +405,13 @@ DATA_VISUAL_TYPES = frozenset(
         "grid",
     }
 )
-CAPTURE_VIEWPORT = {"width": 1920, "height": 1080}
+CAPTURE_VIEWPORT = {"width": 2304, "height": 1080}
 CAPTURE_DEVICE_SCALE_FACTOR = 1
 MAX_PARALLEL_STATE_CAPTURES = positive_int_setting(
-    "PBI_MAX_PARALLEL_STATE_CAPTURES", 10
+    "PBI_MAX_PARALLEL_STATE_CAPTURES", 2
 )
 MAX_PARALLEL_PAGE_CAPTURES = positive_int_setting(
-    "PBI_MAX_PARALLEL_PAGE_CAPTURES", 10
+    "PBI_MAX_PARALLEL_PAGE_CAPTURES", 2
 )
 MAX_PARALLEL_PAGES_PER_DASHBOARD = MAX_PARALLEL_PAGE_CAPTURES
 EXCLUDED_REPORT_PAGES = {"home", "view"}
@@ -832,14 +839,7 @@ async def _options_for_combobox(frame: Any, combo: Any) -> Any:
             return generic_choices
         return options
 
-    controls = [
-        *(
-            await combo.get_attribute("aria-controls") or ""
-        ).split(),
-        *(
-            await combo.get_attribute("aria-owns") or ""
-        ).split(),
-    ]
+    controls = await _combobox_popup_ids(combo)
     related_popup_choices = None
     related_popup_found = False
     for control_id in dict.fromkeys(controls):
@@ -1016,6 +1016,13 @@ async def _jump_listbox_to_edge(listbox: Any, edge: str) -> None:
     await asyncio.sleep(0.2)
 
 
+_POPUP_SCROLLING_ENABLED: ContextVar[bool] = ContextVar(
+    "popup_scrolling_enabled", default=True
+)
+POPUP_RENDER_POLL_ATTEMPTS = 15
+POPUP_RENDER_POLL_SECONDS = 0.2
+
+
 async def _collect_listbox_options(
     listbox: Any,
     page: Any,
@@ -1024,6 +1031,16 @@ async def _collect_listbox_options(
     direction: int,
 ) -> dict[str, Any]:
     """Scroll in one direction from the current position, adding options to seen."""
+    if not _POPUP_SCROLLING_ENABLED.get():
+        data: dict[str, Any] = {}
+        for _ in range(POPUP_RENDER_POLL_ATTEMPTS):
+            data = await listbox.evaluate(LISTBOX_READ_SCRIPT, index)
+            if data.get("options"):
+                break
+            await asyncio.sleep(POPUP_RENDER_POLL_SECONDS)
+        for option in data.get("options", []):
+            seen.setdefault(option["label"], option)
+        return data
     data: dict[str, Any] = {}
     stale_steps = 0
     for _ in range(MAX_LISTBOX_SCROLL_STEPS):
@@ -1056,8 +1073,14 @@ async def _snapshot_scrolled_listboxes(
         seen: dict[str, dict[str, Any]] = {}
         data: dict[str, Any] = {}
         setsize: int | None = None
-        for edge, direction in (("top", 1), ("bottom", -1)):
-            await _jump_listbox_to_edge(listbox, edge)
+        passes = (
+            (("top", 1), ("bottom", -1))
+            if _POPUP_SCROLLING_ENABLED.get()
+            else (("current", 1),)
+        )
+        for edge, direction in passes:
+            if edge != "current":
+                await _jump_listbox_to_edge(listbox, edge)
             data = await _collect_listbox_options(
                 listbox, page, index, seen, direction
             )
@@ -1072,14 +1095,7 @@ async def _snapshot_scrolled_listboxes(
 async def _single_select_dropdown_options(
     frame: Any, combo: Any, filter_item: dict[str, Any]
 ) -> tuple[list[str], list[str] | None] | None:
-    control_ids = [
-        *(
-            await combo.get_attribute("aria-controls") or ""
-        ).split(),
-        *(
-            await combo.get_attribute("aria-owns") or ""
-        ).split(),
-    ]
+    control_ids = await _combobox_popup_ids(combo)
     filter_names = {
         _normalized_control_text(value)
         for value in (
@@ -1193,10 +1209,7 @@ async def _single_select_dropdown_options(
 async def _associated_listbox_options(
     frame: Any, combo: Any, filter_item: dict[str, Any]
 ) -> tuple[list[str], list[str] | None, str | None] | None:
-    control_ids = [
-        *(await combo.get_attribute("aria-controls") or "").split(),
-        *(await combo.get_attribute("aria-owns") or "").split(),
-    ]
+    control_ids = await _combobox_popup_ids(combo)
     filter_names = {
         _normalized_control_text(value)
         for value in (
@@ -1897,6 +1910,10 @@ def _filter_values_equivalent(
 ) -> bool:
     if _filter_values_match(expected, actual):
         return True
+    if not expected and all(
+        _is_aggregate_value(_normalized_control_text(value)) for value in actual
+    ):
+        return True
     values = [
         value
         for value in filter_item.get("values", [])
@@ -2131,6 +2148,20 @@ async def _scroll_filter_option_into_view(
             options, value, filter_name
         )
         if option is None:
+            if not _POPUP_SCROLLING_ENABLED.get():
+                return None, {
+                    "visible": False,
+                    "reason": (
+                        "exact option is not rendered; popup scrolling is "
+                        "disabled for this run"
+                    ),
+                    "visible_options": [
+                        item["label"]
+                        for item in candidates
+                        if item.get("visible")
+                        and isinstance(item.get("label"), str)
+                    ],
+                }
             positions = [
                 item["position"]
                 for item in candidates
@@ -2270,7 +2301,9 @@ async def _scroll_filter_option_into_view(
                 "scroll_bounds": bounds,
             }
             continue
-        if hasattr(option, "scroll_into_view_if_needed"):
+        if _POPUP_SCROLLING_ENABLED.get() and hasattr(
+            option, "scroll_into_view_if_needed"
+        ):
             try:
                 await option.scroll_into_view_if_needed(timeout=2_000)
             except PlaywrightError as exc:
@@ -2502,14 +2535,7 @@ async def _radio_dropdown_selection(
         await _click_slicer_control(combo)
         await _wait_for_slicer_open(page, combo)
 
-    controls = list(
-        dict.fromkeys(
-            [
-                *(await combo.get_attribute("aria-controls") or "").split(),
-                *(await combo.get_attribute("aria-owns") or "").split(),
-            ]
-        )
-    )
+    controls = await _combobox_popup_ids(combo)
     if not controls:
         raise FilterSelectionInspectionError(
             f"Cannot inspect radio selection for filter {filter_name!r}: "
@@ -2901,14 +2927,7 @@ async def _combobox_search_field(frame: Any, combo: Any) -> Any | None:
                 return field
         return None
 
-    controls = [
-        *(
-            await combo.get_attribute("aria-controls") or ""
-        ).split(),
-        *(
-            await combo.get_attribute("aria-owns") or ""
-        ).split(),
-    ]
+    controls = await _combobox_popup_ids(combo)
     for control_id in dict.fromkeys(controls):
         popup = frame.locator(f"[id={json.dumps(control_id)}]")
         if not await popup.count():
@@ -3011,12 +3030,46 @@ async def _click_slicer_control(locator: Any) -> None:
     await locator.click(force=True, timeout=SLICER_CONTROL_ACTION_TIMEOUT_MS)
 
 
+async def _optional_locator_attribute(locator: Any, name: str) -> str | None:
+    try:
+        if isinstance(locator, Locator):
+            return await locator.get_attribute(
+                name, timeout=COMBOBOX_LOCATOR_TIMEOUT_MS
+            )
+        return await locator.get_attribute(name)
+    except PlaywrightTimeoutError:
+        logger.debug("Timed out reading %s from a transient Power BI control", name)
+        return None
+
+
+async def _combobox_popup_ids(combo: Any) -> list[str]:
+    ids: list[str] = []
+    for attribute in ("aria-controls", "aria-owns"):
+        value = await _optional_locator_attribute(combo, attribute)
+        if value:
+            ids.extend(value.split())
+    return list(dict.fromkeys(ids))
+
+
+async def _optional_locator_evaluate(locator: Any, expression: str) -> Any:
+    try:
+        if isinstance(locator, Locator):
+            return await locator.evaluate(
+                expression, timeout=COMBOBOX_LOCATOR_TIMEOUT_MS
+            )
+        return await locator.evaluate(expression)
+    except PlaywrightTimeoutError:
+        logger.debug("Timed out evaluating a transient Power BI control")
+        return None
+
+
 async def _slicer_dropdown_is_open(locator: Any) -> bool:
-    if await locator.get_attribute("aria-expanded") == "true":
+    if await _optional_locator_attribute(locator, "aria-expanded") == "true":
         return True
     if not hasattr(locator, "evaluate"):
         return False
-    return await locator.evaluate(
+    return bool(await _optional_locator_evaluate(
+        locator,
         """element => {
           const visible = node => {
             if (!node) return false;
@@ -3046,7 +3099,7 @@ async def _slicer_dropdown_is_open(locator: Any) -> bool:
             );
           });
         }"""
-    )
+    ))
 
 
 async def _wait_for_slicer_open(page: Any, locator: Any) -> None:
@@ -3383,6 +3436,7 @@ async def _accessible_tab_names(frame: Any) -> list[str]:
 
 async def _wait_for_comparable_report_tabs(page: Page) -> list[str]:
     deadline = time.monotonic() + MAX_PAGE_TAB_WAIT_SECONDS
+    empty_deadline = time.monotonic() + EMPTY_PAGE_TAB_WAIT_SECONDS
     latest_names: list[str] = []
     while True:
         latest_names = []
@@ -3391,7 +3445,7 @@ async def _wait_for_comparable_report_tabs(page: Page) -> list[str]:
                 if name not in latest_names:
                     latest_names.append(name)
         if (
-            not latest_names
+            (not latest_names and time.monotonic() >= empty_deadline)
             or _comparable_report_page_names(latest_names)
             or time.monotonic() >= deadline
         ):
@@ -3473,33 +3527,34 @@ async def _accessible_inventory(
                 continue
             if name and was_cleared(name):
                 continue
+            values = await locator.locator("option").all_text_contents()
             if name and clear_selection_actions:
-                await _click_slicer_control(locator)
-                clear_button = await _clear_selection_button(
+                if await _clear_slicer_if_button_available(
+                    page,
                     frame,
-                    {"name": name, "selector_name": selector_name},
+                    {
+                        "name": name,
+                        "selector_name": selector_name,
+                        "control_type": "select",
+                    },
+                    values=values,
                     control=locator,
-                )
-                if clear_button is not None:
-                    await _click_clear_selection_button(clear_button)
+                ):
                     cleared_slicers.append(name)
                     continue
-            values = await locator.locator("option").all_text_contents()
             values = [value.strip() for value in values if value.strip()]
-            if not clear_selection_actions:
-                values = [
-                    value
-                    for value in values
-                    if not _is_clear_selection_label(value)
-                ]
+            values = [
+                value
+                for value in values
+                if not _is_clear_selection_label(value)
+            ]
             if name and values:
                 selected = await locator.locator("option:checked").all_text_contents()
-                if not clear_selection_actions:
-                    selected = [
-                        value
-                        for value in selected
-                        if not _is_clear_selection_label(value.strip())
-                    ]
+                selected = [
+                    value
+                    for value in selected
+                    if not _is_clear_selection_label(value.strip())
+                ]
                 await locator.press("Escape")
                 filters.append(
                     {
@@ -3507,6 +3562,7 @@ async def _accessible_inventory(
                         "selector_name": selector_name,
                         "selected": [value.strip() for value in selected],
                         "values": values,
+                        "control_type": "select",
                         "clear_selection_checked": True,
                     }
                 )
@@ -3552,6 +3608,7 @@ async def _accessible_inventory(
                 filters.append(
                     {
                         **filter_probe,
+                        "control_type": "dropdown",
                         "selected": _visible_selected_values(
                             name, selector_name, summary
                         ),
@@ -3634,64 +3691,26 @@ async def _accessible_inventory(
             if control_type is not None:
                 filter_probe["control_type"] = control_type
             if clear_selection_actions:
-                clear_button = await _clear_selection_button(
-                    frame, filter_probe, control=combo
-                )
-                if clear_button is not None:
-                    await _click_clear_selection_button(clear_button)
+                if await _clear_slicer_if_button_available(
+                    page,
+                    frame,
+                    filter_probe,
+                    values=values,
+                    control=combo,
+                ):
                     cleared_slicers.append(name)
                     continue
-                if choices:
-                    clear_choice = next(
-                        (
-                            choice
-                            for choice in choices
-                            if _is_clear_selection_label(choice["label"])
-                        ),
-                        None,
-                    )
-                    if clear_choice is not None:
-                        choice_locator = frame.locator(
-                            '[role="radio"], input[type="radio"]'
-                            if choice_type == "radio"
-                            else '[role="checkbox"], input[type="checkbox"]'
-                        ).nth(clear_choice["index"])
-                        await choice_locator.click(
-                            force=True, timeout=5_000
-                        )
-                        cleared_slicers.append(name)
-                        continue
-                clear_value = next(
-                    (
-                        value
-                        for value in values
-                        if _is_clear_selection_label(value)
-                    ),
-                    None,
-                )
-                if clear_value is not None:
-                    await _click_filter_option(
-                        page,
-                        frame,
-                        combo,
-                        clear_value,
-                        filter_name=name,
-                        expected_options=values,
-                    )
-                    cleared_slicers.append(name)
-                    continue
-            else:
-                values = [
+            values = [
+                value
+                for value in values
+                if not _is_clear_selection_label(value)
+            ]
+            if selected is not None:
+                selected = [
                     value
-                    for value in values
+                    for value in selected
                     if not _is_clear_selection_label(value)
                 ]
-                if selected is not None:
-                    selected = [
-                        value
-                        for value in selected
-                        if not _is_clear_selection_label(value)
-                    ]
             summary = (await combo.inner_text()).strip()
             if values:
                 await combo.press("Escape")
@@ -3706,10 +3725,9 @@ async def _accessible_inventory(
                         )
                     ),
                     "values": values,
+                    "control_type": control_type or "dropdown",
                     "clear_selection_checked": True,
                 }
-                if control_type is not None:
-                    filter_entry["control_type"] = control_type
                 filters.append(filter_entry)
             else:
                 visible_selection = _selected_values_with_summary(
@@ -3732,11 +3750,7 @@ async def _accessible_inventory(
                                 "The popup exposed no readable options; "
                                 "the visible aggregate selection was retained."
                             ),
-                            **(
-                                {"control_type": control_type}
-                                if control_type is not None
-                                else {}
-                            ),
+                            "control_type": control_type or "dropdown",
                         }
                     )
                     logger.warning(
@@ -3802,61 +3816,24 @@ async def _accessible_inventory(
                 continue
             frame = page.frames[int(key[0])]
             if clear_selection_actions:
-                clear_button = await _clear_selection_button(frame, item)
-                if clear_button is not None:
-                    await _click_clear_selection_button(clear_button)
+                if await _clear_slicer_if_button_available(
+                    page,
+                    frame,
+                    item,
+                    values=item["values"],
+                ):
                     cleared_slicers.append(item["name"])
                     continue
-                clear_choice = next(
-                    (
-                        value
-                        for value in item["values"]
-                        if _is_clear_selection_label(value)
-                    ),
-                    None,
-                )
-                if clear_choice is not None:
-                    if control_type == "checkbox":
-                        choice = next(
-                            option
-                            for option in await _checkbox_filter_options(
-                                frame, item
-                            )
-                            if _is_clear_selection_label(option["label"])
-                        )
-                        checkboxes = frame.locator(
-                            '[role="checkbox"], input[type="checkbox"]'
-                        )
-                        await checkboxes.nth(choice["index"]).click(
-                            force=True, timeout=5_000
-                        )
-                    else:
-                        radios = frame.locator(
-                            '[role="radio"], input[type="radio"]'
-                        )
-                        choice = next(
-                            option
-                            for option in await _radio_filter_options(
-                                frame, item
-                            )
-                            if _is_clear_selection_label(option["label"])
-                        )
-                        await radios.nth(choice["index"]).click(
-                            force=True, timeout=5_000
-                        )
-                    cleared_slicers.append(item["name"])
-                    continue
-            else:
-                item["values"] = [
-                    value
-                    for value in item["values"]
-                    if not _is_clear_selection_label(value)
-                ]
-                item["selected"] = [
-                    value
-                    for value in item["selected"]
-                    if not _is_clear_selection_label(value)
-                ]
+            item["values"] = [
+                value
+                for value in item["values"]
+                if not _is_clear_selection_label(value)
+            ]
+            item["selected"] = [
+                value
+                for value in item["selected"]
+                if not _is_clear_selection_label(value)
+            ]
             item["clear_selection_checked"] = True
             filters.append(item)
 
@@ -4002,7 +3979,15 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
     ].filter(image => visible(image) && !image.complete).length,
     0
   );
+  const isSlicerVisual = visual =>
+    visual.matches(
+      '[data-visual-type*="slicer" i], [data-visual-kind*="slicer" i]'
+    ) || visual.querySelector(
+      '[role="combobox"], [role="listbox"], [aria-haspopup="listbox"], ' +
+      '[data-visual-type*="slicer" i], [data-visual-kind*="slicer" i]'
+    );
   const isChartVisual = visual => {
+    if (isSlicerVisual(visual)) return false;
     const hints = [
       visual.getAttribute('data-visual-type'),
       visual.getAttribute('data-visual-kind'),
@@ -4737,7 +4722,15 @@ async def _clear_selection_button(
     button, found = await _visible_clear_selection_button(scopes, clear_name)
     visible_before_hover = button is not None
     if button is None:
-        await control.hover(timeout=SLICER_CONTROL_ACTION_TIMEOUT_MS)
+        try:
+            await control.hover(timeout=SLICER_CONTROL_ACTION_TIMEOUT_MS)
+        except PlaywrightError:
+            logger.warning(
+                "Could not hover slicer %r to reveal Clear selections",
+                filter_name,
+                exc_info=True,
+            )
+            return None
         button, found = await _visible_clear_selection_button(
             scopes,
             clear_name,
@@ -4812,6 +4805,39 @@ async def _click_clear_selection_button(
     return True
 
 
+async def _clear_slicer_if_button_available(
+    page: Page,
+    frame: Any,
+    filter_item: dict[str, Any],
+    *,
+    values: list[str],
+    control: Any | None = None,
+) -> bool:
+    if is_kpi_selection_filter(filter_item):
+        return False
+    button = await _clear_selection_button(
+        frame,
+        filter_item,
+        control=control,
+    )
+    if button is None or not await _click_clear_selection_button(
+        button, filter_item.get("name")
+    ):
+        return False
+
+    await page.wait_for_timeout(150)
+    clear_filter = {**filter_item, "values": values}
+    selected = await _current_filter_value(page, clear_filter)
+    if not _filter_selection_is_clear(clear_filter, selected):
+        logger.warning(
+            "Clear selections did not reset filter %r; preserving selection %r",
+            filter_item.get("name"),
+            selected,
+        )
+        return False
+    return True
+
+
 async def _clear_page_slicer_selections(
     page: Page,
     filter_names: list[str] | None = None,
@@ -4822,7 +4848,9 @@ async def _clear_page_slicer_selections(
         {
             _normalized_control_text(name)
             for name in filter_names
-            if isinstance(name, str) and name.strip()
+            if isinstance(name, str)
+            and name.strip()
+            and not is_kpi_selection_filter({"name": name})
         }
         if filter_names is not None
         else None
@@ -4845,31 +4873,39 @@ async def _clear_page_slicer_selections(
                           .filter(Boolean).join(' ')"""
                     )
                 )
+                if is_kpi_selection_filter({"name": name}):
+                    continue
                 if (
                     _normalized_control_text(name) not in requested_names
                     or _normalized_control_text(name)
                     in {_normalized_control_text(item) for item in cleared_slicers}
                 ):
                     continue
-                button = await _clear_selection_button(
+                values = await control.locator("option").all_text_contents()
+                if await _clear_slicer_if_button_available(
+                    page,
                     frame,
-                    {"name": name, "selector_name": name},
+                    {
+                        "name": name,
+                        "selector_name": name,
+                        "control_type": "select",
+                    },
+                    values=values,
                     control=control,
-                )
-                if button is not None:
-                    await _click_clear_selection_button(button)
-                    await page.wait_for_timeout(150)
+                ):
                     cleared_slicers.append(name)
 
         combos = frame.get_by_role("combobox")
         metadata = await combos.evaluate_all(COMBOBOX_METADATA_SCRIPT)
         for item in metadata:
-            combo = combos.nth(item["index"])
-            if not await combo.is_visible():
-                continue
             name = str(item.get("name") or "").strip()
             selector_name = str(item.get("selectorName") or name).strip()
             if not name:
+                continue
+            if is_kpi_selection_filter({"name": name}):
+                continue
+            combo = combos.nth(item["index"])
+            if not await combo.is_visible():
                 continue
             normalized_name = _normalized_control_text(name)
             if (
@@ -4880,161 +4916,19 @@ async def _clear_page_slicer_selections(
                 for cleared in cleared_slicers
             }:
                 continue
-            if not await _slicer_dropdown_is_open(combo):
-                await _click_slicer_control(combo)
-                await _wait_for_slicer_open(page, combo)
             filter_probe = {
                 "name": name,
                 "selector_name": selector_name,
+                "control_type": "dropdown",
             }
-            listbox_options = await _associated_listbox_options(
-                frame, combo, filter_probe
+            clear_button = await _clear_selection_button(
+                frame, filter_probe, control=combo
             )
-            associated_control_type = (
-                listbox_options[2] if listbox_options is not None else None
-            )
-            if associated_control_type == "radio_dropdown":
-                button = await _clear_selection_button(
-                    frame,
-                    {
-                        **filter_probe,
-                        "control_type": associated_control_type,
-                    },
-                    control=combo,
-                )
-                if button is not None:
-                    await _click_clear_selection_button(button)
-                    await page.wait_for_timeout(150)
-                    clear_filter = {
-                        **filter_probe,
-                        "control_type": associated_control_type,
-                        "values": listbox_options[0],
-                    }
-                    selected = await _current_filter_value(page, clear_filter)
-                    if not _filter_selection_is_clear(clear_filter, selected):
-                        raise RuntimeError(
-                            f"Could not clear slicer {name!r} at page startup; "
-                            f"selected values: {selected!r}; Clear selections "
-                            "did not clear the filter"
-                        )
-                    cleared_slicers.append(name)
-                    continue
-                await _close_slicer_dropdown(page, combo)
-                continue
-            if associated_control_type == "checkbox_dropdown":
-                button = await _clear_selection_button(
-                    frame,
-                    {
-                        **filter_probe,
-                        "control_type": associated_control_type,
-                    },
-                    control=combo,
-                )
-                if button is not None:
-                    await _click_clear_selection_button(button)
-                    await page.wait_for_timeout(150)
-                    cleared_slicers.append(name)
-                    continue
-            (
-                options,
-                values,
-                _selected,
-                checkbox_choices,
-                radio_choices,
-            ) = await _wait_for_combobox_options(
-                page, frame, combo, filter_probe
-            )
-            choices = radio_choices or checkbox_choices
-            control_type = (
-                "radio_dropdown"
-                if radio_choices
-                else "checkbox_dropdown"
-                if checkbox_choices
-                else associated_control_type
-            )
-            if control_type == "radio_dropdown":
-                button = await _clear_selection_button(
-                    frame,
-                    {
-                        "name": name,
-                        "selector_name": selector_name,
-                        "control_type": control_type,
-                    },
-                    control=combo,
-                )
-                if button is not None:
-                    await _click_clear_selection_button(button)
-                    await page.wait_for_timeout(150)
-                    clear_filter = {
-                        "name": name,
-                        "selector_name": selector_name,
-                        "control_type": control_type,
-                        "values": values,
-                    }
-                    selected = await _current_filter_value(page, clear_filter)
-                    if not _filter_selection_is_clear(clear_filter, selected):
-                        raise RuntimeError(
-                            f"Could not clear slicer {name!r} at page startup; "
-                            f"selected values: {selected!r}; Clear selections "
-                            "did not clear the filter"
-                        )
-                    cleared_slicers.append(name)
-                    continue
-                await _close_slicer_dropdown(page, combo)
-                continue
-            button = await _clear_selection_button(
-                frame,
-                {
-                    "name": name,
-                    "selector_name": selector_name,
-                    "control_type": control_type,
-                },
-                control=combo,
-            )
-            if button is not None:
-                await _click_clear_selection_button(button)
+            if clear_button is not None and await _click_clear_selection_button(
+                clear_button, name
+            ):
+                cleared_slicers.append(name)
                 await page.wait_for_timeout(150)
-                cleared_slicers.append(name)
-                continue
-            clear_choice = next(
-                (
-                    choice
-                    for choice in choices
-                    if _is_clear_selection_label(choice["label"])
-                ),
-                None,
-            )
-            if clear_choice is not None:
-                choice_locator = frame.locator(
-                    '[role="radio"], input[type="radio"]'
-                    if radio_choices
-                    else '[role="checkbox"], input[type="checkbox"]'
-                ).nth(clear_choice["index"])
-                await choice_locator.click(force=True, timeout=5_000)
-                await page.wait_for_timeout(150)
-                cleared_slicers.append(name)
-                continue
-            clear_value = next(
-                (
-                    value
-                    for value in values
-                    if _is_clear_selection_label(value)
-                ),
-                None,
-            )
-            if clear_value is not None:
-                await _click_filter_option(
-                    page,
-                    frame,
-                    combo,
-                    clear_value,
-                    filter_name=name,
-                    expected_options=values,
-                )
-                cleared_slicers.append(name)
-                continue
-            if await _slicer_dropdown_is_open(combo):
-                await _close_slicer_dropdown(page, combo)
 
         if requested_names is not None:
             for control_type, options_for_frame in (
@@ -5044,6 +4938,8 @@ async def _clear_page_slicer_selections(
                 groups: dict[str, dict[str, Any]] = {}
                 for option in await options_for_frame(frame):
                     name = option["name"].strip()
+                    if is_kpi_selection_filter({"name": name}):
+                        continue
                     normalized_name = _normalized_control_text(name)
                     if (
                         normalized_name not in requested_names
@@ -5062,27 +4958,18 @@ async def _clear_page_slicer_selections(
                             "selector_name": name,
                             "visual_id": option.get("visualId") or "",
                             "control_type": control_type,
+                            "values": [],
                         },
                     )
-                    if _is_clear_selection_label(option["label"]):
-                        group["clear_option_index"] = option["index"]
+                    group["values"].append(option["label"])
                 for group in groups.values():
-                    button = await _clear_selection_button(frame, group)
-                    if button is not None:
-                        await _click_clear_selection_button(button)
-                    elif "clear_option_index" in group:
-                        controls = frame.locator(
-                            '[role="checkbox"], input[type="checkbox"]'
-                            if control_type == "checkbox"
-                            else '[role="radio"], input[type="radio"]'
-                        )
-                        await controls.nth(
-                            group["clear_option_index"]
-                        ).click(force=True, timeout=5_000)
-                    else:
-                        continue
-                    await page.wait_for_timeout(150)
-                    cleared_slicers.append(group["name"])
+                    if await _clear_slicer_if_button_available(
+                        page,
+                        frame,
+                        group,
+                        values=group["values"],
+                    ):
+                        cleared_slicers.append(group["name"])
 
     if requested_names is not None and require_all:
         cleared_names = {
@@ -5111,11 +4998,12 @@ async def _inventory_page_after_clearing_slicers(
         else []
     )
     await _wait_for_state_render(page, settle_seconds=2.0)
-    if inspect_filter_options:
+    if inspect_filter_options and not clear_slicers:
         inventory = await _accessible_inventory(
             page,
             diagnostic_directory=diagnostic_directory,
             clear_selection_actions=False,
+            inspect_filter_options=True,
         )
     else:
         inventory = await _accessible_inventory(
@@ -5156,6 +5044,7 @@ async def _inventory_page_after_clearing_slicers(
     for filter_item in filters:
         if (
             filter_item.get("option_inventory_status") != "skipped"
+            or is_kpi_selection_filter(filter_item)
             or _normalized_control_text(str(filter_item.get("name") or ""))
             in {_normalized_control_text(name) for name in cleared_slicers}
         ):
@@ -5163,17 +5052,24 @@ async def _inventory_page_after_clearing_slicers(
         current = filter_item.get("selected")
         if not current or _filter_selection_is_clear(filter_item, current):
             continue
+        if filter_item.get("control_type") in {
+            "dropdown",
+            "checkbox_dropdown",
+            "radio_dropdown",
+        }:
+            continue
         # The popup can hide the header Clear button, so retry with the
         # dropdown closed and the pointer hovering the slicer.
         for frame in page.frames:
             control = await _combobox_for_filter(frame, filter_item)
             if control is None:
                 continue
-            button = await _clear_selection_button(
-                frame, filter_item, control=control
-            )
-            if button is not None and await _click_clear_selection_button(
-                button, filter_item.get("name")
+            if await _clear_slicer_if_button_available(
+                page,
+                frame,
+                filter_item,
+                values=filter_item.get("values", []),
+                control=control,
             ):
                 cleared_slicers.append(filter_item["name"])
                 retried_clear = True
@@ -5183,6 +5079,22 @@ async def _inventory_page_after_clearing_slicers(
         await _wait_for_state_render(page, settle_seconds=2.0)
 
     for filter_item in filters:
+        was_cleared = _normalized_control_text(
+            str(filter_item.get("name") or "")
+        ) in {
+            _normalized_control_text(name) for name in cleared_slicers
+        }
+        if filter_item.get("option_inventory_status") == "skipped":
+            if was_cleared:
+                filter_item["selected"] = ["All"]
+                filter_item["clear_selection_checked"] = True
+            elif filter_item.get("selected") is None:
+                raise RuntimeError(
+                    f"Could not inspect slicer {filter_item['name']!r} at "
+                    "page startup; its dropdown was not opened and no "
+                    "selection summary was available"
+                )
+            continue
         selected = await _current_filter_value(page, filter_item)
         if filter_item.get("option_inventory_status") == "unavailable":
             if selected is None:
@@ -5214,11 +5126,6 @@ async def _inventory_page_after_clearing_slicers(
             if selected is not None:
                 filter_item["selected"] = selected
             continue
-        was_cleared = _normalized_control_text(
-            str(filter_item.get("name") or "")
-        ) in {
-            _normalized_control_text(name) for name in cleared_slicers
-        }
         if was_cleared and (
             selected is None
             or not _filter_selection_is_clear(filter_item, selected)
@@ -5332,10 +5239,17 @@ async def _prepare_slicer_selections(
             filter_item["reset_strategy"] = "preserve_selection"
             continue
 
+        if is_kpi_selection_filter(filter_item):
+            filter_item["reset_strategy"] = "preserve_selection"
+            filter_item["skip_filter_cases"] = True
+            continue
+
         normalized_name = _normalized_control_text(filter_item["name"])
         if normalized_name in already_cleared:
             filter_item["reset_strategy"] = "clear_selection"
-            filter_item["skip_filter_cases"] = True
+            filter_item["skip_filter_cases"] = (
+                not is_kpi_selection_filter(filter_item)
+            )
             continue
 
         control_type = filter_item.get("control_type")
@@ -5402,7 +5316,9 @@ async def _prepare_slicer_selections(
             )
             filter_item["selected"] = selected
             filter_item["reset_strategy"] = "clear_selection"
-            filter_item["skip_filter_cases"] = True
+            filter_item["skip_filter_cases"] = (
+                not is_kpi_selection_filter(filter_item)
+            )
             continue
 
         control_type = filter_item.get("control_type")
@@ -5628,6 +5544,7 @@ async def _restore_dropdown_filter_values(
                 f"Cannot read current selections for filter "
                 f"{filter_item.get('name')!r}"
             )
+        current = [value for value in current if not _is_aggregate_value(value)]
         if _filter_values_equivalent(filter_item, expected, current):
             return True
         available = filter_item.get("values", [])
@@ -5679,9 +5596,9 @@ async def _restore_dropdown_filter_values(
                         f"Cannot verify restored selections for filter "
                         f"{filter_item.get('name')!r}"
                     )
+        current = [value for value in current if not _is_aggregate_value(value)]
         return _filter_values_equivalent(filter_item, expected, current)
     raise RuntimeError(
-        f"Cannot restore baseline for dropdown filter "
         f"{filter_item.get('name')!r}: control is unavailable"
     )
 
@@ -5998,6 +5915,8 @@ async def _select_filter(
         for item in filters
         if item.get("name", "").casefold() == selection.name.casefold()
     )
+    if is_kpi_selection_filter(filter_item):
+        return
     if _is_aggregate_value(selection.value):
         current = await _current_filter_value(page, filter_item)
         if current is not None and _filter_selection_matches(
@@ -9265,7 +9184,7 @@ async def _capture_filter_case(
                         filter_state=selection.key,
                     ):
                         await _clear_page_slicer_selections(
-                            page, filters_to_reclear, require_all=True
+                            page, filters_to_reclear, require_all=False
                         )
                         await _wait_for_state_render(page, settle_seconds=2.0)
                     for filter_selection in filter_selections:
@@ -9368,6 +9287,9 @@ async def _apply_filter_selections(
         ),
     )
     for _, filter_selection in ordered_selections:
+        filter_item = filters_by_name.get(filter_selection.name.casefold())
+        if filter_item is not None and is_kpi_selection_filter(filter_item):
+            continue
         await _select_filter(
             page,
             filter_selection,
@@ -9377,6 +9299,8 @@ async def _apply_filter_selections(
 
     for filter_selection in selections:
         filter_item = filters_by_name.get(filter_selection.name.casefold())
+        if filter_item is not None and is_kpi_selection_filter(filter_item):
+            continue
         if filter_item is None:
             raise RuntimeError(
                 f"Filter {filter_selection.name!r} is missing from the "
@@ -10202,6 +10126,12 @@ async def _detect_and_apply_page_visual_types(
 ) -> None:
     if reference_state is None:
         return
+    for state in states:
+        state.visuals[:] = [
+            visual
+            for visual in state.visuals
+            if not isinstance(visual, dict) or not is_header_divider(visual)
+        ]
     screenshot_path = Path(reference_state.screenshot)
     if not screenshot_path.is_file():
         raise FileNotFoundError(
@@ -10231,6 +10161,12 @@ async def _detect_and_apply_page_visual_types(
             filter_state=filter_state,
         )
     _apply_visual_type_detections(states, reference_state, detections)
+    for state in states:
+        state.visuals[:] = [
+            visual
+            for visual in state.visuals
+            if not isinstance(visual, dict) or not is_header_divider(visual)
+        ]
 
 
 async def _capture_dashboard_page(
@@ -10330,7 +10266,7 @@ async def _capture_dashboard_page(
                         await _inventory_page_after_clearing_slicers(
                             page,
                             diagnostic_directory=destination,
-                            clear_slicers=False,
+                            clear_slicers=True,
                             inspect_filter_options=False,
                         )
                     )
@@ -10589,6 +10525,7 @@ async def capture_dashboard(
     extract_visual_data: bool = False,
     include_filter_cases: bool = True,
     detect_visual_types: bool = False,
+    shared_browser: Browser | None = None,
 ) -> list[DashboardState]:
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "capture_performance.jsonl").write_text(
@@ -10596,14 +10533,13 @@ async def capture_dashboard(
     )
     if extraction_cache is None:
         extraction_cache = {}
-    async with async_playwright() as playwright:
-        with measure_stage(
-            operation_log_path,
-            job_id=job_id,
-            operation="launch_dashboard_browser",
-            dashboard=dashboard,
-        ):
-            browser = await playwright.chromium.launch(headless=not headed)
+    async with _capture_browser_session(
+        shared_browser,
+        headed,
+        job_id,
+        operation_log_path,
+        dashboard,
+    ) as browser:
         context_options: dict[str, Any] = {
             "viewport": CAPTURE_VIEWPORT,
             "device_scale_factor": CAPTURE_DEVICE_SCALE_FACTOR,
@@ -10765,13 +10701,36 @@ async def capture_dashboard(
                 )
             return states
         finally:
-            with measure_stage(
-                operation_log_path,
-                job_id=job_id,
-                operation="close_dashboard_browser",
-                dashboard=dashboard,
-            ):
-                await browser.close()
+            if shared_browser is None:
+                with measure_stage(
+                    operation_log_path,
+                    job_id=job_id,
+                    operation="close_dashboard_browser",
+                    dashboard=dashboard,
+                ):
+                    await browser.close()
+
+
+@asynccontextmanager
+async def _capture_browser_session(
+    shared_browser: Browser | None,
+    headed: bool,
+    job_id: str,
+    operation_log_path: Path | None,
+    dashboard: str,
+):
+    if shared_browser is not None:
+        yield shared_browser
+        return
+    async with async_playwright() as playwright:
+        with measure_stage(
+            operation_log_path,
+            job_id=job_id,
+            operation="launch_dashboard_browser",
+            dashboard=dashboard,
+        ):
+            browser = await playwright.chromium.launch(headless=not headed)
+        yield browser
 
 
 async def capture_dashboard_pair(
@@ -10787,6 +10746,7 @@ async def capture_dashboard_pair(
     extract_visual_data: bool = False,
     include_filter_cases: bool = False,
     detect_visual_types: bool = False,
+    browser: Browser | None = None,
 ) -> tuple[list[DashboardState], list[DashboardState]]:
     operation_log_path = operation_log_path or destination / "operation_timings.jsonl"
     dashboard_a_directory = destination / "dashboard_A"
@@ -10838,6 +10798,7 @@ async def capture_dashboard_pair(
             extract_visual_data=extract_visual_data,
             include_filter_cases=include_filter_cases,
             detect_visual_types=detect_visual_types,
+            shared_browser=browser,
         ),
         capture_dashboard(
             url=url_b,
@@ -10855,6 +10816,7 @@ async def capture_dashboard_pair(
             extract_visual_data=extract_visual_data,
             include_filter_cases=include_filter_cases,
             detect_visual_types=detect_visual_types,
+            shared_browser=browser,
         ),
     )
 

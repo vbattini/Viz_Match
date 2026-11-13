@@ -41,16 +41,18 @@ standard workflow enable it automatically.
    before using it.
    DOM metadata supplies visual candidates and canvas-relative bounds; the
    screenshot detector enriches those candidates and reuses the result across
-   that page's filter states. Dashboard A and B run concurrently. Pages run in separate Playwright
-   contexts, with up to `min(page_count, 5)` page workers per dashboard and a
-   five-worker global page cap.
+   that page's filter states. Dashboard A and B run concurrently. Scenario
+   execution processes up to five page pairs at a time; standard capture is
+   bounded to two pages per dashboard and two concurrent state captures by
+   default.
    Dropdown slicers are dismissed and their collapsed state verified after
    reading or applying a selection, so an open filter menu cannot cover report
    visuals during export or screenshot capture.
-   Gemini requests remain independent per extraction and run with a global
-   limit of five concurrent requests. Each request has a five-minute timeout
-   and up to four retries with exponential backoff, helping transient Vertex
-   AI transport failures recover without occupying capture workers indefinitely.
+   Gemini requests run with a global limit of two concurrent requests by
+   default. Each request has a five-minute timeout and up to five attempts with
+   exponential backoff, helping transient Vertex AI transport failures recover
+   without occupying capture workers indefinitely. Comparison work is also
+   bounded to two workers by default.
    As page results finish, matching page/filter states
    are compared in bounded workers; their partial results are consolidated and
    validated before the final JSON and Excel reports are written.
@@ -118,17 +120,20 @@ Concurrency and request deadlines can be tuned with
 `PBI_MAX_PARALLEL_MODEL_REQUESTS` (default `10`),
 `PBI_MODEL_REQUEST_TIMEOUT_SECONDS` (default `300`),
 `PBI_MODEL_REQUEST_ATTEMPTS` (default `5`),
-`PBI_MAX_PARALLEL_PAGE_CAPTURES` (default `10`),
-`PBI_MAX_PARALLEL_STATE_CAPTURES` (default `10`),
-`PBI_MAX_PARALLEL_COMPARISONS` (default `4`). Values must be positive.
+`PBI_MAX_PARALLEL_PAGE_CAPTURES` (default `2`),
+`PBI_MAX_PARALLEL_STATE_CAPTURES` (default `2`),
+`PBI_MAX_PARALLEL_COMPARISONS` (default `2`), and
+`PBI_VALIDATION_MAX_PARALLEL_PAGES` (default `5` page pairs; one page from each
+dashboard). Values must be positive. Model requests retry transient transport
+failures, rate limits, server errors, and timeouts with exponential backoff,
+up to the configured attempt count. Lower concurrency if Vertex AI quotas or
+machine capacity require it.
 Screenshot extraction uses the 65,536-token output limit for Gemini 2.5 Flash,
 3.7 Flash, and 3.8 Flash; other configured models retain their own default
 output limit. Gemini 3.7 and 3.8 Flash use model-default sampling settings
 because `temperature` is not configurable for these models.
-The concurrency defaults are a modest throughput increase; lower them if
-Power BI or Gemini starts returning throttling errors, timeouts, or browser
-resource errors. Compare end-to-end times across several representative runs
-before increasing them further.
+Concurrency settings are read when the API starts. Restart Uvicorn after
+changing them for the new values to take effect.
 
 For reports requiring authentication, create a Playwright storage state file
 with an authenticated browser session and pass it to the CLI:
@@ -142,20 +147,61 @@ Sign in in the opened browser, then close it to save the session. Protect
 
 ## Run
 
-Start the local web UI:
+Set `POWERBI_HOME_URL` to your tenant-scoped Power BI Home URL before starting
+the app so discovery preserves its `ctid`:
 
 ```powershell
-uvicorn powerbi_dashboard_comparator.api:app --host 127.0.0.1 --port 8000
+$env:POWERBI_HOME_URL = "https://app.powerbi.com/home?ctid=<tenant-id>&experience=power-bi"
+python -m uvicorn Backend.api:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Then open <http://127.0.0.1:8000>. Enter both Power BI report URLs and start
-the comparison. The UI uses the configured Vertex AI project/model and the
-local `auth.json` storage state; it does not accept credentials in the form.
+Run this from the repository root. `--reload` picks up source changes during
+development; without it, stop and restart Uvicorn after changing code. The
+`powerbi-compare` console command uses the checkout registered by the most
+recent editable install, so run `python -m pip install -e .` here if that
+command is resolving to another checkout.
+
+Then open <http://127.0.0.1:8000>. Add up to 10 jobs with Workspace Name,
+Semantic Model, and Report Name; all three fields are required for each job.
+Edit job values directly in the worksheet and validate the rows before running.
+To fill multiple cells at once, select the starting worksheet cell and paste
+tab-separated rows copied from Excel with Ctrl+V. The worksheet keeps the
+pasted row and column layout and enforces the 10-job limit.
+All 10 input rows fit without a worksheet scrollbar. After the batch is
+accepted, the input sheet collapses and the results panel moves into view; use
+Show input sheet to expand it again.
+The web UI runs the standard capture and comparison, then captures all four
+functional scenarios, validates their evidence, and compares each page/scenario
+pair. Standard DOCX/Excel generation is deferred until those scenario
+comparisons finish. Clear **Run four functional scenarios** to run only the
+standard comparison. Scenario runs save their per-page screenshots and JSON
+under the job folder, and add Scenario DOCX, Scenario JSON, Evidence Validation
+JSON, and Execution JSON links to the job results.
+Jobs execute sequentially in the displayed order, and a failed job does not
+prevent later jobs from running by default. Semantic Model is retained as job
+metadata only and is not used to find or validate Power BI assets. The UI uses
+the configured Vertex AI project/model and local `auth.json` storage state,
+and does not accept credentials in the form.
+The GCP workspace/report names default to `Tredence <Workspace Name>` and
+`<Report Name> GCP`; configure `POWERBI_GCP_WORKSPACE_PREFIX` or
+`POWERBI_GCP_REPORT_SUFFIX` to change those naming rules.
+The DOCX summary uses the submitted report and semantic-model names plus the
+discovered Snowflake and GCP workspace names.
 Only one comparison runs at a time. Job status is polled in the browser, and
 the UI stopwatch counts up while the comparison runs and displays the final
 execution time as `MM:SS:mmm` (minutes, seconds, milliseconds) when it
-completes. There is no 60-second time limit. Completed Word (DOCX), JSON, and Excel
-reports can be downloaded from the page.
+completes. There is no 60-second time limit. Completed DOCX and Excel reports
+can be downloaded for each job. Each downloadable ZIP folder contains only the
+report-named DOCX, report-named Excel workbook, and a `PowerBI_Links.txt` file
+with the Dashboard A/Snowflake and Dashboard B/GCP URLs. When scenarios ran,
+the ZIP also includes `Validation_Execution_Summary.json`; there is no
+separate scenario-comparison report. The batch download collects available
+report folders, including completed jobs if a later job fails or is skipped.
+Each web-UI job folder uses the first dashboard's report name with a unique
+job ID suffix. At the start of each run, the app retains only the five most
+recently modified job folders under `output/jobs` and removes older folders.
+If Windows blocks a folder rename, the comparison still completes and keeps
+the output in its UUID-named folder.
 
 The JSON report includes versioned `comparison_records` with source values,
 positions, statuses, difference details, and available alignment/extraction
@@ -177,12 +223,15 @@ complete.
 
 The runtime workflow is coordinated by an ADK `SequentialAgent`:
 capture/extraction, Python validation, deterministic Python alignment/status
-assignment, then report generation. ADK/Gemini is used for screenshot
-extraction; comparison statuses remain controlled by Python. See
-[workflow.py](./src/powerbi_dashboard_comparator/workflow.py).
+assignment, then report generation. When scenarios are enabled, that final
+report stage is deferred until after scenario capture, evidence validation, and
+scenario comparisons. ADK/Gemini is used for screenshot extraction; comparison
+statuses remain controlled by Python. See
+[workflow.py](./Backend/workflow.py).
 
-The API accepts HTTPS URLs on `app.powerbi.com` only. Keep the server bound to
-localhost unless you add authentication and HTTPS for remote access.
+The app finds exact workspace and report names in the authenticated Power BI
+session before starting screenshot capture. Keep the server bound to localhost
+unless you add authentication and HTTPS for remote access.
 
 ## CLI
 
@@ -194,9 +243,40 @@ powerbi-compare `
   --storage-state ".\auth.json"
 ```
 
+To compare saved evidence without opening Power BI, run only Scenario 01 with
+the job directory that contains its dashboard manifests and planning evidence:
+
+```powershell
+python -m Backend.scenario_comparison `
+  --scenario-id 01 `
+  --scenario-source "01=.\output\jobs\<job-id>" `
+  --output-dir ".\output\scenario-01-comparison"
+```
+
+This compares table headers using the designated initial screenshot and every
+manifested horizontal-scroll screenshot. It does not execute Scenarios 02–04.
+
 Use `--headed` to watch browser activity or `--settle-seconds` to adjust the
 wait after selecting a filter. Filters are exercised exhaustively (see Notes),
 so there is no per-filter value cap.
+
+Add `--validation-scenarios` to run the deterministic validation scenarios
+for every page instead of the default capture (see Validation scenarios below).
+The filter plan is built from the DOM before any scenario action runs. Add
+`--scenario {01,02,03,04}` (with `--validation-scenarios`) to run only that
+one scenario. Requesting `--scenario 03` by itself skips the multiple-filter
+scenario because its single-filter prerequisite was not run.
+Add `--through` with `--scenario` to run a contiguous range, for example
+`--scenario 02 --through 03`. When both filter scenarios run in that range, the
+multiple-filter scenario preserves the single-filter selection and adds exactly
+one option on a different filter. Both selections are verified before its
+screenshot, then the original filter state is restored.
+Validation runs five page pairs at a time by default (Dashboard A and B in
+parallel within each pair, up to ten live report pages); set
+`PBI_VALIDATION_MAX_PARALLEL_PAGES` before starting the API to change this
+limit. Increase it cautiously because each additional pair opens two more live
+Power BI pages; lower it if the machine becomes unstable. Add `--cdp-url` to
+attach to an already-signed-in Chromium or Edge instance.
 
 The output directory contains one folder per dashboard (`dom.json`,
 `filter_plan.json`, screenshots, and `extracted.json`) plus
@@ -324,8 +404,16 @@ Base and Compare screenshots are embedded side by side once per page.
 retains the template sections and appends a page-by-page screenshot section.
 Current screenshots replace the template screenshots; detailed slicer and
 export data remain in JSON. Its Visual & Functional Validation Log groups
-entries by page, lists unique visual types from the comparison results,
-includes filter selections when available, and uses Pass/Fail dropdowns.
+non-filter visual checks by page and omits slicer/dropdown controls, which are
+handled in the Filter Validation Log. Remaining visual checks include applied
+filter selections when available and use Pass/Fail/Unable to Verify dropdowns.
+Page / Tab Name fields contain only the Power BI page name; scenario names and
+filter actions remain separate validation-log fields. Screenshot galleries
+include only captured images and do not add missing-screenshot notification
+paragraphs; capture and evidence failures remain visible in validation
+statuses. Matching, reliably captured filter selections pass even when the
+control type is unknown; differing selections fail, and unavailable selections
+remain Unable to Verify.
 Screenshot-based visual comparison records remain available in
 `comparison.json` and the DOCX report. Known filter/slicer type aliases are
 displayed consistently as `slicer_title` or `slicer_value`; source categories
@@ -357,6 +445,105 @@ available for normal screenshot extraction. If applying or cleaning up a mask
 fails, the issue is logged and the job continues with unmasked extraction.
 Masked extraction screenshots are saved under the state's `_exports\evidence`
 folder.
+
+## Validation scenarios
+
+With `--validation-scenarios`, each page runs four checks in the same browser
+sessions. Scenario 01 uses LLM Vision to compare the captured table-header
+screenshots; scenarios 02 through 04 also use LLM Vision on corresponding
+captures after all applicable evidence has been gathered. One page pair runs
+at a time by default, with Dashboard A and Dashboard B running in parallel for
+that pair. Both sides build a plan from the DOM first, which is written to
+`planning/<page>/`.
+Scenario 01 is captured before any filter or drill interaction. No independent
+Initial Default State scenario is run. The per-page scenarios run in this order:
+
+1. `01_table_column_header_comparison`: captures the initial viewport first.
+   If neither dashboard has a horizontal table scrollbar, it captures no more
+   images and marks the scenario `SKIPPED`. Otherwise each dashboard is
+   scrolled right in increments no larger than half a viewport, with a
+   screenshot after each position change, until its extreme-right position
+   is reached. This provides overlapping views while avoiding duplicate
+   screenshots when the position does not change; vertical scroll is never
+   changed. After both sides finish capture, one LLM Vision comparison reads
+   every screenshot and reports matching, missing, additional, renamed,
+   differently ordered, or unreadable headers. Header identification and
+   comparison use screenshot evidence only; DOM text, OCR, programmatic text
+   extraction, regex, and fuzzy matching are not used.
+2. `02_single_filter_selection`: applies exactly one random shared option on a
+   common filter and verifies the selection on both dashboards. Its screenshot
+   is captured only after successful verification. Skipped when no common
+   filter option is available.
+3. `03_multiple_filter_selection`: runs only after scenario 02 has been
+   verified on both dashboards. It preserves the exact scenario 02 selection,
+   applies exactly one shared option on a different common filter, and verifies
+   both selections from the DOM before capture. Any supported filter type can
+   be used. If scenario 02 was not run or verified, or no distinct filter with
+   an unselected shared option is available, scenario 03 is `SKIPPED` with a
+   reason; it never changes the first filter or falls back to selecting
+   multiple values in one filter.
+4. `04_drilldown`: clicks the enabled
+   "Go to the next level in the hierarchy" control and captures each level. It keeps
+   clicking until that control is disabled or absent, verifying that visible rows
+   changed after each click. Skipped when no visual has a verified drill control;
+   unverified visuals are skipped. Before and after screenshots are written for
+   every level.
+
+Default filter state is restored between independent scenarios. Scenario 02's
+state is held only while scenario 03 adds its second filter, then both scenarios
+are restored together. Before every scenario screenshot, the pointer is moved
+off the dashboard and focused controls are blurred to avoid covering content
+or leaving tooltips visible. A scenario that cannot run is `SKIPPED`. A
+scenario that fails during execution is `UNVERIFIED` with diagnostic evidence,
+and the page continues.
+
+Each dashboard stores screenshots directly in a page folder:
+`<output-dir>/dashboard_A/<page>/` or
+`<output-dir>/dashboard_B/<page>/`. All applicable scenario screenshots for a
+page share that folder; scenario subfolders are not used. Filenames include the
+dashboard, scenario, page, and applicable filter combination, drill level, or
+scroll position. There are no independent Initial Default State screenshots.
+For API comparison jobs, the Dashboard A/B initial screenshots provide Scenario
+01. The four functional scenarios are captured before comparison; their
+screenshots are extracted with the existing Vision utility and added as
+scenario-tagged states to the existing Dashboard Comparison pipeline. The old
+`compare_dashboards` logic generates the comparison, and the existing DOCX and
+Excel reports include all captured scenario screenshots and per-state results.
+The table-header execution keeps internal ID `01` but is labeled Scenario 05
+in the report. It uses screenshot-only Vision extraction of table headers;
+DOM and OCR are not used for that scenario.
+Each dashboard root contains an `evidence_manifest.json` with the page
+identity, scenario and capture role, selected filter values, combination or
+drill/scroll identifiers, capture timestamp and status, screenshot path,
+scrollbar state, and associated execution JSON evidence. DOM, execution, and
+execution-status JSON evidence is stored under
+`planning/scenario_evidence/scenario_<ID>/pages/<page>/`. No separate
+`comparison_results` directory or scenario-only report is produced by API jobs.
+The standalone validation-scenario capture command does not write the base
+comparison JSON, Excel, or DOCX reports. API jobs that run validation scenarios
+generate the existing `Dashboard_Comparison.docx` and
+`Dashboard_Comparison.xlsx` only after all scenario screenshots and execution
+evidence have been captured and validated and the existing comparator has
+processed the matched states. Missing, unmatched, or invalid scenario evidence
+is reported as `UNVERIFIED`; skipped operations remain `SKIPPED`. A run-level
+execution summary is written to `<output-dir>/validation_summary.json`.
+
+For a screenshot-only inventory in the supplied report-template format, run:
+
+```powershell
+python -m Backend.visual_inventory_report `
+  --source .\output_all `
+  --output-dir .\output_visual_inventory
+```
+
+This uses LLM Vision on Scenario 01's saved initial screenshots and, where
+available, the incremental horizontal screenshots. It records visible report/page
+titles, filter names and control types, visual names/types, and ordered
+table/matrix headers. Selected filter values, KPI numbers, chart data, and
+table cells are intentionally excluded. The output includes a DOCX with Filter
+Validation and Visual & Functional Validation logs, page screenshot pairs,
+plus per-page inventory JSON.
+
 
 ## Notes
 
@@ -439,7 +626,8 @@ folder.
   still capture concurrently, bounded by the page and global capture limits.
   Each capture uses the page's validated filter inventory and restores its
   baseline before applying the combination.
-- Captures use a consistent 1920x1080 viewport. Before screenshots, the mouse is
+- Captures use a consistent 2304x1080 viewport so wide report pages are not
+  clipped at the right edge. Before screenshots, the mouse is
   moved outside the dashboard and transient hover overlays are allowed to
   disappear, preventing the pointer or chart tooltip from obscuring evidence.
 - Each detected visual is hovered independently. When its More options menu
@@ -575,5 +763,5 @@ folder.
   The workspace includes `.github/skills/dashboard-url-comparator/SKILL.md`.
   Invoke it in VS Code with `/dashboard-url-comparator` for a structured
   comparison workflow. The Google ADK/Gemini extraction agent uses the matching
-  runtime guidance in `src/powerbi_dashboard_comparator/agents.py`; it does not
+  runtime guidance in `Backend/agents.py`; it does not
   automatically load VS Code skill files.

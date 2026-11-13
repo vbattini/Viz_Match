@@ -300,6 +300,12 @@ def test_visual_type_detection_returns_screenshot_classifications(monkeypatch) -
     assert agent_configs[0]["generate_content_config"].temperature is None
     assert len(requests) == 1
     assert "Do not transcribe KPI values" in agents.VISUAL_TYPE_DETECTION_INSTRUCTIONS
+    assert "A KPI title alone does not mean its metric value rendered" in (
+        agents.VISUAL_TYPE_DETECTION_INSTRUCTIONS
+    )
+    assert "sentence-style alert text as Text Box" in (
+        agents.VISUAL_TYPE_DETECTION_INSTRUCTIONS
+    )
     assert "TABLE_001" in requests[0][1].parts[0].text
 
 
@@ -615,6 +621,28 @@ def test_shared_aggregate_plan_expands_to_individual_values() -> None:
     }
 
 
+def test_kpi_selection_shared_plan_is_left_default() -> None:
+    shared_plan = {
+        "filters": [{"name": "KPI Selection", "values": ["Select all"]}]
+    }
+    inventory = {
+        "filters": [
+            {
+                "name": "KPI Selection",
+                "control_type": "checkbox",
+                "values": [
+                    "Select all",
+                    "Cases Selected",
+                    "Paid Hours",
+                    "Cases Per Hour",
+                ],
+            }
+        ]
+    }
+
+    assert _align_shared_plan(shared_plan, inventory) == {"filters": []}
+
+
 def test_shared_plan_expands_aggregate_when_second_dashboard_has_none() -> None:
     shared_plan = {"filters": [{"name": "Status", "values": ["Select all"]}]}
     second_inventory = {
@@ -696,6 +724,33 @@ def test_filter_plan_never_clicks_aggregate_option() -> None:
             {"name": "Time Period", "values": ["Benefits", "Finance"]}
         ]
     }
+
+
+def test_kpi_selection_checkbox_plan_is_left_default() -> None:
+    inventory = {
+        "filters": [
+            {
+                "name": "KPI Selection",
+                "control_type": "checkbox",
+                "values": [
+                    "Select all",
+                    "Cases Selected",
+                    "Paid Hours",
+                    "Cases Per Hour",
+                ],
+            }
+        ]
+    }
+
+    assert _deterministic_filter_plan(inventory) == {"filters": []}
+
+    for control_type in ("checkbox_dropdown", "dropdown", "radio_dropdown"):
+        inventory["filters"][0]["control_type"] = control_type
+        assert _deterministic_filter_plan(inventory) == {"filters": []}
+        assert _align_shared_plan(
+            {"filters": [{"name": "KPI Selection", "values": ["Cases Selected"]}]},
+            inventory,
+        ) == {"filters": []}
 
 
 def test_radio_filter_tests_every_option_including_all() -> None:

@@ -182,6 +182,126 @@ class VisualTypeDetectionResult(BaseModel):
     visuals: list[VisualTypeDetection] = Field(default_factory=list)
 
 
+class VisualHeaderDifference(BaseModel):
+    status: Literal["MISSING", "ADDITIONAL", "RENAMED", "DIFFERENT_ORDER", "UNVERIFIED"]
+    header_a: StrictStr | None = None
+    header_b: StrictStr | None = None
+    observation: StrictStr
+
+
+class VisualHeaderOrderDifference(BaseModel):
+    header: StrictStr
+    position_a: int
+    position_b: int
+    observation: StrictStr
+
+
+class ScreenshotHeaderComparison(BaseModel):
+    status: Literal["PASS", "FAIL", "UNVERIFIED"]
+    tables_found_a: bool
+    tables_found_b: bool
+    headers_a: list[StrictStr] = Field(default_factory=list)
+    headers_b: list[StrictStr] = Field(default_factory=list)
+    matching_headers: list[StrictStr] = Field(default_factory=list)
+    missing_headers: list[StrictStr] = Field(default_factory=list)
+    additional_headers: list[StrictStr] = Field(default_factory=list)
+    renamed_headers: list[VisualHeaderDifference] = Field(default_factory=list)
+    differently_ordered_headers: list[VisualHeaderOrderDifference] = Field(default_factory=list)
+    notes: list[StrictStr] = Field(default_factory=list)
+
+
+class ScenarioVisualFinding(BaseModel):
+    category: Literal[
+        "MATCH",
+        "MISSING",
+        "ADDITIONAL",
+        "RENAMED",
+        "DIFFERENT_VALUE",
+        "DIFFERENT_ORDER",
+        "VISUAL_DIFFERENCE",
+        "BEHAVIOR_DIFFERENCE",
+        "UNVERIFIED",
+    ]
+    element_type: StrictStr
+    element_a: StrictStr | None = None
+    element_b: StrictStr | None = None
+    observation: StrictStr
+
+
+class ScenarioScreenshotPageResult(BaseModel):
+    page_name: StrictStr
+    status: Literal["PASS", "FAIL", "UNVERIFIED"]
+    matching_elements: list[StrictStr] = Field(default_factory=list)
+    findings: list[ScenarioVisualFinding] = Field(default_factory=list)
+    notes: list[StrictStr] = Field(default_factory=list)
+
+
+class ScenarioScreenshotComparison(BaseModel):
+    page_results: list[ScenarioScreenshotPageResult] = Field(default_factory=list)
+
+
+class VisionFilterInventoryItem(BaseModel):
+    name: StrictStr
+    control_type: StrictStr | None = None
+
+
+class VisionTitleInventoryItem(BaseModel):
+    role: Literal[
+        "report_title",
+        "dashboard_title",
+        "section_title",
+        "visual_title",
+        "filter_title",
+    ]
+    text: StrictStr
+
+
+class VisionVisualInventoryItem(BaseModel):
+    title: StrictStr | None = None
+    visual_type: StrictStr
+    rendering_status: Literal[
+        "Rendered",
+        "Blank",
+        "Partial",
+        "Loading",
+        "Error",
+        "Unable to Verify",
+    ]
+    table_headers: list[StrictStr] = Field(default_factory=list)
+
+
+class DashboardScreenshotInventory(BaseModel):
+    report_title: StrictStr | None = None
+    dashboard_title: StrictStr | None = None
+    filters: list[VisionFilterInventoryItem] = Field(default_factory=list)
+    titles: list[VisionTitleInventoryItem] = Field(default_factory=list)
+    visuals: list[VisionVisualInventoryItem] = Field(default_factory=list)
+
+
+class InventoryComparisonFinding(BaseModel):
+    element_type: Literal[
+        "Report Title",
+        "Dashboard Title",
+        "Section Title",
+        "Filter",
+        "Visual",
+        "Table Header",
+    ]
+    status: Literal["PASS", "FAIL", "UNVERIFIED"]
+    element_a: StrictStr | None = None
+    element_b: StrictStr | None = None
+    observation: StrictStr
+
+
+class PageScreenshotInventoryResult(BaseModel):
+    page_name: StrictStr
+    status: Literal["PASS", "FAIL", "UNVERIFIED"]
+    dashboard_A: DashboardScreenshotInventory
+    dashboard_B: DashboardScreenshotInventory
+    findings: list[InventoryComparisonFinding] = Field(default_factory=list)
+    notes: list[StrictStr] = Field(default_factory=list)
+
+
 DASHBOARD_COMPARISON_SKILL = """You are using the dashboard_url_comparator
 extraction workflow. Extract all information visibly available in the supplied
 dashboard screenshot, regardless of dashboard platform or layout. Extract one
@@ -282,6 +402,9 @@ visible table column and row in original order, including totals; never
 deduplicate rows. Table columns must contain only displayed column headers,
 while chart categories must contain axis/category values and series must keep
 their own names and values. Do not treat chart categories as table headers.
+Do not emit decorative header divider lines or horizontal rules as elements,
+including elements named "Header Divider Line", "Header Divider", or
+"Divider Line". Preserve other meaningful shapes and content-bearing banners.
 For charts retain type, axes, categories, every visible series/value, legend,
 units, styles, and annotations; never estimate values from geometry. For KPIs
 retain primary and secondary values, units, trends, and comparison period.
@@ -450,6 +573,9 @@ charts or shapes that are absent from the candidate list. The candidate IDs,
 titles, and bounds are locators only; classify from screenshot appearance, not
 from an ID, title, DOM attribute, or HTML type. Exclude Power BI application
 chrome, page navigation, and filter slicers, which are captured separately.
+Exclude decorative header divider lines and horizontal separators, including
+elements named "Header Divider Line", "Header Divider", or "Divider Line".
+Preserve other meaningful shapes and content-bearing banners.
 
 For each supplied candidate, reuse its visual_id if it is visible in the
 screenshot. For any additional visible visual, assign an ID SCREENSHOT_001,
@@ -469,15 +595,20 @@ Donut Chart, Treemap, Scatter Plot, Bubble Chart, KPI Card, Multi-row Card,
 Gauge, Funnel Chart, Waterfall Chart, Ribbon Chart, Combo Chart, Map, Filled
 Map, Heatmap, Histogram, Slicer / Dropdown, Text Box, Header, Shape / Line,
 Image / Logo, and Button.
+Classify a solid callout or banner with sentence-style alert text as Text Box,
+not KPI; a KPI uses a metric value as its main displayed content.
 Distinguish types by visible structure. A blank visual may have an
 Unidentified actual type; do not infer its actual type from its title.
 
 Use rendering_status values Rendered, Blank, Partial, Loading, Error, or
 Unable to Verify. A visible KPI value of 0.00 is Rendered; "(Blank)" is Blank.
-A titled chart with an empty plotting area is Blank only when loading is
-complete. Loading is not a confirmed failure. Keep visual type separate from
-rendering status. A visible rule, divider, or line shape is Rendered when the
-line is visible, even though it has no data labels or chart marks.
+A KPI title alone does not mean its metric value rendered. If its title is
+visible but the value is unclear and not explicitly "(Blank)", use Unable to
+Verify. For charts, titles and axes alone do not prove that plotted content
+rendered; an empty plotting area is Blank only when loading is complete.
+Loading is not a confirmed failure. Keep visual type separate from rendering
+status. Do not return decorative header divider lines or horizontal separators
+as visuals.
 
 Do not transcribe KPI values, table cells, chart values, categories, or other
 dashboard data. Do not compare dashboards. Do not invent text or types. Return
@@ -485,6 +616,358 @@ exactly one result for every supplied visual_id plus any additional
 SCREENSHOT_NNN visual IDs for visible visual containers missing from the list.
 Return bounds as x, y, width, and height, each on a 0-to-1000 scale relative to
 the full screenshot."""
+
+
+TABLE_HEADER_SCREENSHOT_COMPARISON_INSTRUCTIONS = """Compare only table and
+matrix column headers. Do not compare KPI values, charts, visualizations,
+filters, slicers, table records, or other dashboard content.
+
+The images are labeled by dashboard and position and are ordered Dashboard A
+then Dashboard B. Each dashboard's views are ordered initial, then sequential
+horizontal_scroll_NN positions through the extreme-right end. Some incremental
+views may be absent when no scrollbar exists or the position does not change.
+Always compare the initial screenshots, including when neither dashboard has a
+horizontal scrollbar. Combine every available view for each dashboard into
+one complete left-to-right header sequence before comparing the two sequences.
+Deduplicate a header only when it is visibly the same column repeated in the
+overlap between adjacent views. Preserve identical header text when it belongs
+to distinct columns at different positions. If overlap makes column identity
+ambiguous, report UNVERIFIED rather than collapsing a legitimate repeated
+header.
+
+Use any supplied DOM accessibility header sequence only to corroborate header
+identity and ordering. The DOM sequence is from the initial screenshot and is
+provided only when that screenshot is pixel-identical to the designated
+Scenario 01 initial screenshot. Screenshots remain the primary visual evidence;
+do not add headers that cannot be tied to the table or matrix.
+
+Return PASS only when both sides show a table/matrix and the complete readable
+header sequences match in name and order. Return FAIL for visually confirmed
+missing, additional, renamed, or differently ordered headers. Return
+UNVERIFIED when screenshots are incomplete, loading, ambiguous, or header text
+cannot be read reliably. Do not guess unreadable labels. Return the complete
+visually identified header sequence for each dashboard and populate
+matching_headers, missing_headers (A only), additional_headers (B only),
+renamed_headers, and differently_ordered_headers. Use RENAMED only when
+corresponding headers are clearly the same column with different names;
+otherwise report them as missing and additional. For order differences,
+include the 1-based position on each dashboard. If a table area shows a
+visible error or loading state on either side, return UNVERIFIED and explain
+the rendering limitation rather than reporting headers absent due to the
+failure. If neither side has a table or matrix, return UNVERIFIED and state
+that table headers are not applicable to the page. """
+
+
+SCENARIO_SCREENSHOT_COMPARISON_INSTRUCTIONS = """Compare each labeled Dashboard A
+(Snowflake) screenshot only with the Dashboard B (GCP) screenshot for the same
+page and scenario. Never compare different pages or scenario states with each
+other. Use only visible screenshot evidence for page titles, slicers and
+selection presentation, visual presence/type/title, chart legends and axes,
+table/matrix headers, rendering, layout, alignment, colors, fonts, and other
+visible presentation. The scenario and filter-state descriptions identify
+what state the screenshots represent; do not infer hidden filter options.
+
+Do not compare table records, chart data values, or numeric KPI values for data
+accuracy. You may report that a KPI or visual is visibly blank, missing, or
+failed to render after loading. Do not infer a difference from position alone.
+If the screenshots show different filter states, report that as a
+BEHAVIOR_DIFFERENCE and do not claim downstream visuals were compared at an
+equivalent state. Use RENAMED only when the same visible element is clearly
+renamed; otherwise report MISSING and ADDITIONAL. Use UNVERIFIED when text,
+identity, or rendering is ambiguous or obscured.
+
+For every page, return a status: PASS when corresponding visible elements are
+rendered and consistent; FAIL for confirmed material differences; UNVERIFIED
+when evidence is insufficient. List confirmed matches and every supported
+difference in the supplied schema. Keep observations specific and concise."""
+
+
+VISUAL_INVENTORY_COMPARISON_INSTRUCTIONS = """Inspect and compare the supplied
+Power BI screenshots for one report page. Dashboard A is Snowflake; Dashboard B
+is GCP. Use only screenshot pixels. Do not use DOM, HTML, OCR tools, filenames,
+or hidden metadata to identify content.
+
+On each dashboard's initial screenshot, identify every visible report visual,
+its displayed title when present, and its visual type. When a visual has no
+visible title, return null rather than inventing one. Also identify the
+visible report title, dashboard-authored title, section titles, and filter
+names/control types. Do not open or infer hidden filters. Do not transcribe
+filter selections, selected values, option values, KPI numbers, chart data,
+table body/cell values, row labels, or other data values. There is deliberately
+no output field for those values.
+
+Additional images labeled horizontal_scroll_NN are overlapping horizontal
+views of the same page. Use those images only to complete the ordered column
+headers for table and matrix visuals already identified in the initial view;
+merge repeated overlap headers and retain the left-to-right sequence. Do not
+count scrolled views as additional visuals. Do not infer headers that are not
+legible.
+
+Compare report/dashboard/section titles, filter names and visible control
+types, visual identity/title/type/rendering, and table/matrix header text and
+order. Match visuals using title, type, surrounding visual context, and
+geometry together; position alone is not identity. Use a confirmed missing or
+additional item only when the screenshots support its absence. Use UNVERIFIED
+when text, identity, correspondence, or rendering is uncertain. A visible
+loading or error state is not a confirmed missing visual. Return one finding
+for every comparable title, filter, visual, and table/matrix header sequence.
+Do not compare visual data values. Keep observations specific and concise."""
+
+
+async def compare_table_headers_from_screenshots(
+    screenshots: list[tuple[str, bytes]],
+    page_name: str,
+    *,
+    dom_header_evidence: dict[str, list[str]] | None = None,
+    job_id: str = "standalone",
+    operation_log_path: Path | None = None,
+) -> dict[str, Any]:
+    def label_order(label: str) -> tuple[int, int]:
+        parts = label.split(maxsplit=2)
+        if len(parts) != 3 or parts[0] != "Dashboard" or parts[1] not in {"A", "B"}:
+            raise ValueError(f"Invalid header screenshot label: {label!r}")
+        position = parts[2]
+        if position == "initial":
+            position_index = 0
+        elif position.startswith("horizontal_scroll_"):
+            sequence = position.removeprefix("horizontal_scroll_")
+            if not sequence.isdigit() or int(sequence) < 1:
+                raise ValueError(f"Invalid header screenshot position: {label!r}")
+            position_index = int(sequence)
+        else:
+            raise ValueError(f"Invalid header screenshot position: {label!r}")
+        return (0 if parts[1] == "A" else 1, position_index)
+
+    labels = [label for label, _ in screenshots]
+    if any(label_order(label) >= label_order(next_label) for label, next_label in zip(labels, labels[1:])):
+        raise ValueError("Header screenshots must be unique and ordered by dashboard and position")
+    if "Dashboard A initial" not in labels or "Dashboard B initial" not in labels:
+        raise ValueError("Header comparison requires the initial screenshot for both dashboards")
+    if any(not image for _, image in screenshots):
+        raise ValueError("Header comparison requires non-empty screenshots")
+    with measure_stage(
+        operation_log_path,
+        job_id=job_id,
+        operation="prepare_visual_header_comparison",
+        page=page_name,
+    ):
+        model_name = _model_name()
+        agent = LlmAgent(
+            name="table_header_visual_comparator",
+            model=model_name,
+            instruction=TABLE_HEADER_SCREENSHOT_COMPARISON_INSTRUCTIONS,
+            output_schema=ScreenshotHeaderComparison,
+            generate_content_config=_generation_config(model_name),
+        )
+        parts: list[Any] = []
+        for label, image in screenshots:
+            parts.extend(
+                [
+                    types.Part(text=f"Screenshot: {label}"),
+                    types.Part.from_bytes(data=image, mime_type="image/png"),
+                ]
+            )
+        dom_lines = [
+            f"Dashboard {side[-1]} initial DOM accessibility headers: "
+            + ", ".join(headers)
+            for side, headers in (dom_header_evidence or {}).items()
+            if side in {"dashboard_A", "dashboard_B"} and headers
+        ]
+        dom_context = (
+            "\n\nCorroborating DOM evidence:\n" + "\n".join(dom_lines)
+            if dom_lines
+            else ""
+        )
+        content = types.Content(
+            role="user",
+            parts=[
+                types.Part(
+                    text=(
+                        f"Compare only table or matrix column headers on page "
+                        f"{page_name!r}. The initial screenshots are required "
+                        f"even when there are no horizontal-scroll views. "
+                        f"Available views in order: {', '.join(labels)}."
+                        f"{dom_context}"
+                    )
+                ),
+                *parts,
+            ],
+        )
+    response = await _run_agent(
+        agent,
+        content,
+        job_id=job_id,
+        operation_log_path=operation_log_path,
+        page=page_name,
+        filter_state="scenario_01_table_headers",
+    )
+    parsed = _parse_json_response(response, "table header visual comparison")
+    return ScreenshotHeaderComparison.model_validate(parsed).model_dump(mode="json")
+
+
+async def compare_scenario_screenshots(
+    screenshots: list[tuple[str, bytes]],
+    page_names: list[str],
+    scenario_id: str,
+    scenario_name: str,
+    *,
+    page_states: dict[str, str] | None = None,
+    job_id: str = "standalone",
+    operation_log_path: Path | None = None,
+) -> dict[str, Any]:
+    if not page_names:
+        raise ValueError("At least one page is required for scenario comparison")
+    labels = [label for label, _ in screenshots]
+    if any(not image for _, image in screenshots):
+        raise ValueError("Scenario comparison requires non-empty screenshots")
+    for page_name in page_names:
+        page_labels = [
+            label
+            for label in labels
+            if label.startswith(f"Page: {page_name} | ")
+        ]
+        if not page_labels or any(
+            not label.endswith((" | Dashboard A", " | Dashboard B"))
+            for label in page_labels
+        ):
+            raise ValueError(
+                f"Scenario screenshots are incomplete for page {page_name!r}"
+            )
+        if sum(label.endswith(" | Dashboard A") for label in page_labels) != sum(
+            label.endswith(" | Dashboard B") for label in page_labels
+        ):
+            raise ValueError(
+                f"Scenario screenshots are not paired for page {page_name!r}"
+            )
+    if any(
+        not any(label.startswith(f"Page: {page_name} | ") for label in labels)
+        for page_name in page_names
+    ):
+        raise ValueError("Scenario screenshots do not cover every requested page")
+    with measure_stage(
+        operation_log_path,
+        job_id=job_id,
+        operation="prepare_scenario_visual_comparison",
+        page=",".join(page_names),
+        filter_state=f"scenario_{scenario_id}",
+    ):
+        model_name = _model_name()
+        agent = LlmAgent(
+            name="scenario_screenshot_comparator",
+            model=model_name,
+            instruction=SCENARIO_SCREENSHOT_COMPARISON_INSTRUCTIONS,
+            output_schema=ScenarioScreenshotComparison,
+            generate_content_config=_generation_config(model_name),
+        )
+        parts: list[Any] = []
+        for label, image in screenshots:
+            parts.extend(
+                [
+                    types.Part(text=f"Screenshot: {label}"),
+                    types.Part.from_bytes(data=image, mime_type="image/png"),
+                ]
+            )
+        state_text = "\n".join(
+            f"{page_name}: {(page_states or {}).get(page_name, 'state not recorded')}"
+            for page_name in page_names
+        )
+        content = types.Content(
+            role="user",
+            parts=[
+                types.Part(
+                    text=(
+                        f"Compare scenario {scenario_id} ({scenario_name!r}) "
+                        f"independently for these pages, in order: "
+                        f"{', '.join(page_names)}. Each page has one Dashboard A "
+                        "and one or more matching Dashboard B screenshots. "
+                        "Compare only evidence with the same page and state. "
+                        f"Recorded page states:\n{state_text}"
+                    )
+                ),
+                *parts,
+            ],
+        )
+    response = await _run_agent(
+        agent,
+        content,
+        job_id=job_id,
+        operation_log_path=operation_log_path,
+        page=",".join(page_names),
+        filter_state=f"scenario_{scenario_id}",
+    )
+    parsed = _parse_json_response(response, "scenario screenshot comparison")
+    return ScenarioScreenshotComparison.model_validate(parsed).model_dump(mode="json")
+
+
+async def extract_compare_visual_inventory(
+    screenshots: list[tuple[str, bytes]],
+    page_name: str,
+    *,
+    job_id: str = "standalone",
+    operation_log_path: Path | None = None,
+) -> dict[str, Any]:
+    if not screenshots or any(not image for _, image in screenshots):
+        raise ValueError("Visual inventory comparison requires screenshots")
+    labels = [label for label, _ in screenshots]
+    for dashboard in ("Dashboard A", "Dashboard B"):
+        if not any(
+            label == f"Page: {page_name} | {dashboard} | initial"
+            for label in labels
+        ):
+            raise ValueError(
+                f"Initial screenshot is missing for {dashboard} on {page_name!r}"
+            )
+    with measure_stage(
+        operation_log_path,
+        job_id=job_id,
+        operation="prepare_visual_inventory_comparison",
+        page=page_name,
+    ):
+        model_name = _model_name()
+        agent = LlmAgent(
+            name="visual_inventory_comparator",
+            model=model_name,
+            instruction=VISUAL_INVENTORY_COMPARISON_INSTRUCTIONS,
+            output_schema=PageScreenshotInventoryResult,
+            generate_content_config=_generation_config(model_name),
+        )
+        parts: list[Any] = []
+        for label, image in screenshots:
+            parts.extend(
+                [
+                    types.Part(text=f"Screenshot: {label}"),
+                    types.Part.from_bytes(data=image, mime_type="image/png"),
+                ]
+            )
+        content = types.Content(
+            role="user",
+            parts=[
+                types.Part(
+                    text=(
+                        f"Extract and compare the visible visual inventory for "
+                        f"page {page_name!r}. Screenshots are ordered as initial "
+                        "view followed by incremental horizontal views for each "
+                        "dashboard. Return all visible titles, filter names, "
+                        "visual types, and table/matrix column headers. Do not "
+                        "return any selected filter values or dashboard data "
+                        "values. Use the exact page name in page_name."
+                    )
+                ),
+                *parts,
+            ],
+        )
+    response = await _run_agent(
+        agent,
+        content,
+        job_id=job_id,
+        operation_log_path=operation_log_path,
+        page=page_name,
+        filter_state="default_state_visual_inventory",
+    )
+    parsed = _parse_json_response(response, "visual inventory comparison")
+    return PageScreenshotInventoryResult.model_validate(parsed).model_dump(
+        mode="json"
+    )
 
 
 async def detect_visual_types_from_screenshot(
@@ -1508,6 +1991,15 @@ def _is_aggregate_value(value: str) -> bool:
     return value.strip().casefold() in AGGREGATE_FILTER_VALUES
 
 
+def is_kpi_selection_filter(filter_item: Any) -> bool:
+    if not isinstance(filter_item, dict):
+        return False
+    name = re.sub(
+        r"[^a-z0-9]+", " ", str(filter_item.get("name") or "").casefold()
+    ).strip()
+    return name == "kpi selection"
+
+
 async def plan_from_dom(
     dom_inventory: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -1542,9 +2034,10 @@ def _deterministic_filter_plan(inventory: dict[str, Any]) -> dict[str, Any]:
             raise ValueError(
                 f"Radio filter {name!r} must not expose a Clear Selection option"
             )
-        # Aggregate options are excluded for multi-select/dropdown controls,
-        # where toggling them changes the whole selection. Radio options are
-        # single-choice, so every exposed value is tested individually.
+        if is_kpi_selection_filter(item):
+            continue
+        # Other multi-select/dropdown controls exclude aggregate options,
+        # while radio options test every exposed value individually.
         selected_values: list[str] = []
         for value in values:
             if (
@@ -1629,6 +2122,8 @@ def _align_shared_plan(
             raise ValueError(f"DOM inventory values for {name!r} are invalid")
         filter_name = canonical_names.get(name.casefold(), name)
         control_type = item.get("control_type")
+        if is_kpi_selection_filter(item):
+            return None
         values: list[str] = []
         for value in options:
             if (
@@ -1700,6 +2195,7 @@ async def extract_screenshot(
     operation_log_path: Path | None = None,
     dashboard: str | None = None,
     filter_state: str | None = None,
+    header_only: bool = False,
 ) -> dict[str, Any]:
     return await extract_screenshots(
         [screenshot_bytes],
@@ -1709,6 +2205,7 @@ async def extract_screenshot(
         operation_log_path=operation_log_path,
         dashboard=dashboard,
         filter_state=filter_state,
+        header_only=header_only,
     )
 
 
@@ -1721,6 +2218,7 @@ async def extract_screenshots(
     operation_log_path: Path | None = None,
     dashboard: str | None = None,
     filter_state: str | None = None,
+    header_only: bool = False,
 ) -> dict[str, Any]:
     if not screenshots:
         raise ValueError("At least one screenshot is required for extraction")
@@ -1750,10 +2248,20 @@ async def extract_screenshots(
             ),
         )
     prompt = (
-        f"Extract the dashboard state for page: {page_name}. "
-        "The images are successive scrolled views of the same report state. "
-        "Combine all visible data, preserving repeated values for distinct "
-        "categories and avoiding duplicate rows for the same category."
+        f"Extract only table and matrix column headers from the screenshots "
+        f"for page: {page_name}. Use the supplied images as the sole evidence. "
+        "For each visible table or matrix, return its title and the ordered "
+        "column headers in content.columns. Do not extract table cell values, "
+        "rows, chart data, KPI values, filters, or other text. Do not use DOM "
+        "or OCR. If a header is not visually readable, omit it and record an "
+        "uncertainty."
+        if header_only
+        else (
+            f"Extract the dashboard state for page: {page_name}. "
+            "The images are successive scrolled views of the same report state. "
+            "Combine all visible data, preserving repeated values for distinct "
+            "categories and avoiding duplicate rows for the same category."
+        )
     )
     exported_titles = list(
         dict.fromkeys(
@@ -1762,7 +2270,7 @@ async def extract_screenshots(
             if isinstance(title, str) and title.strip()
         )
     )
-    if exported_titles:
+    if exported_titles and not header_only:
         prompt += (
             "\nThe following visuals have a confirmed Export data option and "
             "have successfully parsed summarized export data. Their visual "
@@ -1832,11 +2340,16 @@ async def extract_screenshots(
             page_name,
             "truncated response" if isinstance(exc, TruncatedAgentResponseError) else "invalid JSON",
         )
+        retry_scope = (
+            "Preserve only the requested table and matrix titles and ordered "
+            "column headers; do not extract cell values."
+            if header_only
+            else "Preserve every visible report element, table row, column, and value."
+        )
         response = await request_extraction(
             f"{prompt} The previous response was truncated or invalid. Retry "
             "and return one complete, valid JSON object matching the required "
-            "schema. Keep notes concise, but preserve every visible report "
-            "element, table row, column, and value. Do not include markdown."
+            f"schema. Keep notes concise. {retry_scope} Do not include markdown."
         )
         with measure_stage(
             operation_log_path,
@@ -1873,4 +2386,25 @@ async def extract_screenshots(
         page=page_name,
         filter_state=filter_state,
     ):
-        return _prepare_screenshot_extraction(extracted, screenshots, page_name)
+        prepared = _prepare_screenshot_extraction(extracted, screenshots, page_name)
+        if header_only:
+            prepared["elements"] = [
+                {
+                    **element,
+                    "categories": list(element.get("categories") or []),
+                    "values": [],
+                    "rows": [],
+                    "value": None,
+                }
+                for element in prepared.get("elements") or []
+                if str(element.get("type") or "").casefold() in {"table", "grid"}
+                and element.get("categories")
+            ]
+            prepared["title_items"] = []
+            prepared["dashboard_metadata"] = {
+                "page_name": page_name,
+                "screenshot_id": prepared["dashboard_metadata"].get("screenshot_id"),
+                "image_width": prepared["dashboard_metadata"].get("image_width"),
+                "image_height": prepared["dashboard_metadata"].get("image_height"),
+            }
+        return prepared

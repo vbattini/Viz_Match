@@ -23,13 +23,13 @@ dependencies = [
 dev = ["pytest>=8.0.0"]
 
 [project.scripts]
-powerbi-compare = "powerbi_dashboard_comparator.cli:main"
+powerbi-compare = "Backend.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+packages = ["Backend"]
 
 [tool.setuptools.package-data]
-powerbi_dashboard_comparator = ["static/*.png", "assets/*.docx"]
+Backend = ["assets/*.docx"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

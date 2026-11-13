@@ -28,9 +28,10 @@ def filter_selection_result(
     value_b = "" if selected_b is None else str(selected_b).strip()
     key_a = " ".join(value_a.split()).casefold()
     key_b = " ".join(value_b.split()).casefold()
-    has_both = value_a not in {"", "-"} and value_b not in {"", "-"}
+    unavailable = {"", "-", "not captured", "unavailable", "unknown"}
+    has_both = key_a not in unavailable and key_b not in unavailable
     if has_both and key_a == key_b:
-        return MATCH, "Filter selection matches."
+        return MATCH, "Filter selection successfully verified on both dashboards."
     if has_both:
         return (
             DIFFERENT,
@@ -38,7 +39,7 @@ def filter_selection_result(
         )
     return (
         UNVERIFIED,
-        "Filter selection differs: "
+        "Filter selection could not be verified: "
         f"Base {value_a or 'not captured'}; "
         f"Compare {value_b or 'not captured'}.",
     )
@@ -72,7 +73,7 @@ _VISUAL_TYPE_RULES: tuple[tuple[str, str], ...] = (
     (r"funnel", "Funnel Chart"),
     (r"gauge", "Gauge"),
     (r"area", "Area Chart"),
-    (r"shape|divider|separator|horizontal line", "Shape / Line"),
+    (r"shape|divider|separator|horizontal line|rule", "Shape / Line"),
     (r"line", "Line Chart"),
     (r"matrix", "Matrix"),
     (r"table", "Table"),
@@ -158,36 +159,105 @@ def _geometry_cost(
     return centre_offset, size_change, centre_offset + size_change
 
 
+def _visual_match_name(visual: dict[str, Any]) -> str:
+    visual_id = str(visual.get("visual_id") or "").strip().casefold()
+    for field in ("visual_name", "visual_title"):
+        name = re.sub(r"\s+", " ", str(visual.get(field) or "")).strip()
+        key = name.casefold()
+        if (
+            not key
+            or key in {"unknown", "unidentified", "unnamed visual"}
+            or key in {visual_id, f"visual {visual_id}"}
+            or re.fullmatch(r"(?:visual|screenshot)[\s_-]*\d+", key)
+        ):
+            continue
+        return name
+    return ""
+
+
+def _is_reliable_screenshot_pair(
+    visual_a: dict[str, Any],
+    visual_b: dict[str, Any],
+    type_a: Any,
+    type_b: Any,
+    centre_offset: float,
+    size_change: float,
+) -> bool:
+    return (
+        re.fullmatch(
+            r"SCREENSHOT_\d{3}",
+            str(visual_a.get("visual_id") or ""),
+            flags=re.IGNORECASE,
+        )
+        is not None
+        and re.fullmatch(
+            r"SCREENSHOT_\d{3}",
+            str(visual_b.get("visual_id") or ""),
+            flags=re.IGNORECASE,
+        )
+        is not None
+        and same_visual_type(type_a, type_b)
+        and str(visual_a.get("confidence") or "").casefold() == "high"
+        and str(visual_b.get("confidence") or "").casefold() == "high"
+        and str(visual_a.get("rendering_status") or "").casefold() == "rendered"
+        and str(visual_b.get("rendering_status") or "").casefold() == "rendered"
+        and centre_offset <= POSITION_TOLERANCE
+        and size_change <= SIZE_TOLERANCE
+    )
+
+
 def _pair_visuals(
     visuals_a: list[dict[str, Any]],
     visuals_b: list[dict[str, Any]],
     page_w: float,
     page_h: float,
 ) -> tuple[list[tuple[int, int, float, float]], list[int], list[int]]:
-    """Pair by stable ID, then title and visual family to disambiguate repeats."""
+    """Pair by stable ID and unique title, then use type and geometry for repeats."""
     used_a: set[int] = set()
     used_b: set[int] = set()
     pairs = []
 
     def normalized_name(visual: dict[str, Any]) -> str:
-        name = re.sub(
-            r"\s+",
-            " ",
-            str(visual.get("visual_name") or ""),
-        ).strip().casefold()
-        visual_id = str(visual.get("visual_id") or "").strip().casefold()
-        if (
-            name in {"unknown", "unidentified", "unnamed visual"}
-            or name in {visual_id, f"visual {visual_id}"}
-        ):
-            return ""
-        return name
+        return _visual_match_name(visual).casefold()
 
     def type_family(visual: dict[str, Any]) -> str:
         visual_type = str(visual.get("visual_type") or "").casefold()
         visual_type = re.sub(r"100%\s*", " ", visual_type)
         visual_type = re.sub(r"\b(?:stacked|clustered)\b", " ", visual_type)
         return re.sub(r"[^a-z0-9]+", " ", visual_type).strip()
+
+    def meaningful_name_tokens(visual: dict[str, Any]) -> set[str]:
+        stop_words = {
+            "a",
+            "an",
+            "and",
+            "at",
+            "by",
+            "for",
+            "from",
+            "in",
+            "of",
+            "on",
+            "the",
+            "to",
+            "with",
+        }
+        return {
+            token
+            for token in re.findall(r"[a-z0-9]+", normalized_name(visual))
+            if token not in stop_words
+        }
+
+    def related_names(a: dict[str, Any], b: dict[str, Any]) -> bool:
+        tokens_a = meaningful_name_tokens(a)
+        tokens_b = meaningful_name_tokens(b)
+        shared = tokens_a & tokens_b
+        shorter_name_length = min(len(tokens_a), len(tokens_b))
+        return (
+            bool(tokens_a and tokens_b)
+            and len(shared) >= 2
+            and len(shared) / shorter_name_length >= 0.5
+        )
 
     def pair_unique_matches(key: Any) -> None:
         by_key_a: dict[str, list[int]] = {}
@@ -230,6 +300,63 @@ def _pair_visuals(
         )
     )
     pair_unique_matches(normalized_name)
+
+    # A renamed visual can still be paired when its name retains a distinctive
+    # phrase and its visual type agrees. Require a unique candidate on both
+    # sides; geometry alone is never used to establish identity.
+    candidates_a: dict[int, list[tuple[int, float]]] = {}
+    candidates_b: dict[int, list[tuple[int, float]]] = {}
+    for i, visual_a in enumerate(visuals_a):
+        if i in used_a:
+            continue
+        for j, visual_b in enumerate(visuals_b):
+            if j in used_b:
+                continue
+            if (
+                not type_family(visual_a)
+                or type_family(visual_a) != type_family(visual_b)
+            ):
+                continue
+            centre, size, cost = _geometry_cost(
+                visual_a, visual_b, page_w, page_h
+            )
+            if related_names(visual_a, visual_b) or _is_reliable_screenshot_pair(
+                visual_a,
+                visual_b,
+                visual_a.get("visual_type"),
+                visual_b.get("visual_type"),
+                centre,
+                size,
+            ):
+                candidates_a.setdefault(i, []).append((j, cost))
+                candidates_b.setdefault(j, []).append((i, cost))
+
+    def unique_best_candidate(
+        candidates: list[tuple[int, float]],
+    ) -> int | None:
+        ranked = sorted(candidates, key=lambda candidate: candidate[1])
+        if len(ranked) > 1 and ranked[1][1] - ranked[0][1] <= POSITION_TOLERANCE:
+            return None
+        return ranked[0][0] if ranked else None
+
+    best_b_for_a = {
+        i: unique_best_candidate(candidates)
+        for i, candidates in candidates_a.items()
+    }
+    best_a_for_b = {
+        j: unique_best_candidate(candidates)
+        for j, candidates in candidates_b.items()
+    }
+    for i, j in best_b_for_a.items():
+        if j is None or best_a_for_b.get(j) != i:
+            continue
+        centre, size, _cost = _geometry_cost(
+            visuals_a[i], visuals_b[j], page_w, page_h
+        )
+        used_a.add(i)
+        used_b.add(j)
+        pairs.append((i, j, centre, size))
+
     pairs.sort(key=lambda item: item[0])
     unpaired_a = [i for i in range(len(visuals_a)) if i not in used_a]
     unpaired_b = [j for j in range(len(visuals_b)) if j not in used_b]
@@ -256,18 +383,39 @@ def _visual_type_label(visual: dict[str, Any] | None) -> str:
     return visual_type
 
 
+def _visual_type_key(value: Any) -> str:
+    return re.sub(r"[\s_-]+", " ", str(value or "").strip().casefold())
+
+
+def _visual_type_from_evidence(visual: dict[str, Any]) -> str:
+    visual_type = _visual_type_label(visual)
+    if visual_type.casefold() not in {"kpi", "kpi card"}:
+        return visual_type
+    observation = " ".join(str(visual.get("observation") or "").split()).casefold()
+    if any(
+        phrase in observation
+        for phrase in ("alert banner", "callout box", "alert status text")
+    ):
+        return "Text Box"
+    return visual_type
+
+
 def _visual_name(*candidates: dict[str, Any] | None) -> str:
-    # Display-only identification. Never used to decide a visual type match.
-    # Uses the first visual's title, then falls back to its visual id.
     for visual in candidates:
-        if visual and visual.get("visual_name"):
-            name = str(visual["visual_name"]).strip()
-            if name.casefold() not in {"unknown", "unidentified"}:
+        if visual:
+            name = _visual_match_name(visual)
+            if name:
                 return name
     for visual in candidates:
         if visual and visual.get("visual_id"):
             return str(visual["visual_id"])
     return "Unidentified"
+
+
+def _visual_title(visual: dict[str, Any] | None) -> str:
+    if not visual:
+        return ""
+    return str(visual.get("visual_title") or visual.get("visual_name") or "").strip()
 
 
 def _visual_row(
@@ -296,6 +444,18 @@ def _visual_row(
     return {
         "page": page,
         "visual_name": _visual_name(visual_a, visual_b),
+        "visual_name_a": (
+            _visual_match_name(visual_a)
+            if visual_a
+            else ""
+        ),
+        "visual_name_b": (
+            _visual_match_name(visual_b)
+            if visual_b
+            else ""
+        ),
+        "visual_title_a": _visual_title(visual_a),
+        "visual_title_b": _visual_title(visual_b),
         "action_applied": action_applied,
         "expected_result": expected_result if visual_a or visual_b else "-",
         "visual_id_a": _visual_id(visual_a),
@@ -319,6 +479,40 @@ def _visual_row(
     }
 
 
+_DECORATIVE_TYPES = {"shape / line", "text box", "header", "image"}
+_VISUAL_TYPE_EQUIVALENCE_GROUPS = (
+    {"text box", "header"},
+    {"text box", "kpi"},
+    {"table", "matrix"},
+    {"table", "multi row card"},
+)
+
+
+def effective_rendering_status(status: Any, visual_type: Any) -> str:
+    """Decorative visuals (lines, text, images) have no data, so are never blank."""
+    text = str(status or "").casefold()
+    if text == "blank" and str(visual_type or "").strip().casefold() in _DECORATIVE_TYPES:
+        return "ok"
+    return text
+
+
+def same_visual_type(type_a: Any, type_b: Any) -> bool:
+    a = _visual_type_key(type_a)
+    b = _visual_type_key(type_b)
+    return a == b or any(
+        a in group and b in group for group in _VISUAL_TYPE_EQUIVALENCE_GROUPS
+    )
+
+
+def same_visual_name(name_a: Any, name_b: Any) -> bool:
+    def normalize(value: Any) -> str:
+        return re.sub(r"\s+", " ", str(value or "")).strip().casefold()
+
+    normalized_a = normalize(name_a)
+    normalized_b = normalize(name_b)
+    return bool(normalized_a) and normalized_a == normalized_b
+
+
 def compare_visual_inventories(
     page: str,
     visuals_a: list[dict[str, Any]],
@@ -328,9 +522,8 @@ def compare_visual_inventories(
     """Compare visual containers of one page in Dashboard A and Dashboard B.
 
     Each input item needs: visual_id, visual_type (canonical or None), x, y,
-    width, height. An optional visual_name is used only for display. Titles
-    and text are never used for matching. action_applied records the filter
-    combination in effect for this comparison run.
+    width, height. An optional visual_name helps pair visuals and is preserved
+    in the result. action_applied records the filter combination in effect.
     """
     rows: list[dict[str, Any]] = []
     page_w, page_h = _page_extent(visuals_a + visuals_b)
@@ -340,11 +533,23 @@ def compare_visual_inventories(
 
     for i, j, centre, size in pairs:
         a, b = visuals_a[i], visuals_b[j]
-        type_a, type_b = a.get("visual_type"), b.get("visual_type")
+        type_a, type_b = _visual_type_label(a), _visual_type_label(b)
+        screenshot_visual_pair = _is_reliable_screenshot_pair(
+            a, b, type_a, type_b, centre, size
+        )
+        matched_name_a = _visual_match_name(a)
+        matched_name_b = _visual_match_name(b)
+        same_name = bool(matched_name_a) and (
+            matched_name_a.casefold() == matched_name_b.casefold()
+        )
         notes: list[str] = []
         render_statuses = {
-            "A": str(a.get("rendering_status") or "").casefold(),
-            "B": str(b.get("rendering_status") or "").casefold(),
+            "A": effective_rendering_status(
+                a.get("rendering_status"), type_a or type_b
+            ),
+            "B": effective_rendering_status(
+                b.get("rendering_status"), type_b or type_a
+            ),
         }
         failed_sides = [
             side for side, status in render_statuses.items()
@@ -354,6 +559,15 @@ def compare_visual_inventories(
             side for side, status in render_statuses.items()
             if status in {"partial", "loading", "unable to verify"}
         ]
+        matching_blank_kpi = (
+            same_name
+            and type_a.casefold() in {"kpi", "kpi card"}
+            and type_b.casefold() in {"kpi", "kpi card"}
+            and render_statuses["A"] == "blank"
+            and render_statuses["B"] == "blank"
+            and str(a.get("confidence") or "").casefold() == "high"
+            and str(b.get("confidence") or "").casefold() == "high"
+        )
         unidentified_sides = [
             side
             for side, visual_type in (("A", type_a), ("B", type_b))
@@ -361,7 +575,13 @@ def compare_visual_inventories(
             or str(visual_type).strip().casefold()
             in {"unknown", "unidentified"}
         ]
-        if failed_sides:
+        if matching_blank_kpi:
+            status = MATCH
+            notes.append(
+                "Both dashboards explicitly display this KPI as (Blank); "
+                "it matches the Base dashboard."
+            )
+        elif failed_sides:
             status = DIFFERENT
             for side in failed_sides:
                 rendering = render_statuses[side]
@@ -384,29 +604,55 @@ def compare_visual_inventories(
                 f"Visual rendering could not be verified on Dashboard {side}"
                 for side in incomplete_sides
             )
-        elif unidentified_sides:
+        elif unidentified_sides and not same_name:
             status = UNVERIFIED
             notes.extend(
                 f"Visual type could not be identified for Dashboard {side}"
                 for side in unidentified_sides
             )
-        elif type_a != type_b:
+        elif not same_visual_type(type_a, type_b) and not same_name:
             status = DIFFERENT
             notes.append(f"Visual type changed from {type_a} to {type_b}")
+        elif same_name and (
+            unidentified_sides or not same_visual_type(type_a, type_b)
+        ):
+            status = MATCH
+            notes.append(
+                f"Exact visual title matches ({matched_name_a}); "
+                f"type labels differ (Base {type_a}; Compare {type_b}) "
+                "and are not used to reject the match."
+            )
         else:
             status = MATCH
-            notes.append(f"Same visual type ({type_a})")
+            if screenshot_visual_pair and not same_name:
+                notes.append(
+                    "Both screenshots show the same rendered visual type "
+                    "with matching geometry; generated visual labels differ "
+                    "and are not treated as a title mismatch."
+                )
+            else:
+                notes.append(f"Same visual type ({type_a})")
 
-        name_a = str(a.get("visual_name") or "").strip()
-        name_b = str(b.get("visual_name") or "").strip()
+        stable_id_a = str(a.get("visual_id") or "").strip().casefold()
+        stable_id_b = str(b.get("visual_id") or "").strip().casefold()
+        stable_id_match = (
+            bool(stable_id_a)
+            and stable_id_a == stable_id_b
+            and not re.fullmatch(r"screenshot_\d{3}", stable_id_a)
+        )
         if (
-            name_a
-            and name_b
-            and name_a.casefold() != name_b.casefold()
-            and not incomplete_sides
+            matched_name_a
+            and matched_name_b
+            and not same_name
+            and not stable_id_match
+            and not screenshot_visual_pair
         ):
-            status = DIFFERENT
-            notes.append(f"Visual title/name differs ({name_a} vs {name_b})")
+            if status == MATCH:
+                status = DIFFERENT
+            notes.append(
+                f"Visual title/name differs: Base {matched_name_a}; "
+                f"Compare {matched_name_b}."
+            )
 
         if centre > POSITION_TOLERANCE or size > SIZE_TOLERANCE:
             if status == MATCH:
@@ -419,9 +665,30 @@ def compare_visual_inventories(
             _visual_row(page, a, b, status, "; ".join(notes), action_applied)
         )
 
+    def detection_is_uncertain(visual: dict[str, Any]) -> bool:
+        rendering = str(visual.get("rendering_status") or "").casefold()
+        confidence = str(visual.get("confidence") or "").casefold()
+        return rendering in {"blank", "partial", "loading", "unable to verify"} or (
+            confidence in {"low", "medium"}
+        )
+
+    def presence_is_confirmed(visual: dict[str, Any]) -> bool:
+        rendering = str(visual.get("rendering_status") or "").casefold()
+        confidence = str(visual.get("confidence") or "").casefold()
+        return confidence == "high" and rendering not in {
+            "partial",
+            "loading",
+            "unable to verify",
+        }
+
     for i in unpaired_a:
         confirmed_missing = (
-            len(visuals_a) > len(visuals_b) and not unpaired_b
+            (
+                len(visuals_a) > len(visuals_b)
+                and not unpaired_b
+                and not detection_is_uncertain(visuals_a[i])
+            )
+            or presence_is_confirmed(visuals_a[i])
         )
         rows.append(
             _visual_row(
@@ -430,8 +697,8 @@ def compare_visual_inventories(
                 None,
                 DIFFERENT if confirmed_missing else UNVERIFIED,
                 (
-                    "Visual is present in Dashboard A and no corresponding "
-                    "visual is present in Dashboard B"
+                    "Visual was detected in Dashboard A, but no corresponding "
+                    "visual was detected in Dashboard B."
                     if confirmed_missing
                     else "No visual with a matching ID or unique title was "
                     "identified in Dashboard B; this may be a missing, "
@@ -442,7 +709,12 @@ def compare_visual_inventories(
         )
     for j in unpaired_b:
         confirmed_missing = (
-            len(visuals_b) > len(visuals_a) and not unpaired_a
+            (
+                len(visuals_b) > len(visuals_a)
+                and not unpaired_a
+                and not detection_is_uncertain(visuals_b[j])
+            )
+            or presence_is_confirmed(visuals_b[j])
         )
         rows.append(
             _visual_row(
@@ -451,8 +723,8 @@ def compare_visual_inventories(
                 visuals_b[j],
                 DIFFERENT if confirmed_missing else UNVERIFIED,
                 (
-                    "Visual is present in Dashboard B and no corresponding "
-                    "visual is present in Dashboard A"
+                    "Visual was detected in Dashboard B, but no corresponding "
+                    "visual was detected in Dashboard A."
                     if confirmed_missing
                     else "No visual with a matching ID or unique title was "
                     "identified in Dashboard A; this may be a missing, "
@@ -488,6 +760,8 @@ def compare_visual_inventories(
 _FILTER_TYPE_LABELS = {
     "radio_dropdown": "Dropdown",
     "checkbox_dropdown": "Checkbox",
+    "dropdown": "Dropdown",
+    "select": "Dropdown",
     "date": "Date slicer",
     "bookmark_buttons": "Bookmark buttons",
 }
@@ -621,26 +895,59 @@ def compare_filter_configurations(
         type_a, mode_a = _filter_label(filter_a)
         type_b, mode_b = _filter_label(filter_b)
         if not filter_a.get("control_type") or not filter_b.get("control_type"):
-            status = UNVERIFIED
             notes.append("Filter control type could not be identified")
         elif type_a != type_b:
             status = DIFFERENT
             notes.append(f"Filter type differs ({type_a} vs {type_b})")
-        if mode_a != mode_b and "N/A" not in (mode_a, mode_b):
+        if (
+            filter_a.get("control_type")
+            and filter_b.get("control_type")
+            and mode_a != mode_b
+            and "N/A" not in (mode_a, mode_b)
+        ):
             status = DIFFERENT
             notes.append(f"Selection mode differs ({mode_a} vs {mode_b})")
-        if set(_values(filter_a.get("options"))) != set(_values(filter_b.get("options"))):
-            status = DIFFERENT if status != UNVERIFIED else status
-            notes.append("Available options differ")
         selected_a = {
             _filter_key(value) for value in _canonical_filter_selection(filter_a)
         }
         selected_b = {
             _filter_key(value) for value in _canonical_filter_selection(filter_b)
         }
-        if selected_a != selected_b:
-            status = DIFFERENT if status != UNVERIFIED else status
+        options_a = {_filter_key(value) for value in _values(filter_a.get("options"))}
+        options_b = {_filter_key(value) for value in _values(filter_b.get("options"))}
+        if options_a and options_b and options_a != options_b:
+            status = DIFFERENT
+            notes.append("Available options differ")
+        elif bool(options_a) != bool(options_b):
+            notes.append("Available options could not be verified on both dashboards")
+        if not selected_a or not selected_b:
+            if status == MATCH:
+                status = UNVERIFIED
+            missing_sides = [
+                side
+                for side, selected, options in (
+                    ("Base", selected_a, options_a),
+                    ("Compare", selected_b, options_b),
+                )
+                if not selected and not options
+            ]
+            notes.append(
+                "Filter selection could not be verified: selected values are "
+                "missing on "
+                + " and ".join(missing_sides or [
+                    side
+                    for side, selected in (
+                        ("Base", selected_a),
+                        ("Compare", selected_b),
+                    )
+                    if not selected
+                ])
+            )
+        elif selected_a != selected_b:
+            status = DIFFERENT
             notes.append("Selected values differ")
+        else:
+            notes.append("Filter selection successfully verified on both dashboards")
         if not notes:
             notes.append("Same filter configuration")
         rows.append(_filter_row(page, name, filter_a, filter_b, status, "; ".join(notes)))
@@ -670,12 +977,53 @@ _VISUAL_CONTAINER_TYPES = frozenset(
         "gauge",
         "funnel",
         "waterfall",
+        "shape",
+        "shape_line",
+        "shape_/_line",
     }
 )
 
 
 def _normalize_type(value: Any) -> str:
     return str(value or "").strip().casefold().replace(" ", "_").replace("-", "_")
+
+
+def is_header_divider(visual: dict[str, Any]) -> bool:
+    visual_type = _normalize_type(
+        visual.get("visual_type") or visual.get("element_type") or visual.get("type")
+    )
+    if visual_type in {
+        "divider",
+        "divider_line",
+        "header_divider_line",
+        "horizontal_line",
+        "separator",
+        "separator_line",
+        "rule",
+    }:
+        return True
+
+    names = (
+        visual.get("visual_name"),
+        visual.get("visual_title"),
+        visual.get("title"),
+        visual.get("element_text"),
+    )
+    return any(
+        re.sub(r"[^a-z0-9]+", " ", str(name or "").casefold()).strip()
+        in {
+            "header divider",
+            "header divider line",
+            "divider",
+            "divider line",
+            "header separator",
+            "header separator line",
+            "separator",
+            "separator line",
+            "horizontal line",
+        }
+        for name in names
+    )
 
 
 def _visual_geometry(element: dict[str, Any]) -> dict[str, float] | None:
@@ -696,11 +1044,58 @@ def _visual_geometry(element: dict[str, Any]) -> dict[str, float] | None:
     return None
 
 
+def _visible_visual_title(
+    extracted: dict[str, Any], visual: dict[str, Any]
+) -> str | None:
+    visual_geometry = _visual_geometry(visual)
+    if visual_geometry is None:
+        return None
+
+    left = visual_geometry["x"]
+    top = visual_geometry["y"]
+    right = left + visual_geometry["width"]
+    bottom = top + visual_geometry["height"]
+    visible_titles: list[tuple[int, float, str]] = []
+    for item in extracted.get("title_items") or []:
+        if not isinstance(item, dict):
+            continue
+        category = str(item.get("category") or "").casefold()
+        if category not in {"chart_title", "visual_title"}:
+            continue
+        if item.get("extraction_status") != "complete":
+            continue
+        title = " ".join(str(item.get("text") or "").split())
+        if not title:
+            continue
+        title_box = item.get("bounding_box")
+        title_geometry = (
+            {key: float(title_box[key]) for key in ("x", "y", "width", "height")}
+            if isinstance(title_box, dict)
+            and all(
+                isinstance(title_box.get(key), (int, float))
+                for key in ("x", "y", "width", "height")
+            )
+            else _visual_geometry(item)
+        )
+        if title_geometry is None:
+            continue
+        center_x = title_geometry["x"] + title_geometry["width"] / 2
+        center_y = title_geometry["y"] + title_geometry["height"] / 2
+        if left <= center_x <= right and top <= center_y <= bottom:
+            visible_titles.append(
+                (0 if category == "visual_title" else 1, center_y - top, title)
+            )
+    if not visible_titles:
+        return None
+    return min(visible_titles)[2]
+
+
 def visual_inventory(state: Any) -> list[dict[str, Any]]:
     """Return the visual containers of one captured state.
 
-    Only the element type, identifier, geometry and display name are read. The
-    display name is the visual's own title and is never used for matching.
+    Names used for matching come from spatially matched title evidence when
+    title items are available. Screenshot-detected names are retained
+    separately for display when title evidence has no spatial match.
     """
     visuals: list[dict[str, Any]] = []
     captured_visuals = getattr(state, "visuals", None) or []
@@ -708,25 +1103,55 @@ def visual_inventory(state: Any) -> list[dict[str, Any]]:
         for visual in captured_visuals:
             if not isinstance(visual, dict):
                 continue
+            if is_header_divider(visual):
+                continue
             geometry = _visual_geometry(visual)
             if geometry is None:
                 continue
+            extracted = state.extracted or {}
+            visible_title = _visible_visual_title(
+                extracted,
+                visual,
+            )
+            visual_name = (
+                visible_title
+                if "title_items" in extracted
+                else visual.get("visual_name")
+            )
             item = {
                 "visual_id": visual.get("visual_id")
                 or f"visual_{len(visuals) + 1}",
-                "visual_name": visual.get("visual_name") or None,
-                "visual_type": _visual_type_label(visual),
+                "visual_name": visual_name or None,
+                "visual_type": _visual_type_from_evidence(visual),
                 **geometry,
             }
+            display_title = visible_title or visual.get("visual_name")
+            if display_title and display_title != visual_name:
+                item["visual_title"] = display_title
             for key in ("rendering_status", "confidence"):
                 if visual.get(key) is not None:
                     item[key] = visual[key]
+            rendering_status = str(
+                item.get("rendering_status") or ""
+            ).casefold()
+            is_kpi = item["visual_type"].casefold() in {"kpi", "kpi card"}
+            if (
+                rendering_status == "blank"
+                and not visible_title
+                and item["visual_type"].casefold() not in _DECORATIVE_TYPES
+                and not is_kpi
+            ):
+                continue
+            if rendering_status == "blank" and visible_title and not is_kpi:
+                item["rendering_status"] = "Rendered"
             visuals.append(item)
         return visuals
 
     elements = (state.extracted or {}).get("elements") or []
     for element in elements:
         if not isinstance(element, dict):
+            continue
+        if is_header_divider(element):
             continue
         element_type = _normalize_type(element.get("element_type"))
         if element_type not in _VISUAL_CONTAINER_TYPES:
@@ -774,8 +1199,11 @@ def filter_inventory(state: Any) -> list[dict[str, Any]]:
     for name in names:
         has_captured_options = name in options_by_name
         selected = selected_by_name.get(name)
-        if not has_captured_options:
-            selected = [s.value for s in applied if s.name == name]
+        applied_for_name = [s.value for s in applied if s.name == name]
+        if not has_captured_options and (
+            name not in selected_by_name or applied_for_name
+        ):
+            selected = applied_for_name
         inventory.append(
             {
                 "name": name,

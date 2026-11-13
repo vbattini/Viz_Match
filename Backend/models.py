@@ -47,6 +47,9 @@ class DashboardState:
     filter: FilterSelection | FilterCombination | None
     screenshot: Path
     extracted: dict[str, Any]
+    scenario_id: str | None = None
+    scenario_name: str | None = None
+    scenario_step: str | None = None
     filter_names: list[str] = field(default_factory=list)
     filter_values: dict[str, list[str]] = field(default_factory=dict)
     visuals: list[dict[str, Any]] = field(default_factory=list)
@@ -56,6 +59,11 @@ class DashboardState:
     @property
     def state_key(self) -> str:
         suffix = self.filter.key if self.filter else "initial"
+        if self.scenario_id is not None:
+            suffix = (
+                f"scenario_{self.scenario_id}|"
+                f"{self.scenario_step or suffix}"
+            )
         return f"{self.page}|{suffix}"
 
     def to_dict(self) -> dict[str, Any]:

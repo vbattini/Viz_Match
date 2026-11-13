@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c2a">
+  <title>Dashboard Comparison</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Dashboard Comparison home">
+        <span class="brand-logos" aria-label="Partner companies">
+          <img
+            class="brand-logo brand-logo--cs"
+            src="https://www.cswg.com/wp-content/uploads/2026/05/CS_Wholesale_Grocers_logo.svg"
+            alt="C&S Wholesale Grocers"
+            width="210"
+            height="50"
+            referrerpolicy="no-referrer"
+          >
+          <img
+            class="brand-logo"
+            src="https://www.dvnf.org/wp-content/uploads/2019/05/SpartanNash-Company-Logo-260x63.png"
+            alt="SpartanNash"
+            width="156"
+            height="40"
+            referrerpolicy="no-referrer"
+          >
+        </span>
+      </a>
+      <div class="topbar-meta">
+        <span class="topbar-tag"><span class="live-dot" aria-hidden="true"></span> Sequential validation</span>
+        <span id="execution-time" class="execution-time" aria-live="polite"></span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="side-visuals" aria-hidden="true">
+        <img
+          class="workflow-art-image workflow-art-image--left-1"
+          src="https://logos-world.net/wp-content/uploads/2022/02/Microsoft-Power-BI-Symbol-700x394.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--left-2"
+          src="https://cdn.freebiesupply.com/logos/large/2x/google-gemini-logo-png-transparent.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--word-icon"
+          src="/static/microsoft-word-icon.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--gemini-accent"
+          src="/static/gemini-logo-ai-tower.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--left-3"
+          src="/static/playwright-logo-transparent.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--left-4"
+          src="https://newgensoft.com/wp-content/uploads/2025/01/Agentic-AI-Newgen.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--right-1"
+          src="https://cdn.freebiesupply.com/logos/large/2x/google-gemini-logo-png-transparent.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--ai-brain-accent"
+          src="/static/ai-brain-circuit.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--ai-brain-secondary"
+          src="/static/ai-brain-circuit.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--right-2"
+          src="https://newgensoft.com/wp-content/uploads/2025/01/Agentic-AI-Newgen.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--right-3"
+          src="https://logos-world.net/wp-content/uploads/2022/02/Microsoft-Power-BI-Symbol-700x394.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--right-4"
+          src="/static/playwright-logo-transparent.png"
+          alt=""
+        >
+        <img
+          class="workflow-art-image workflow-art-image--powerbi-accent"
+          src="/static/powerbi-symbol-additional.png"
+          alt=""
+        >
+      </div>
+      <section class="form-panel" aria-labelledby="page-title">
+        <header class="panel-heading">
+          <div class="heading-card">
+            <p class="eyebrow">POWER BI · SNOWFLAKE VS GCP</p>
+            <h1 id="page-title">Dashboard Comparison</h1>
+            <p class="heading-copy">Prepare and run report validation jobs in spreadsheet order.</p>
+          </div>
+          <button id="config-toggle" class="sheet-toggle" type="button" aria-expanded="true" aria-controls="configuration-content">
+            <span id="config-toggle-label">Hide sheet</span>
+            <span id="config-toggle-icon" class="toggle-icon" aria-hidden="true">⌃</span>
+          </button>
+        </header>
+
+        <div class="dashboard-columns">
+        <div id="configuration-content" class="configuration-content">
+          <div class="sheet-title-row">
+            <span id="job-counter" class="job-counter">0 of 10 jobs added</span>
+          </div>
+
+          <div class="workbook" aria-label="Editable comparison jobs spreadsheet">
+            <div class="workbook-bar">
+              <div class="workbook-name">
+                <span class="workbook-icon" aria-hidden="true">▦</span>
+                <span>Comparison Jobs</span>
+                <span class="saved-indicator"><span aria-hidden="true">●</span> Ready</span>
+              </div>
+            </div>
+
+            <div class="sheet-toolbar" aria-label="Spreadsheet controls">
+              <div class="sheet-toolbar-group">
+                <button id="add-row" class="small-tool-button" type="button" title="Add a row">＋ <span>Add row</span></button>
+                <button id="delete-rows" class="small-tool-button" type="button" title="Delete selected rows">− <span>Delete row</span></button>
+                <button id="clear-rows" class="small-tool-button muted-tool-button" type="button">Clear all</button>
+              </div>
+              <span class="sheet-hint">Up to 10 jobs · Ctrl+V pastes Excel ranges</span>
+            </div>
+
+            <div class="spreadsheet-scroll">
+              <table id="batch-grid" class="spreadsheet" aria-label="Comparison jobs">
+                <thead>
+                  <tr class="column-letters" aria-hidden="true">
+                    <th class="row-number-heading"></th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                  </tr>
+                  <tr class="column-headings">
+                    <th class="row-number-heading">S.No</th>
+                    <th scope="col">Workspace Name</th>
+                    <th scope="col">Semantic Model</th>
+                    <th scope="col">Report Name</th>
+                  </tr>
+                </thead>
+                <tbody id="batch-rows"></tbody>
+              </table>
+            </div>
+            <div class="sheet-statusbar">
+              <span><span class="statusbar-dot" aria-hidden="true"></span> Editable worksheet</span>
+              <span>Inline editing enabled</span>
+            </div>
+          </div>
+
+          <div id="validation-messages" class="validation-messages" role="status" aria-live="polite"></div>
+          <div class="run-toolbar">
+            <div class="run-options">
+              <label class="stop-on-failure">
+                <input id="stop-on-failure" type="checkbox">
+                <span class="custom-check" aria-hidden="true"></span>
+                Stop after first failed job
+              </label>
+              <label class="stop-on-failure">
+                <input id="run-validation-scenarios" type="checkbox" checked>
+                <span class="custom-check" aria-hidden="true"></span>
+                Run four functional scenarios
+              </label>
+            </div>
+            <div class="run-actions">
+              <button id="validate-inputs" class="secondary-button" type="button">Validate inputs</button>
+              <button id="run-batch" class="primary-button" type="button">
+                <span class="run-icon" aria-hidden="true">▶</span>
+                <span>Run batch</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-column" hidden>
+        <section class="live-progress" aria-labelledby="progress-heading">
+          <div class="progress-topline">
+            <div>
+              <p id="progress-heading" class="progress-eyebrow">BATCH PROGRESS</p>
+              <p id="batch-overall-progress" class="overall-progress">0 of 0 jobs completed</p>
+            </div>
+            <span id="current-stage-status" class="stage-status" data-status="pending">Pending</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-label="Batch progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span id="batch-progress-fill" class="progress-fill"></span>
+          </div>
+          <div class="current-action">
+            <span class="action-indicator" aria-hidden="true"></span>
+            <div>
+              <p id="current-job-label" class="current-job">No active job</p>
+              <p id="current-stage-label" class="current-stage">Add jobs and run a batch to begin.</p>
+            </div>
+          </div>
+        </section>
+
+        <div id="status" class="status-message" role="status" aria-live="polite"></div>
+
+        <section class="results-section" aria-labelledby="results-heading">
+          <div class="results-heading">
+            <div>
+              <p class="progress-eyebrow">RUN HISTORY</p>
+              <h2 id="results-heading">Batch results</h2>
+            </div>
+            <div class="results-download-actions">
+              <div id="batch-folder-download">
+                <button class="download-button" type="button" disabled>Download reports folder</button>
+              </div>
+            </div>
+          </div>
+          <div class="results-summary" aria-live="polite">
+            <span id="batch-summary-total">Total <strong>0</strong></span>
+            <span id="batch-summary-completed">Completed <strong>0</strong></span>
+            <span id="batch-summary-failed">Failed <strong>0</strong></span>
+            <span id="batch-summary-skipped">Skipped <strong>0</strong></span>
+          </div>
+          <div class="results-table-wrap">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th scope="col">Job</th>
+                  <th scope="col">Workspace</th>
+                  <th scope="col">Semantic model</th>
+                  <th scope="col">Report</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Result</th>
+                </tr>
+              </thead>
+              <tbody id="batch-job-rows">
+                <tr class="empty-results"><td colspan="6">Your completed jobs and report links will appear here.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

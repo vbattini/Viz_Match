@@ -1,6 +1,6 @@
 import asyncio
 import time
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Literal
@@ -13,6 +13,7 @@ from google.adk.events import Event
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
+from playwright.async_api import Browser
 from pydantic import PrivateAttr
 
 from .browser import capture_dashboard_pair
@@ -28,7 +29,32 @@ from .timing import measure_stage, write_operation_event
 
 APP_NAME = "powerbi_dashboard_comparator"
 USER_ID = "dashboard_comparator"
-COMPARISON_WORKERS = positive_int_setting("PBI_MAX_PARALLEL_COMPARISONS", 4)
+COMPARISON_WORKERS = positive_int_setting("PBI_MAX_PARALLEL_COMPARISONS", 2)
+ScenarioStateLoader = Callable[
+    [],
+    Awaitable[
+        tuple[list[DashboardState], list[DashboardState], dict[str, Any]]
+    ],
+]
+
+
+def write_dashboard_comparison_report(
+    result: dict[str, Any],
+    output_dir: Path,
+    job_id: str,
+    report_metadata: dict[str, Any] | None = None,
+) -> None:
+    _validate_comparison_output(result)
+    source_names = result["kpis"]["source_names"]
+    write_comparison(
+        result,
+        output_dir,
+        source_names["a"],
+        source_names["b"],
+        job_id=job_id,
+        operation_log_path=output_dir / "operation_timings.jsonl",
+        report_metadata=report_metadata,
+    )
 
 
 class ComparisonWorkflowRun:
@@ -39,12 +65,21 @@ class ComparisonWorkflowRun:
         url_b: str,
         output_dir: Path,
         storage_state: Path,
+        progress_callback: Callable[[int, str, str | None], None] | None = None,
+        browser: Browser | None = None,
+        report_metadata: dict[str, Any] | None = None,
+        scenario_state_loader: ScenarioStateLoader | None = None,
     ) -> None:
         self.job_id = job_id
         self.url_a = url_a
         self.url_b = url_b
         self.output_dir = output_dir
         self.storage_state = storage_state
+        self.progress_callback = progress_callback
+        self.browser = browser
+        self.report_metadata = report_metadata
+        self.scenario_state_loader = scenario_state_loader
+        self.scenario_context: dict[str, Any] = {}
         self.states_a: list[DashboardState] = []
         self.states_b: list[DashboardState] = []
         self.partial_comparisons: dict[str, dict[str, Any]] = {}
@@ -61,27 +96,61 @@ class ComparisonWorkflowRun:
         )
 
     async def run_step(self, step: str) -> None:
+        progress_step = {"capture": 9, "compare": 10, "report": 13}.get(step)
+        if progress_step is not None and self.progress_callback:
+            self.progress_callback(progress_step, "in_progress", None)
         with measure_stage(
             self.operation_log_path,
             job_id=self.job_id,
             operation=f"workflow_{step}",
         ):
-            if step == "capture":
-                await self._capture()
-            elif step == "validate":
-                _validate_captured_states(self.states_a, self.states_b)
-            elif step == "compare":
-                self.result = (
-                    merge_incremental_comparisons(
-                        self.partial_comparisons, self.states_a, self.states_b
+            try:
+                if step == "capture":
+                    await self._capture()
+                elif step == "validate":
+                    _validate_captured_states(self.states_a, self.states_b)
+                    if self.scenario_state_loader is not None:
+                        states_a, states_b, self.scenario_context = (
+                            await self.scenario_state_loader()
+                        )
+                        self.states_a.extend(states_a)
+                        self.states_b.extend(states_b)
+                        _validate_captured_states(self.states_a, self.states_b)
+                elif step == "compare":
+                    if self.scenario_state_loader is not None:
+                        self.result = await asyncio.get_running_loop().run_in_executor(
+                            None,
+                            compare_dashboards,
+                            self.states_a,
+                            self.states_b,
+                        )
+                    else:
+                        self.result = (
+                            merge_incremental_comparisons(
+                                self.partial_comparisons,
+                                self.states_a,
+                                self.states_b,
+                            )
+                            if self.partial_comparisons
+                            else compare_dashboards(self.states_a, self.states_b)
+                        )
+                    if self.scenario_context:
+                        self.result["validation_scenarios"] = self.scenario_context
+                        self.result["summary"]["validation_scenarios"] = (
+                            self.scenario_context.get("execution")
+                        )
+                elif step == "report":
+                    self._write_report()
+                else:
+                    raise ValueError(f"Unknown dashboard workflow step: {step}")
+            except Exception as exc:
+                if progress_step is not None and self.progress_callback:
+                    self.progress_callback(
+                        progress_step, "failed", str(exc)
                     )
-                    if self.partial_comparisons
-                    else compare_dashboards(self.states_a, self.states_b)
-                )
-            elif step == "report":
-                self._write_report()
-            else:
-                raise ValueError(f"Unknown dashboard workflow step: {step}")
+                raise
+        if progress_step is not None and self.progress_callback:
+            self.progress_callback(progress_step, "completed", None)
 
     async def _capture(self) -> None:
         completed_states: asyncio.Queue[
@@ -105,6 +174,7 @@ class ComparisonWorkflowRun:
                     operation_log_path=self.operation_log_path,
                     on_state_captured=publish_state,
                     detect_visual_types=True,
+                    browser=self.browser,
                 )
             finally:
                 completed_states.put_nowait(None)
@@ -174,7 +244,11 @@ class ComparisonWorkflowRun:
                     continue
                 state_a = states_by_side["dashboard_a"].get(key)
                 state_b = states_by_side["dashboard_b"].get(key)
-                if state_a is not None and state_b is not None:
+                if (
+                    state_a is not None
+                    and state_b is not None
+                    and self.scenario_state_loader is None
+                ):
                     processed_keys.add(key)
                     comparison_tasks[key] = asyncio.create_task(
                         compare_state_pair(state_a, state_b)
@@ -197,7 +271,10 @@ class ComparisonWorkflowRun:
                     set(states_by_side["dashboard_a"])
                     | set(states_by_side["dashboard_b"])
                 ):
-                    if key in processed_keys:
+                    if (
+                        key in processed_keys
+                        or self.scenario_state_loader is not None
+                    ):
                         continue
                     processed_keys.add(key)
                     comparison_tasks[key] = asyncio.create_task(
@@ -225,15 +302,11 @@ class ComparisonWorkflowRun:
     def _write_report(self) -> None:
         if self.result is None:
             raise RuntimeError("Comparison must complete before report generation")
-        _validate_comparison_output(self.result)
-        source_names = self.result["kpis"]["source_names"]
-        write_comparison(
+        write_dashboard_comparison_report(
             self.result,
             self.output_dir,
-            source_names["a"],
-            source_names["b"],
-            job_id=self.job_id,
-            operation_log_path=self.operation_log_path,
+            self.job_id,
+            self.report_metadata,
         )
 
     def finish(self, outcome: str, error_type: str | None = None) -> None:
@@ -361,6 +434,11 @@ async def run_dashboard_comparison(
     url_b: str,
     output_dir: Path,
     storage_state: Path,
+    progress_callback: Callable[[int, str, str | None], None] | None = None,
+    browser: Browser | None = None,
+    report_metadata: dict[str, Any] | None = None,
+    generate_report: bool = True,
+    scenario_state_loader: ScenarioStateLoader | None = None,
 ) -> dict[str, Any]:
     workflow_run = ComparisonWorkflowRun(
         job_id=job_id,
@@ -368,35 +446,43 @@ async def run_dashboard_comparison(
         url_b=url_b,
         output_dir=output_dir,
         storage_state=storage_state,
+        progress_callback=progress_callback,
+        browser=browser,
+        report_metadata=report_metadata,
+        scenario_state_loader=scenario_state_loader,
     )
-    workflow = SequentialAgent(
-        name="dashboard_comparison_workflow",
-        description=(
-            "Capture, validate, align, and report a dashboard comparison in "
-            "deterministic order."
+    workflow_steps = [
+        _ComparisonStepAgent(
+            name="capture_dashboards",
+            step="capture",
+            workflow_run=workflow_run,
         ),
-        sub_agents=[
-            _ComparisonStepAgent(
-                name="capture_dashboards",
-                step="capture",
-                workflow_run=workflow_run,
-            ),
-            _ComparisonStepAgent(
-                name="validate_extraction",
-                step="validate",
-                workflow_run=workflow_run,
-            ),
-            _ComparisonStepAgent(
-                name="align_and_compare",
-                step="compare",
-                workflow_run=workflow_run,
-            ),
+        _ComparisonStepAgent(
+            name="validate_extraction",
+            step="validate",
+            workflow_run=workflow_run,
+        ),
+        _ComparisonStepAgent(
+            name="align_and_compare",
+            step="compare",
+            workflow_run=workflow_run,
+        ),
+    ]
+    if generate_report:
+        workflow_steps.append(
             _ComparisonStepAgent(
                 name="generate_comparison_report",
                 step="report",
                 workflow_run=workflow_run,
-            ),
-        ],
+            )
+        )
+    workflow = SequentialAgent(
+        name="dashboard_comparison_workflow",
+        description=(
+            "Capture, validate, align, and optionally report a dashboard "
+            "comparison in deterministic order."
+        ),
+        sub_agents=workflow_steps,
     )
     session_service = InMemorySessionService()
     session_id = str(uuid4())

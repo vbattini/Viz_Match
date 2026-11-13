@@ -31,6 +31,32 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--headed", action="store_true", help="Show the Chromium window")
     parser.add_argument("--settle-seconds", type=float, default=2.0)
     parser.add_argument(
+        "--validation-scenarios",
+        action="store_true",
+        help=(
+            "Run four page-by-page validation scenarios instead of the default capture: "
+            "table-header comparison, single filter selection, multiple filter selection "
+            "(max 2 values), and drill-down. The DOM filter plan is built before any action."
+        ),
+    )
+    parser.add_argument(
+        "--scenario",
+        choices=["01", "02", "03", "04"],
+        help="With --validation-scenarios, run only this scenario.",
+    )
+    parser.add_argument(
+        "--through",
+        choices=["01", "02", "03", "04"],
+        help="With --scenario, run through this scenario in the four-scenario order.",
+    )
+    parser.add_argument(
+        "--cdp-url",
+        help=(
+            "With --scenario, attach to an already signed-in browser at this CDP "
+            "endpoint (e.g. http://127.0.0.1:9222) instead of launching one."
+        ),
+    )
+    parser.add_argument(
         "--include-filter-cases",
         action="store_true",
         help=(
@@ -59,6 +85,12 @@ def _parser() -> argparse.ArgumentParser:
 async def _run(args: argparse.Namespace) -> None:
     if args.settle_seconds < 0:
         raise ValueError("--settle-seconds cannot be negative")
+    if args.scenario and not args.validation_scenarios:
+        raise ValueError("--scenario requires --validation-scenarios")
+    if args.through and not args.scenario:
+        raise ValueError("--through requires --scenario")
+    if args.through and args.through < args.scenario:
+        raise ValueError("--through must not be before --scenario")
     if args.storage_state is not None and not args.storage_state.is_file():
         raise FileNotFoundError(f"Storage state file not found: {args.storage_state}")
     job_id = uuid4().hex
@@ -73,6 +105,48 @@ async def _run(args: argparse.Namespace) -> None:
     )
     try:
         configure_vertex_ai(args.project_id, args.location, args.model)
+
+        if args.validation_scenarios:
+            from .validation_scenarios import (
+                SCENARIO_BY_CODE,
+                discover_scenario_pages,
+                run_validation_scenarios,
+            )
+
+            scenario = SCENARIO_BY_CODE[args.scenario] if args.scenario else None
+            last_scenario = SCENARIO_BY_CODE[args.through] if args.through else scenario
+            from playwright.async_api import async_playwright
+
+            async with async_playwright() as playwright:
+                browser = (
+                    await playwright.chromium.connect_over_cdp(args.cdp_url)
+                    if args.cdp_url else None
+                )
+                page_names = await discover_scenario_pages(
+                    url_a=args.url_a,
+                    storage_state=None if browser else args.storage_state,
+                    headed=args.headed,
+                    destination=args.output_dir,
+                    job_id=job_id,
+                    operation_log_path=operation_log_path,
+                    browser=browser,
+                )
+                summary = await run_validation_scenarios(
+                    url_a=args.url_a,
+                    url_b=args.url_b,
+                    page_names=page_names,
+                    destination=args.output_dir,
+                    storage_state=None if browser else args.storage_state,
+                    headed=args.headed,
+                    settle_seconds=args.settle_seconds,
+                    browser=browser,
+                    job_id=job_id,
+                    operation_log_path=operation_log_path,
+                    only=scenario,
+                    last=last_scenario,
+                )
+            print(json.dumps(summary, indent=2, ensure_ascii=False))
+            return
 
         from .browser import capture_dashboard_pair
 
