@@ -158,6 +158,7 @@ async def _run(args: argparse.Namespace) -> None:
             headed=args.headed,
             settle_seconds=args.settle_seconds,
             include_filter_cases=args.include_filter_cases,
+            extract_visual_data=True,
             detect_visual_types=True,
             job_id=job_id,
             operation_log_path=operation_log_path,

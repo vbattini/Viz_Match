@@ -14,7 +14,7 @@ EVIDENCE_MANIFEST = "evidence_manifest.json"
 SCENARIO_DETAILS = {
     "01": (
         "01_table_column_header_comparison",
-        "Table Column Header Comparison",
+        "Table Column Header and Hierarchy Validation",
         "table_headers",
     ),
     "02": ("02_single_filter_selection", "Single Filter Selection", "single_filter"),
@@ -152,6 +152,32 @@ def _write_manifest(root: Path, dashboard_id: str, entries: list[dict[str, Any]]
     temporary.replace(path)
 
 
+def _single_filter_slot(entry: dict[str, Any]) -> tuple[str, str] | None:
+    if str(entry.get("scenario_id") or "") != "02":
+        return None
+    page_name = str(entry.get("page_name") or "").strip()
+    pairing_key = str(entry.get("pairing_key") or "").strip()
+    return (page_name, pairing_key) if page_name and pairing_key else None
+
+
+def _deduplicate_single_filter_entries(
+    entries: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    positions: dict[str, int] = {}
+    for entry in entries:
+        key = _single_filter_slot(entry)
+        if key is None or key not in positions:
+            if key is not None:
+                positions[key] = len(result)
+            result.append(entry)
+        elif str(entry.get("screenshot_capture_timestamp") or "") >= str(
+            result[positions[key]].get("screenshot_capture_timestamp") or ""
+        ):
+            result[positions[key]] = entry
+    return result
+
+
 class EvidenceManifestStore:
     def __init__(self, root: Path) -> None:
         self.root = root.resolve()
@@ -159,7 +185,7 @@ class EvidenceManifestStore:
         self._entries: dict[str, list[dict[str, Any]]] = {}
         for dashboard_id in _DASHBOARDS:
             manifest = read_evidence_manifest(self.root, dashboard_id)
-            self._entries[dashboard_id] = (
+            self._entries[dashboard_id] = _deduplicate_single_filter_entries(
                 list(manifest["screenshots"]) if manifest else []
             )
 
@@ -167,8 +193,7 @@ class EvidenceManifestStore:
         for dashboard_id in _DASHBOARDS:
             folder = self.root / dashboard_id
             folder.mkdir(parents=True, exist_ok=True)
-            if not _manifest_path(self.root, dashboard_id).exists():
-                _write_manifest(self.root, dashboard_id, self._entries[dashboard_id])
+            _write_manifest(self.root, dashboard_id, self._entries[dashboard_id])
 
     async def add(self, entry: dict[str, Any]) -> None:
         dashboard_id = entry.get("dashboard_id")
@@ -179,14 +204,19 @@ class EvidenceManifestStore:
             screenshot_path = os.path.normcase(
                 str(Path(entry["screenshot_full_path"]).resolve())
             )
+            slot = _single_filter_slot(entry)
             matching_index = next(
                 (
                     index
                     for index, existing in enumerate(entries)
-                    if os.path.normcase(
-                        str(Path(existing["screenshot_full_path"]).resolve())
+                    if (
+                        _single_filter_slot(existing) == slot
+                        if slot is not None
+                        else os.path.normcase(
+                            str(Path(existing["screenshot_full_path"]).resolve())
+                        )
+                        == screenshot_path
                     )
-                    == screenshot_path
                 ),
                 None,
             )
@@ -899,10 +929,24 @@ def organize_scenario_screenshots(
         for old_directory in {"01_initial_default_state", *scenario_roots.values()}:
             legacy_path = root / old_directory
             if legacy_path.is_dir():
-                shutil.rmtree(legacy_path)
+                try:
+                    shutil.rmtree(legacy_path)
+                except OSError:
+                    logger.warning(
+                        "Could not remove legacy scenario directory %s",
+                        legacy_path,
+                        exc_info=True,
+                    )
         for legacy_path in legacy_dashboard_scenario_roots:
             if legacy_path.is_dir():
-                shutil.rmtree(legacy_path)
+                try:
+                    shutil.rmtree(legacy_path)
+                except OSError:
+                    logger.warning(
+                        "Could not remove legacy scenario directory %s",
+                        legacy_path,
+                        exc_info=True,
+                    )
 
     return counts
 

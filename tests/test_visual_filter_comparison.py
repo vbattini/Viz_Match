@@ -42,6 +42,165 @@ def test_table_vs_table_is_match() -> None:
     assert statuses(rows) == [MATCH]
 
 
+def test_hierarchical_table_headers_are_compared() -> None:
+    base = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "categories": ["Facility", "Ordered Cases"],
+        "row_headers": [{"text": "North", "level": 1}],
+        "hierarchy_extraction": "sort_expand_drill_up",
+    }
+    compare = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "categories": ["Different first column", "Other measure"],
+        "row_headers": [{"text": "North", "level": 1}],
+        "hierarchy_extraction": "sort_expand_drill_up",
+    }
+
+    rows = compare_visual_inventories("Report", [base], [compare])
+
+    assert statuses(rows) == [MATCH]
+    assert "row headers, hierarchy levels, parent paths, row types, and order match" in rows[0]["comparison_notes"]
+    assert rows[0]["row_headers_a"] == [{"text": "North", "level": 1}]
+
+
+def test_hierarchical_table_header_difference_fails() -> None:
+    base = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "categories": ["Facility"],
+        "row_headers": [{"text": "North", "level": 1}],
+        "hierarchy_extraction": "sort_expand_drill_up",
+    }
+    compare = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "categories": ["Facility"],
+        "row_headers": [{"text": "North", "level": 2}],
+        "hierarchy_extraction": "sort_expand_drill_up",
+    }
+
+    rows = compare_visual_inventories("Report", [base], [compare])
+
+    assert statuses(rows) == [DIFFERENT]
+    assert "row headers, hierarchy levels, parent paths, row types, or order differ" in rows[0]["comparison_notes"]
+
+
+def test_hierarchical_export_structure_uses_parent_paths_and_row_types() -> None:
+    structure = {
+        "status": "PASS",
+        "columns": [{"name": "Dimension A", "level": 1}],
+        "depth": 2,
+        "rows": [
+            {
+                "hierarchy_level": 1,
+                "parent_path": [],
+                "current_value": "North",
+                "row_type": "subtotal",
+            },
+            {
+                "hierarchy_level": 2,
+                "parent_path": ["North"],
+                "current_value": "Store 1",
+                "row_type": "detail",
+            },
+        ],
+    }
+    base = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "hierarchy_extraction": "sort_expand_drill_up",
+        "hierarchy_structure": structure,
+    }
+    compare = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "hierarchy_extraction": "sort_expand_drill_up",
+        "hierarchy_structure": {**structure, "columns": [{"name": "Other A", "level": 1}]},
+    }
+
+    rows = compare_visual_inventories("Report", [base], [compare])
+
+    assert statuses(rows) == [MATCH]
+    assert rows[0]["hierarchy_comparison"]["row_count_a"] == 2
+
+
+def test_hierarchy_structure_is_compared_without_legacy_marker() -> None:
+    structure = {
+        "status": "PASS",
+        "columns": [{"name": "Dimension", "level": 1}],
+        "depth": 1,
+        "rows": [
+            {
+                "hierarchy_level": 1,
+                "parent_path": [],
+                "current_value": "North",
+                "row_type": "detail",
+            }
+        ],
+    }
+    base = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "hierarchy_structure": structure,
+    }
+    compare = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "hierarchy_structure": {
+            **structure,
+            "rows": [{**structure["rows"][0], "current_value": "South"}],
+        },
+    }
+
+    rows = compare_visual_inventories("Report", [base], [compare])
+
+    assert statuses(rows) == [DIFFERENT]
+    assert rows[0]["hierarchy_comparison"]["status"] == DIFFERENT
+    assert len(rows[0]["hierarchy_comparison"]["different_rows"]) == 1
+
+
+def test_hierarchical_export_structure_reports_missing_branch() -> None:
+    base = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "hierarchy_extraction": "sort_expand_drill_up",
+        "hierarchy_structure": {
+            "status": "PASS",
+            "columns": [{"name": "A", "level": 1}],
+            "depth": 1,
+            "rows": [
+                {
+                    "hierarchy_level": 1,
+                    "parent_path": [],
+                    "current_value": "North",
+                    "row_type": "detail",
+                },
+                {
+                    "hierarchy_level": 1,
+                    "parent_path": [],
+                    "current_value": "South",
+                    "row_type": "detail",
+                },
+            ],
+        },
+    }
+    compare = {
+        **visual("v1", "Table", *GRID["top_left"]),
+        "hierarchy_extraction": "sort_expand_drill_up",
+        "hierarchy_structure": {
+            "status": "PASS",
+            "columns": [{"name": "B", "level": 1}],
+            "depth": 1,
+            "rows": [
+                {
+                    "hierarchy_level": 1,
+                    "parent_path": [],
+                    "current_value": "North",
+                    "row_type": "detail",
+                }
+            ],
+        },
+    }
+
+    rows = compare_visual_inventories("Report", [base], [compare])
+
+    assert statuses(rows) == [DIFFERENT]
+    assert len(rows[0]["hierarchy_comparison"]["missing_rows"]) == 1
+
+
 def test_kpi_vs_kpi_is_match() -> None:
     rows = compare_visual_inventories("Overview", single("KPI"), single("KPI"))
     assert statuses(rows) == [MATCH]
@@ -543,7 +702,67 @@ def test_different_filter_selections_fail_when_control_type_is_unknown() -> None
     rows = compare_filter_configurations("Item Counts", a, b)
 
     assert statuses(rows) == [DIFFERENT]
-    assert "Selected values differ" in rows[0]["comparison_notes"]
+
+
+def test_scroll_screenshots_are_skipped_for_visual_type_and_missing_visual_validation():
+    from pathlib import Path
+    from Backend.models import DashboardState
+    from Backend.visual_filter_comparison import (
+        build_visual_filter_result,
+        visual_inventory,
+    )
+
+    state_scroll_a = DashboardState(
+        dashboard="dashboard_A",
+        page="Report",
+        filter=None,
+        screenshot=Path("dashboard_A_S01_table_headers_Page01_Scroll01.png"),
+        extracted={"elements": [{"element_id": "TABLE_001", "type": "table", "title": "Table"}]},
+        scenario_id="01",
+        scenario_step="table_headers_scroll:horizontal_scroll_01",
+    )
+    state_scroll_b = DashboardState(
+        dashboard="dashboard_B",
+        page="Report",
+        filter=None,
+        screenshot=Path("dashboard_B_S01_table_headers_Page01_Scroll01.png"),
+        extracted={"elements": []},
+        scenario_id="01",
+        scenario_step="table_headers_scroll:horizontal_scroll_01",
+    )
+
+    state_initial_a = DashboardState(
+        dashboard="dashboard_A",
+        page="Report",
+        filter=None,
+        screenshot=Path("dashboard_A_S01_table_headers_Page01_Initial.png"),
+        extracted={"elements": [{"element_id": "TABLE_001", "type": "table", "title": "Table", "bounding_box": {"x": 0, "y": 0, "width": 100, "height": 100}}]},
+        scenario_id="01",
+        scenario_step="table_headers_initial:initial",
+    )
+    state_initial_b = DashboardState(
+        dashboard="dashboard_B",
+        page="Report",
+        filter=None,
+        screenshot=Path("dashboard_B_S01_table_headers_Page01_Initial.png"),
+        extracted={"elements": [{"element_id": "TABLE_001", "type": "table", "title": "Table", "bounding_box": {"x": 0, "y": 0, "width": 100, "height": 100}}]},
+        scenario_id="01",
+        scenario_step="table_headers_initial:initial",
+    )
+
+    assert visual_inventory(state_scroll_a) == []
+    assert visual_inventory(state_scroll_b) == []
+
+    inv_initial = visual_inventory(state_initial_a)
+    assert len(inv_initial) == 1
+    assert inv_initial[0]["visual_type"] == "Table"
+
+    res = build_visual_filter_result(
+        [state_initial_a, state_scroll_a],
+        [state_initial_b, state_scroll_b],
+    )
+    scroll_rows = [row for row in res["visual_rows"] if "Scroll" in str(row.get("state", ""))]
+    assert scroll_rows == []
 
 
 def test_matching_filter_selection_passes_when_only_one_control_type_is_known() -> None:

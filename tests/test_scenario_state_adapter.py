@@ -8,6 +8,24 @@ from Backend.models import DashboardState
 from Backend.scenario_evidence import dashboard_execution_evidence_path
 
 
+def test_snapshot_data_preserves_all_filters_and_unreadable_values() -> None:
+    names, values = adapter._snapshot_data(
+        {
+            "filter_state_snapshot": [
+                {"filter_name": "Facility", "selected_values": ["02 - Sioux Falls"]},
+                {"filter_name": "Category", "selected_values": ["All"]},
+                {"filter_name": "Master Vendor", "selected_values": None},
+            ]
+        }
+    )
+
+    assert names == ["Facility", "Category", "Master Vendor"]
+    assert values == {
+        "Facility": ["02 - Sioux Falls"],
+        "Category": ["All"],
+    }
+
+
 def _write_side(
     root,
     dashboard,
@@ -117,6 +135,53 @@ def test_scenario_states_use_matched_screenshot_extraction_and_header_only_mode(
     assert result["comparisons"][0]["status"] == "MATCH"
 
 
+def test_header_only_extraction_synthesizes_table_visual_from_headers(
+    tmp_path, monkeypatch
+):
+    entries = {}
+    for dashboard in ("dashboard_A", "dashboard_B"):
+        entries[dashboard] = [_write_side(tmp_path, dashboard)]
+        _write_manifest(tmp_path, dashboard, entries[dashboard])
+
+    async def fake_extract(*_args, **_kwargs):
+        return {
+            "elements": [],
+            "title_items": [
+                {"category": "column_header", "text": "Item"},
+                {"category": "column_header", "text": "Quantity"},
+            ],
+        }
+
+    monkeypatch.setattr(adapter, "extract_screenshot", fake_extract)
+    states_a, states_b, _ = asyncio.run(
+        adapter.load_scenario_states(
+            destination=tmp_path,
+            job_id="job",
+            operation_log_path=tmp_path / "operations.jsonl",
+            execution={
+                "pages": [
+                    {
+                        "page": "Sales",
+                        "statuses": {
+                            "01_table_column_header_comparison": "PASS"
+                        },
+                    }
+                ]
+            },
+        )
+    )
+
+    for state in (states_a[0], states_b[0]):
+        assert state.extracted["elements"] == [
+            {
+                "element_id": "TABLE_001",
+                "type": "table",
+                "title": "Table",
+                "categories": ["Item", "Quantity"],
+            }
+        ]
+
+
 def test_scenario_adapter_does_not_pair_different_filter_states(
     tmp_path, monkeypatch
 ):
@@ -152,6 +217,42 @@ def test_scenario_adapter_does_not_pair_different_filter_states(
     assert len(states_a) == len(states_b) == 2
     assert result["summary"]["matched_states"] == 2
     assert all(row["status"] == "UNVERIFIED" for row in result["comparisons"])
+
+
+def test_scenario_adapter_uses_one_duplicate_single_filter_capture(
+    tmp_path, monkeypatch
+):
+    pairing_key = "single_filter:facility nbr desc=5 - minot"
+    entry_a = _write_side(
+        tmp_path, "dashboard_A", scenario_id="02", pairing_key=pairing_key
+    )
+    duplicate_a = _write_side(
+        tmp_path, "dashboard_A", scenario_id="02", pairing_key=pairing_key
+    )
+    entry_b = _write_side(
+        tmp_path, "dashboard_B", scenario_id="02", pairing_key=pairing_key
+    )
+    _write_manifest(tmp_path, "dashboard_A", [entry_a, duplicate_a])
+    _write_manifest(tmp_path, "dashboard_B", [entry_b])
+
+    async def fake_extract(*_args, **_kwargs):
+        return {"elements": [], "title_items": []}
+
+    monkeypatch.setattr(adapter, "extract_screenshot", fake_extract)
+    states_a, states_b, context = asyncio.run(
+        adapter.load_scenario_states(
+            destination=tmp_path,
+            job_id="job",
+            operation_log_path=tmp_path / "operations.jsonl",
+            execution={"pages": [{"page": "Sales", "statuses": {}}]},
+        )
+    )
+
+    assert len(states_a) == len(states_b) == 1
+    assert any(
+        "Duplicate single-filter screenshot evidence" in item["reason"]
+        for item in context["evidence_validation"]["issues"]
+    )
 
 
 def test_scenario_workflow_compares_only_after_state_loader_finishes(

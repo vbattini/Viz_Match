@@ -1,8 +1,0 @@
-{
-  "visuals": [],
-  "table_visuals": {
-    "A": 1,
-    "B": 0
-  },
-  "reason": "a visual reports 'Error fetching data'; header comparison cannot be verified"
-}

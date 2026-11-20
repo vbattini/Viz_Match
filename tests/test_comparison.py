@@ -399,8 +399,12 @@ def test_comparison_docx_formats_filter_validation_log_and_result_dropdowns(
     ]
     assert len(filter_log.rows) == 3
     assert [filter_log.cell(row, 2).text for row in (1, 2)] == [
-        "Calendar: All\nFacility: Snowflake: North; GCP: South",
-        "Calendar: All",
+        "Calendar: All;\n"
+        "Facility: Base: North; Compare: South;\n"
+        "Validation detail: Calendar: Filter control type could not be identified. "
+        "Facility: Filter control type could not be identified.",
+        "Calendar: All;\n"
+        "Validation detail: Calendar: Filter control type could not be identified.",
     ]
     assert [filter_log.cell(row, 3).text for row in (1, 2)] == [
         "Filters are applied and visuals are working as expected.",
@@ -3707,25 +3711,25 @@ def test_docx_visual_validation_log_uses_excel_visual_check_values_and_filters(
         "01",
         "Sales",
         "Table",
-        "Calendar: All",
+        "Calendar: All;",
     ]
     assert [cell.text for cell in table.rows[2].cells[:4]] == [
         "02",
         "Sales",
         "Column Chart",
-        "Calendar: All",
+        "Calendar: All;",
     ]
     assert [cell.text for cell in table.rows[3].cells[:4]] == [
         "03",
         "Sales",
         "KPI",
-        "Calendar: All",
+        "Calendar: All;",
     ]
     assert [cell.text for cell in table.rows[4].cells[:4]] == [
         "04",
         "Sales",
         "Matrix",
-        "Calendar: All",
+        "Calendar: All;",
     ]
     assert len(table.rows) == 5
     assert table.cell(2, 4).text.startswith(

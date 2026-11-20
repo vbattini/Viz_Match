@@ -1,9 +1,0 @@
-{
-  "steps": [
-    {
-      "step": "capture_default_state",
-      "outcome": "captured"
-    }
-  ],
-  "inventory_error": "dashboard_A filter inventory failed: TimeoutError: "
-}

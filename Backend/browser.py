@@ -7,6 +7,8 @@ import json
 import logging
 import math
 import re
+import shutil
+import tempfile
 import time
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
@@ -24,7 +26,6 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
     async_playwright,
 )
-
 from .agents import (
     TruncatedAgentResponseError,
     _align_shared_plan,
@@ -35,18 +36,23 @@ from .agents import (
     is_kpi_selection_filter,
     plan_from_dom,
 )
-from .config import positive_int_setting
+from .config import positive_float_setting, positive_int_setting
 from .models import DashboardState, FilterCombination, FilterSelection
 from .timing import measure_stage, write_operation_event
 from .visual_filter_comparison import classify_visual_type, is_header_divider
 
 MAX_DOM_CONTROLS = 500
-MAX_RENDER_WAIT_SECONDS = 15.0
-CLASS_ONLY_RENDER_TIMEOUT_MS = 30_000
-UNRENDERED_CHART_TIMEOUT_MS = 30_000
-MAX_PAGE_TAB_WAIT_SECONDS = 60.0
-EMPTY_PAGE_TAB_WAIT_SECONDS = 15.0
-REPORT_READY_TIMEOUT_MS = 300_000
+MAX_RENDER_WAIT_SECONDS = positive_float_setting("PBI_MAX_RENDER_WAIT_SECONDS", 30.0)
+CLASS_ONLY_RENDER_TIMEOUT_MS = positive_int_setting(
+    "PBI_CLASS_ONLY_RENDER_TIMEOUT_MS", 30_000
+)
+UNRENDERED_CHART_TIMEOUT_MS = positive_int_setting(
+    "PBI_UNRENDERED_CHART_TIMEOUT_MS", 30_000
+)
+MAX_PAGE_TAB_WAIT_SECONDS = 20.0
+EMPTY_PAGE_TAB_WAIT_SECONDS = 5.0
+REPORT_READY_TIMEOUT_MS = 120_000
+REPORT_STABILITY_TIMEOUT_SECONDS = 30.0
 REPORT_STABLE_SECONDS = 4.0
 REPORT_POLL_MS = 500
 SLICER_CONTROL_ACTION_TIMEOUT_MS = 15_000
@@ -54,6 +60,8 @@ COMBOBOX_LOCATOR_TIMEOUT_MS = 2_000
 CLEAR_SELECTION_VISIBLE_TIMEOUT_MS = 2_000
 EXPORT_DIALOG_BUTTON_TIMEOUT_MS = 5_000
 EXPORT_DOWNLOAD_TIMEOUT_MS = 60_000
+SCROLL_SETTLE_TIMEOUT_SECONDS = 2.0
+SCROLL_POLL_MS = 50
 MORE_OPTIONS_WAIT_ATTEMPTS = 20
 VISUAL_SELECTOR = "div.visualContainer, [data-visual-id]"
 _VISUAL_LAYOUT_SCRIPT = """() => {
@@ -148,10 +156,22 @@ _VISUAL_LAYOUT_SCRIPT = """() => {
       '[role="heading"], h1, h2, h3, h4, [class*="visualTitle"]'
     );
     const titleText = title?.innerText?.replace(/\\s+/g, ' ').trim() || '';
+    const scrollable = [node, ...node.querySelectorAll('*')].some(
+      child => (
+        (child.scrollWidth > child.clientWidth + 2 &&
+          ['auto', 'scroll'].includes(getComputedStyle(child).overflowX)) ||
+        (child.scrollHeight > child.clientHeight + 2 &&
+          ['auto', 'scroll'].includes(getComputedStyle(child).overflowY))
+      )
+    ) || [...node.querySelectorAll('.scroll-bar-div')].some(track => {
+      const rect = track.getBoundingClientRect();
+      return rect.width > 20 || rect.height > 20;
+    });
     output.push({
       visual_id: node.getAttribute('data-visual-id') || node.id || '',
       visual_name: titleText,
       visual_type: detectType(valuesForType(node)),
+      scrollable,
       x: bounds.left - rootBounds.left,
       y: bounds.top - rootBounds.top,
       width: bounds.width,
@@ -159,6 +179,71 @@ _VISUAL_LAYOUT_SCRIPT = """() => {
     });
   }
   return output;
+}"""
+
+_TABLE_HORIZONTAL_SCROLL_SCRIPT = """() => {
+  const tables = [...document.querySelectorAll('[role="grid"], [role="table"]')];
+  return tables.some((table) => {
+    const root = table.closest('[data-visual-id], .visualContainer') || table;
+    return [table, ...root.querySelectorAll('*')].some((node) =>
+      node.scrollWidth > node.clientWidth + 2 &&
+      ['auto', 'scroll'].includes(getComputedStyle(node).overflowX)
+    ) || [...root.querySelectorAll('.scroll-bar-div')].some((track) => {
+      const rect = track.getBoundingClientRect();
+      return rect.width > 100 && rect.width > rect.height * 4;
+    });
+  });
+}"""
+
+_REPORT_PAGE_VERTICAL_SCROLL_SCRIPT = """() => {
+  const visualSelector = '.visualContainer, [data-visual-id]';
+  const internalVisualSelector =
+    `${visualSelector}, [role="grid"], [role="table"], table, canvas, svg`;
+  const root = document.scrollingElement;
+  const documentScrolls = Boolean(
+    root && root.scrollHeight > root.clientHeight + 2 &&
+    root.scrollHeight > window.innerHeight + 2
+  );
+  const main = document.querySelector('[role="main"]');
+  const containerScrolls = [
+    ...(main ? [main, ...main.querySelectorAll('*')] : [])
+  ].some(element => {
+    const style = getComputedStyle(element);
+    if (!['auto', 'scroll'].includes(style.overflowY) ||
+        element.scrollHeight <= element.clientHeight + 2 ||
+        element.closest(internalVisualSelector)) return false;
+    return !!element.querySelector(visualSelector);
+  });
+  return {
+    page_vertical_scroll: documentScrolls || containerScrolls,
+    document_scroll: documentScrolls,
+    report_container_scroll: containerScrolls
+  };
+}"""
+
+_TABLE_HEADERS_SCRIPT = r"""() => {
+  const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
+  return [...document.querySelectorAll('[role="grid"], [role="table"]')]
+    .map((table) => {
+      const root = table.closest('[data-visual-id], .visualContainer') || table;
+      const titleNode = root.querySelector(
+        '[role="heading"], h1, h2, h3, [class*="visualTitle"]'
+      );
+      const title = normalize(
+        titleNode?.innerText || root.getAttribute('aria-label') || ''
+      );
+      const headers = [...root.querySelectorAll('[role="columnheader"], th')]
+        .map((header) => normalize(
+          header.getAttribute('aria-label') ||
+          header.getAttribute('data-column-name') ||
+          header.getAttribute('title') ||
+          header.innerText ||
+          header.textContent
+        ))
+        .filter(Boolean);
+      return {title, headers: [...new Set(headers)]};
+    })
+    .filter((item) => item.headers.length);
 }"""
 _TITLE_LABEL_SCRIPT = """filterNames => {
   const main = document.querySelector('[role="main"]') || document.body;
@@ -405,8 +490,37 @@ DATA_VISUAL_TYPES = frozenset(
         "grid",
     }
 )
+CHART_VISUAL_TYPES = frozenset(
+    {
+        "chart",
+        "bar chart",
+        "line chart",
+        "column chart",
+        "pie chart",
+        "donut chart",
+        "combo chart",
+        "area chart",
+        "scatter chart",
+        "treemap",
+        "waterfall",
+        "funnel",
+        "gauge",
+        "map",
+    }
+)
 CAPTURE_VIEWPORT = {"width": 2304, "height": 1080}
 CAPTURE_DEVICE_SCALE_FACTOR = 1
+_REPORT_UI_TARGETS: dict[str, tuple[str, str]] = {}
+
+
+def register_report_ui_target(
+    report_url: str, workspace_name: str, report_name: str
+) -> None:
+    _REPORT_UI_TARGETS[report_url] = (workspace_name, report_name)
+
+
+def unregister_report_ui_target(report_url: str) -> None:
+    _REPORT_UI_TARGETS.pop(report_url, None)
 MAX_PARALLEL_STATE_CAPTURES = positive_int_setting(
     "PBI_MAX_PARALLEL_STATE_CAPTURES", 2
 )
@@ -3147,13 +3261,36 @@ async def _wait_for_state_render(
 ) -> float:
     wait_seconds = max(0.0, settle_seconds)
 
+    def rendered_data_visual_count(state: dict[str, Any]) -> int:
+        count = state.get("rendered_data_visuals")
+        if isinstance(count, int):
+            return max(0, count)
+        visual_count = int(state.get("visuals", 0))
+        if not visual_count:
+            return 0
+        unrendered = {
+            (
+                "index",
+                item.get("visual_index"),
+            )
+            if item.get("visual_index") is not None
+            else (
+                "id",
+                item.get("visual_id"),
+            )
+            for key in ("unrendered_chart_visuals", "unrendered_visuals")
+            for item in state.get(key, [])
+            if isinstance(item, dict)
+        }
+        return max(0, visual_count - len(unrendered))
+
     started_at = time.monotonic()
     minimum_wait = min(0.5, wait_seconds)
     stable_clear_seconds = max(0.3, wait_seconds) if wait_seconds else 0.0
     observed_strong_loading = False
     observed_class_loading = False
     observed_change = False
-    observed_unrendered_chart = False
+    observed_unrendered_visuals = False
     previous_signature: tuple[str, ...] | None = None
     stable_since: float | None = None
 
@@ -3186,11 +3323,12 @@ async def _wait_for_state_render(
             )
             return time.monotonic() - started_at
         loading = any(state["busy"] for state in indicator_states)
-        unrendered_chart = any(
+        unrendered_visuals = any(
             state.get("unrendered_chart_visuals")
+            or state.get("unrendered_visuals")
             for state in relevant_states
         )
-        observed_unrendered_chart |= unrendered_chart
+        observed_unrendered_visuals |= unrendered_visuals
         signal_strengths = [
             _loading_signal_strength(state) for state in indicator_states
         ]
@@ -3208,7 +3346,7 @@ async def _wait_for_state_render(
             stable_since = None
         if (
             not class_loading
-            and not unrendered_chart
+            and not unrendered_visuals
             and signature != previous_signature
         ):
             if previous_signature is not None:
@@ -3216,13 +3354,13 @@ async def _wait_for_state_render(
             stable_since = now
         elif (
             not class_loading
-            and not unrendered_chart
+            and not unrendered_visuals
             and stable_since is None
         ):
             stable_since = now
         if (
             not loading
-            and not unrendered_chart
+            and not unrendered_visuals
             and stable_since is not None
             and elapsed >= minimum_wait
             and now - stable_since >= stable_clear_seconds
@@ -3232,15 +3370,15 @@ async def _wait_for_state_render(
 
         max_wait = (
             UNRENDERED_CHART_TIMEOUT_MS / 1_000
-            if unrendered_chart
+            if unrendered_visuals
             else CLASS_ONLY_RENDER_TIMEOUT_MS / 1_000
             if observed_class_loading and not observed_strong_loading
-            and not observed_unrendered_chart
+            and not observed_unrendered_visuals
             else REPORT_READY_TIMEOUT_MS / 1_000
             if (
                 observed_strong_loading
                 or observed_class_loading
-                or observed_unrendered_chart
+                or observed_unrendered_visuals
             )
             else max(wait_seconds, MAX_RENDER_WAIT_SECONDS)
             if observed_change
@@ -3248,21 +3386,38 @@ async def _wait_for_state_render(
         )
         remaining = max_wait - elapsed
         if remaining <= 0:
-            if unrendered_chart:
-                logger.warning(
-                    "Continuing capture after %.0f seconds with chart visuals "
-                    "that have not rendered data marks",
-                    elapsed,
+            if unrendered_visuals:
+                raise RuntimeError(
+                    "Dashboard visuals remained unrendered; refusing to "
+                    f"capture a partial report after {max_wait:.0f} seconds "
+                    f"(rendered_data_visuals="
+                    f"{[rendered_data_visual_count(state) for state in relevant_states]!r}, "
+                    f"unrendered_chart_visuals="
+                    f"{[state.get('unrendered_chart_visuals', []) for state in relevant_states]!r}, "
+                    f"unrendered_visuals="
+                    f"{[state.get('unrendered_visuals', []) for state in relevant_states]!r}, "
+                    "busy_details="
+                    f"{[state.get('busy_details', {}) for state in indicator_states]!r})"
                 )
-                return time.monotonic() - started_at
             if loading and class_loading and not strong_loading:
-                logger.warning(
-                    "Continuing capture after %d seconds with class-only "
-                    "Power BI loading indicators still active",
-                    CLASS_ONLY_RENDER_TIMEOUT_MS // 1_000,
+                raise RuntimeError(
+                    "Power BI loading indicators remained active for "
+                    f"{max_wait:.0f} seconds; refusing to capture the report "
+                    "while a visual may still be loading "
+                    f"(rendered_data_visuals="
+                    f"{[rendered_data_visual_count(state) for state in relevant_states]!r}, "
+                    "busy_details="
+                    f"{[state.get('busy_details', {}) for state in indicator_states]!r})"
                 )
-                return time.monotonic() - started_at
             if loading or observed_change:
+                if not loading and not observed_unrendered_visuals:
+                    logger.warning(
+                        "Continuing capture after %.0f seconds because "
+                        "dashboard content kept changing without an active "
+                        "loading indicator",
+                        elapsed,
+                    )
+                    return time.monotonic() - started_at
                 raise RuntimeError(
                     "Dashboard visuals or visible content did not finish loading "
                     f"within {max_wait:.0f} seconds "
@@ -3296,14 +3451,26 @@ async def _read_render_warning(page: Any) -> dict[str, Any] | None:
     active_indicators = [
         state
         for state in relevant_states
-        if state.get("busy") or state.get("unrendered_chart_visuals")
+        if (
+            state.get("busy")
+            or state.get("unrendered_chart_visuals")
+            or state.get("unrendered_visuals")
+        )
     ]
     if not errors and not active_indicators:
         return None
     if errors:
         reason = "Power BI query exceeded available resources"
-    elif any(state.get("unrendered_chart_visuals") for state in active_indicators):
+    elif any(
+        state.get("unrendered_chart_visuals")
+        for state in active_indicators
+    ):
         reason = "Power BI chart content did not finish rendering"
+    elif any(
+        state.get("unrendered_visuals")
+        for state in active_indicators
+    ):
+        reason = "Power BI visual content did not finish rendering"
     else:
         reason = "Power BI visual loading indicators remained active"
     return {
@@ -3316,6 +3483,7 @@ async def _read_render_warning(page: Any) -> dict[str, Any] | None:
                 "unrendered_chart_visuals": state.get(
                     "unrendered_chart_visuals", []
                 ),
+                "unrendered_visuals": state.get("unrendered_visuals", []),
             }
             for state in active_indicators
         ],
@@ -3331,10 +3499,11 @@ def _loading_signal_strength(state: dict[str, Any]) -> tuple[bool, bool]:
         return True, False
 
     explicit = int(details.get("explicit_indicators", 0) or 0)
+    page_loading = int(details.get("page_loading_indicators", 0) or 0)
     images = int(details.get("incomplete_visual_images", 0) or 0)
     refresh = int(details.get("rotating_refresh_controls", 0) or 0)
     class_indicators = int(details.get("visual_loading_classes", 0) or 0)
-    strong = bool(explicit or images or refresh)
+    strong = bool(explicit or page_loading or images or refresh)
     class_only = bool(class_indicators and not strong)
     if not strong and not class_only:
         strong = True
@@ -3367,7 +3536,42 @@ async def _extract_or_reuse(
             ensure_ascii=False,
         ).encode("utf-8")
     ).hexdigest()
-    if cache_key not in extraction_cache:
+    cached_extraction = extraction_cache.get(cache_key)
+    if isinstance(cached_extraction, asyncio.Future):
+        if performance_seconds is not None:
+            performance_seconds["extraction_cache_hits"] = (
+                performance_seconds.get("extraction_cache_hits", 0.0) + 1
+            )
+        write_operation_event(
+            operation_log_path,
+            job_id=job_id,
+            operation="gemini_screenshot_cache",
+            event="finished",
+            outcome="in_flight_hit",
+            dashboard=dashboard,
+            page=page or page_name,
+            filter_state=filter_state,
+        )
+        return await cached_extraction
+    if cached_extraction is None:
+        if performance_seconds is not None:
+            performance_seconds["extraction_cache_misses"] = (
+                performance_seconds.get("extraction_cache_misses", 0.0) + 1
+            )
+        extraction_future: asyncio.Future[dict[str, Any]] = (
+            asyncio.get_running_loop().create_future()
+        )
+        extraction_cache[cache_key] = extraction_future
+        write_operation_event(
+            operation_log_path,
+            job_id=job_id,
+            operation="gemini_screenshot_cache",
+            event="finished",
+            outcome="miss",
+            dashboard=dashboard,
+            page=page or page_name,
+            filter_state=filter_state,
+        )
         extraction_started_at = time.perf_counter()
         try:
             with measure_stage(
@@ -3389,16 +3593,25 @@ async def _extract_or_reuse(
                     else {}
                 )
                 if exported_visual_titles:
-                    extraction_cache[cache_key] = await extract_screenshot(
+                    extracted = await extract_screenshot(
                         screenshot_bytes,
                         page_name,
                         exported_visual_titles,
                         **model_timing_context,
                     )
                 else:
-                    extraction_cache[cache_key] = await extract_screenshot(
+                    extracted = await extract_screenshot(
                         screenshot_bytes, page_name, **model_timing_context
                     )
+                extraction_cache[cache_key] = extracted
+                extraction_future.set_result(extracted)
+                return extracted
+        except BaseException as exc:
+            if extraction_cache.get(cache_key) is extraction_future:
+                del extraction_cache[cache_key]
+            if not extraction_future.done():
+                extraction_future.set_exception(exc)
+            raise
         finally:
             if performance_seconds is not None:
                 performance_seconds["extraction_model_seconds"] = (
@@ -3410,7 +3623,17 @@ async def _extract_or_reuse(
         performance_seconds["extraction_cache_hits"] = (
             performance_seconds.get("extraction_cache_hits", 0.0) + 1
         )
-    return extraction_cache[cache_key]
+        write_operation_event(
+            operation_log_path,
+            job_id=job_id,
+            operation="gemini_screenshot_cache",
+            event="finished",
+            outcome="hit",
+            dashboard=dashboard,
+            page=page or page_name,
+            filter_state=filter_state,
+        )
+    return cached_extraction
 
 
 async def _accessible_tab_names(frame: Any) -> list[str]:
@@ -3459,6 +3682,7 @@ async def _accessible_inventory(
     *,
     clear_selection_actions: bool = True,
     inspect_filter_options: bool = True,
+    requested_filter_names: set[str] | None = None,
 ) -> dict[str, Any]:
     frames: list[dict[str, Any]] = []
     for frame_index, frame in enumerate(page.frames):
@@ -3603,7 +3827,11 @@ async def _accessible_inventory(
                 "name": name,
                 "selector_name": selector_name or name,
             }
-            if not inspect_filter_options:
+            inspect_this_filter = inspect_filter_options and (
+                requested_filter_names is None
+                or _normalized_control_text(name) in requested_filter_names
+            )
+            if not inspect_this_filter:
                 summary = (await combo.inner_text()).strip()
                 filters.append(
                     {
@@ -3809,6 +4037,10 @@ async def _accessible_inventory(
                 if option["selected"] and value not in group["selected"]:
                     group["selected"].append(value)
         for key, item in choice_groups.items():
+            if requested_filter_names is not None and (
+                _normalized_control_text(item["name"]) not in requested_filter_names
+            ):
+                continue
             if not item["values"] or any(
                 existing["name"].casefold() == item["name"].casefold()
                 for existing in filters
@@ -3903,6 +4135,25 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
   const visuals = [
     ...main.querySelectorAll('div.visualContainer, [data-visual-id]')
   ].filter(visible);
+  const isIdentifiedVisual = visual =>
+    visual.hasAttribute('data-visual-id') ||
+    visual.hasAttribute('data-visual-type') ||
+    visual.hasAttribute('data-visual-kind') ||
+    visual.hasAttribute('aria-label') ||
+    visual.hasAttribute('title');
+  const isLayoutContainer = visual => {
+    const rect = visual.getBoundingClientRect();
+    return (
+      rect.width <= 25 ||
+      rect.height <= 25 ||
+      (!isIdentifiedVisual(visual) &&
+       !visual.querySelector(
+         'svg, canvas, img, table, [role="grid"], [role="row"], ' +
+         '[role="combobox"], select'
+       ) &&
+       !(visual.innerText || '').trim())
+    );
+  };
   const busySelectors = [
     '[aria-busy="true"]',
     '[role="progressbar"]',
@@ -3915,7 +4166,9 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
     )
   );
   const busyElements = new Set(explicitBusyElements);
-  const visualLoadingCandidates = new Set(visuals.flatMap(visual => [
+  const visualLoadingCandidates = new Set(visuals.filter(visual =>
+    !isLayoutContainer(visual)
+  ).flatMap(visual => [
     ...(visual.matches('[class*="spinner" i], [class*="loading" i]')
       ? [visual]
       : []),
@@ -3938,6 +4191,31 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
     ) || ''
   }));
   visualLoadingElements.forEach(element => busyElements.add(element));
+  const pageLoadingElements = [
+    ...(document.body || document.documentElement).querySelectorAll(
+      '[class*="spinner" i], [class*="loading" i]'
+    )
+  ].filter(element =>
+    visible(element) &&
+    !visuals.includes(element) &&
+    !visuals.some(visual => visual.contains(element)) &&
+    (
+      main.contains(element) ||
+      element.closest(
+        '[class*="powerbi" i], [id*="powerbi" i], ' +
+        '[class*="report" i], [id*="report" i]'
+      ) ||
+      (() => {
+        const rect = element.getBoundingClientRect();
+        return rect.left <= 100 && rect.top <= 100;
+      })()
+    ) &&
+    !element.closest(
+      'button, input, select, textarea, [role="button"], ' +
+      '[role="navigation"], header, nav'
+    )
+  );
+  pageLoadingElements.forEach(element => busyElements.add(element));
   const refreshControls = [
     ...main.querySelectorAll('button, [role="button"]')
   ].filter(element => {
@@ -4072,6 +4350,38 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
       title: (visual.innerText || '').trim().slice(0, 120)
     }];
   });
+  const unrenderedVisuals = visuals.flatMap((visual, index) => {
+    if (isSlicerVisual(visual) ||
+        /no data|no results|no records|nothing to display/i.test(
+          visual.innerText || ''
+        ) ||
+        isLayoutContainer(visual) ||
+        visual.querySelector(
+          'svg, canvas, img, table, [role="grid"], [role="row"], ' +
+          '[role="combobox"], select'
+        ) ||
+        (visual.innerText || '').trim()) return [];
+    if (!isIdentifiedVisual(visual)) return [];
+    const rect = visual.getBoundingClientRect();
+    return [{
+      visual_index: index + 1,
+      visual_id: visual.getAttribute('data-visual-id') || '',
+      title: (visual.getAttribute('aria-label') ||
+        visual.getAttribute('title') || '').slice(0, 120),
+      class_name: String(visual.className).slice(0, 120),
+      size: Math.round(rect.width) + 'x' + Math.round(rect.height)
+    }];
+  });
+  const unrenderedVisualIndexes = new Set([
+    ...unrenderedChartVisuals,
+    ...unrenderedVisuals
+  ].map(visual => visual.visual_index));
+  const renderedDataVisuals = visuals.reduce(
+    (count, visual, index) => count +
+      (!isSlicerVisual(visual) &&
+       !unrenderedVisualIndexes.has(index + 1) ? 1 : 0),
+    0
+  );
   let contentHash = 2166136261;
   for (let index = 0; index < reportText.length; index += 1) {
     contentHash ^= reportText.charCodeAt(index);
@@ -4092,6 +4402,7 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
     busy: busyElements.size + incompleteVisualImages,
     busy_details: {
       explicit_indicators: explicitBusyElements.size,
+      page_loading_indicators: pageLoadingElements.length,
       visual_loading_candidates: visualLoadingCandidates.size,
       visual_loading_classes: visualLoadingElements.length,
       visual_loading_markers: visualLoadingMarkers,
@@ -4099,6 +4410,8 @@ _REPORT_LOAD_STATE_SCRIPT = """() => {
       rotating_refresh_controls: refreshControls.length
     },
     unrendered_chart_visuals: unrenderedChartVisuals,
+    unrendered_visuals: unrenderedVisuals,
+    rendered_data_visuals: renderedDataVisuals,
     render_errors: renderErrors,
     content: (contentHash >>> 0).toString(16)
   };
@@ -4138,7 +4451,7 @@ async def _wait_for_report_load_to_settle(page: Page) -> None:
             now - stable_since >= REPORT_STABLE_SECONDS
         ):
             return
-        max_wait = REPORT_READY_TIMEOUT_MS / 1_000
+        max_wait = REPORT_STABILITY_TIMEOUT_SECONDS
         if now - started_at >= max_wait:
             raise RuntimeError(
                 "Power BI report did not finish loading within "
@@ -4187,6 +4500,7 @@ async def _read_visual_layout_inventory(
                     "dom_visual_id": str(item.get("visual_id") or ""),
                     "visual_name": name or None,
                     "visual_type": visual_type,
+                    "scrollable": bool(item.get("scrollable")),
                     **bounds,
                 }
             )
@@ -4208,6 +4522,105 @@ async def _read_visual_layout_inventory(
         type_counts[prefix] = type_counts.get(prefix, 0) + 1
         visual["visual_id"] = f"{prefix}_{type_counts[prefix]:03d}"
     return visuals
+
+
+def _is_chart_visual_type(value: Any) -> bool:
+    normalized = str(value or "").casefold().strip()
+    return normalized in CHART_VISUAL_TYPES or "chart" in normalized
+
+
+def _normalize_chart_extraction(
+    extracted: dict[str, Any],
+    visuals: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Keep chart evidence title/type-only and omit scrollable charts."""
+    scrollable_titles = {
+        str(visual.get("visual_name") or "").strip().casefold()
+        for visual in visuals
+        if visual.get("scrollable") and visual.get("visual_name")
+    }
+    scrollable_ids = {
+        str(visual.get("dom_visual_id") or "").strip().casefold()
+        for visual in visuals
+        if visual.get("scrollable") and visual.get("dom_visual_id")
+    }
+    chart_titles = {
+        str(visual.get("visual_name") or "").strip().casefold()
+        for visual in visuals
+        if _is_chart_visual_type(visual.get("visual_type"))
+        and visual.get("visual_name")
+        and not visual.get("scrollable")
+    }
+    elements: list[dict[str, Any]] = []
+    for element in extracted.get("elements") or []:
+        if not isinstance(element, dict):
+            continue
+        element_type = element.get("element_type") or element.get("type")
+        is_chart = _is_chart_visual_type(
+            element.get("visual_type") or element_type
+        )
+        title = str(element.get("title") or "").strip()
+        visual_id = str(
+            element.get("visual_id") or element.get("associated_visual_dom_id") or ""
+        ).strip().casefold()
+        if is_chart:
+            if (
+                title.casefold() in scrollable_titles
+                or visual_id in scrollable_ids
+            ):
+                continue
+            elements.append(
+                {
+                    key: element[key]
+                    for key in (
+                        "element_id",
+                        "element_type",
+                        "type",
+                        "visual_type",
+                        "title",
+                        "visual_id",
+                        "reading_order",
+                        "bounding_box",
+                        "normalized_bounding_box",
+                        "extraction_status",
+                        "uncertainties",
+                    )
+                    if key in element
+                }
+            )
+            continue
+        elements.append(element)
+    extracted["elements"] = elements
+
+    title_items = extracted.get("title_items")
+    if isinstance(title_items, list):
+        chart_detail_categories = {
+            "axis_title",
+            "legend_title",
+            "legend_item",
+            "annotation_title",
+            "data_label",
+        }
+        filtered_items = []
+        for item in title_items:
+            if not isinstance(item, dict):
+                continue
+            associated = str(
+                item.get("associated_visual")
+                or item.get("associated_visual_dom_id")
+                or ""
+            ).strip().casefold()
+            category = str(item.get("category") or "").casefold()
+            text = str(item.get("text") or "").strip().casefold()
+            if associated in scrollable_titles or associated in scrollable_ids:
+                continue
+            if category in chart_detail_categories:
+                continue
+            if category == "chart_title" and chart_titles and text not in chart_titles:
+                continue
+            filtered_items.append(item)
+        extracted["title_items"] = filtered_items
+    return extracted
 
 
 async def _read_report_title(page: Page) -> str | None:
@@ -4328,7 +4741,17 @@ async def _read_dom_title_items(
 
 
 async def _goto_report(page: Page, url: str, attempts: int = 3) -> None:
-    """Navigate with a longer timeout, retrying on Power BI load stalls."""
+    """Reopen discovered reports by UI clicks; retain URL mode for CLI inputs."""
+    ui_target = _REPORT_UI_TARGETS.get(url)
+    if ui_target is not None:
+        from .discovery import navigate_to_report_by_ui
+
+        await navigate_to_report_by_ui(
+            page,
+            workspace_name=ui_target[0],
+            report_name=ui_target[1],
+        )
+        return
     last_error: Exception | None = None
     for attempt in range(attempts):
         try:
@@ -4344,6 +4767,51 @@ async def _goto_report(page: Page, url: str, attempts: int = 3) -> None:
                 await asyncio.sleep(5 * (attempt + 1))
     assert last_error is not None
     raise last_error
+
+
+async def _maximize_and_fit_report_if_page_scrolled(page: Page) -> bool:
+    if not all(
+        hasattr(page, attribute)
+        for attribute in ("evaluate", "set_viewport_size", "locator")
+    ):
+        return False
+    scroll_state = await page.evaluate(
+        _REPORT_PAGE_VERTICAL_SCROLL_SCRIPT
+    )
+    if not scroll_state.get("page_vertical_scroll"):
+        return False
+
+    await page.set_viewport_size(dict(CAPTURE_VIEWPORT))
+    fit_buttons = [page.locator("#fitToPageButton")]
+    if hasattr(page, "get_by_role"):
+        fit_buttons.append(
+            page.get_by_role(
+                "button",
+                name=re.compile(r"fit to (?:page|screen)", re.IGNORECASE),
+            )
+        )
+    for fit_button in fit_buttons:
+        try:
+            await fit_button.wait_for(state="visible", timeout=10_000)
+            await fit_button.click(timeout=5_000)
+            break
+        except PlaywrightTimeoutError:
+            continue
+    else:
+        logger.warning(
+            "Whole-report vertical scroll detected, but Power BI's Fit to "
+            "page control was unavailable; continuing report readiness without "
+            "the fit action."
+        )
+        return False
+    logger.info(
+        "Whole-report vertical scroll detected (%s); maximized capture "
+        "viewport to %sx%s and selected Fit to page.",
+        "document" if scroll_state.get("document_scroll") else "report container",
+        CAPTURE_VIEWPORT["width"],
+        CAPTURE_VIEWPORT["height"],
+    )
+    return True
 
 
 async def _wait_for_report_ready(page: Page) -> None:
@@ -4378,21 +4846,43 @@ async def _wait_for_report_ready(page: Page) -> None:
               // and text boxes have no chart markup, so text or controls also
               // count as rendered. Empty chart frames have neither.
               const rendered = visual => {
+                const rect = visual.getBoundingClientRect();
+                if (rect.width <= 20 || rect.height <= 20) return false;
                 if (visual.querySelector(
                   'svg, canvas, img, table, [role="grid"], [role="row"], ' +
                   '[role="combobox"], select'
                 )) {
                   return true;
                 }
-                return (visual.innerText || '').trim().length > 0;
+                const text = (visual.innerText || '').trim();
+                return text.replace(/[.…\\s]/g, '').length > 0;
               };
+              const isSlicer = visual => Boolean(
+                visual.matches(
+                  '[data-visual-type*="slicer" i], ' +
+                  '[data-visual-kind*="slicer" i]'
+                ) ||
+                visual.querySelector(
+                  '[role="combobox"], [role="listbox"], ' +
+                  '[aria-haspopup="listbox"], ' +
+                  '[data-visual-type*="slicer" i], ' +
+                  '[data-visual-kind*="slicer" i]'
+                )
+              );
               const busy = visuals.some(visual =>
                 [...visual.querySelectorAll(
                   '[aria-busy="true"], [role="progressbar"]'
                 )].some(visible)
               );
               if (visuals.length === 0) return hasFilterControl;
-              return !busy && visuals.every(rendered);
+              const renderedVisualCount = visuals.filter(rendered).length;
+              const dataVisuals = visuals.filter(visual => !isSlicer(visual));
+              const renderedDataVisualCount = dataVisuals.filter(rendered).length;
+              return !busy && (
+                dataVisuals.length === 0
+                  ? renderedVisualCount > 0
+                  : renderedDataVisualCount > 0
+              );
             }""",
             timeout=REPORT_READY_TIMEOUT_MS,
             polling=500,
@@ -4445,12 +4935,15 @@ async def _wait_for_report_ready(page: Page) -> None:
                 unrenderedVisuals: [...(main?.querySelectorAll(
                   'div.visualContainer, [data-visual-id]'
                 ) || [])].filter(visible).filter(visual => {
+                  const rect = visual.getBoundingClientRect();
+                  if (rect.width <= 20 || rect.height <= 20) return false;
                   const hasMarkup = visual.querySelector(
                     'svg, canvas, img, table, [role="grid"], [role="row"], ' +
                     '[role="combobox"], select'
                   );
+                  const text = (visual.innerText || '').trim();
                   return !hasMarkup &&
-                    (visual.innerText || '').trim().length === 0;
+                    text.replace(/[.…\\s]/g, '').length === 0;
                 }).map(visual => {
                   const rect = visual.getBoundingClientRect();
                   return {
@@ -4484,6 +4977,7 @@ async def _wait_for_report_ready(page: Page) -> None:
                 f"observed page state: {diagnostics!r}"
             ) from exc
     await _wait_for_report_load_to_settle(page)
+    await _maximize_and_fit_report_if_page_scrolled(page)
 
 
 async def _current_filter_value(
@@ -6134,6 +6628,28 @@ async def _select_filter(
                     f"{selection.name!r} from its open popup; available "
                     f"options: {available_options!r}"
                 )
+            if any(
+                _is_aggregate_value(_normalized_control_text(value))
+                for value in initial_selected
+            ):
+                await _close_slicer_dropdown(page, combo_control)
+                cleared = await _clear_slicer_if_button_available(
+                    page,
+                    frame,
+                    filter_item,
+                    values=available_options,
+                    control=combo_control,
+                )
+                if not cleared:
+                    raise RuntimeError(
+                        f"Cannot replace aggregate selection in filter "
+                        f"{selection.name!r}: Clear selections was unavailable "
+                        "or did not clear the filter"
+                    )
+                initial_selected = []
+                if not await _slicer_dropdown_is_open(combo_control):
+                    await _click_slicer_control(combo_control)
+                    await _wait_for_slicer_open(page, combo_control)
             target_was_selected = any(
                 _selection_matches(selection.value, value)
                 for value in initial_selected
@@ -6359,6 +6875,111 @@ def _export_element_from_json(
 def _export_element(title: str, filename: str, content: bytes, visual_type: str) -> dict[str, Any]:
     document = _export_json_document(title, filename, content)
     return _export_element_from_json(document, visual_type)
+
+
+def _unique_export_headers(values: Any) -> list[str]:
+    headers: list[str] = []
+    seen: set[str] = set()
+    for value in values if isinstance(values, list) else []:
+        header = re.sub(r"\s+", " ", str(value or "")).strip()
+        key = header.casefold()
+        if header and key not in seen:
+            seen.add(key)
+            headers.append(header)
+    return headers
+
+
+def _merge_table_headers(
+    extracted: dict[str, Any],
+    exported: list[dict[str, Any]],
+) -> None:
+    elements = extracted.setdefault("elements", [])
+    for exported_element in exported:
+        headers = _unique_export_headers(exported_element.get("categories"))
+        if not headers:
+            continue
+        title_key = _normalized_control_text(
+            str(exported_element.get("title") or "")
+        )
+        target = next(
+            (
+                element
+                for element in elements
+                if isinstance(element, dict)
+                and str(element.get("type") or "").casefold()
+                in {"table", "matrix"}
+                and _normalized_control_text(str(element.get("title") or ""))
+                == title_key
+            ),
+            None,
+        )
+        if target is None:
+            target = {
+                "type": exported_element.get("type") or "table",
+                "title": exported_element.get("title"),
+                "categories": headers,
+                "rows": [],
+                "values": [],
+                "data_sources": ["powerbi_export_headers"],
+            }
+            elements.append(target)
+        else:
+            target["categories"] = headers
+            target["rows"] = []
+            target["values"] = []
+            target["data_sources"] = list(
+                dict.fromkeys(
+                    [*(target.get("data_sources") or []), "powerbi_export_headers"]
+                )
+            )
+
+
+def _merge_table_dom_headers(
+    extracted: dict[str, Any],
+    table_headers: list[dict[str, Any]],
+) -> None:
+    elements = extracted.setdefault("elements", [])
+    for item in table_headers:
+        if not isinstance(item, dict):
+            continue
+        headers = _unique_export_headers(item.get("headers"))
+        if not headers:
+            continue
+        title_key = _normalized_control_text(str(item.get("title") or ""))
+        target = next(
+            (
+                element
+                for element in elements
+                if isinstance(element, dict)
+                and str(element.get("type") or "").casefold()
+                in {"table", "matrix"}
+                and _normalized_control_text(
+                    str(element.get("title") or "")
+                )
+                == title_key
+            ),
+            None,
+        )
+        if target is None:
+            elements.append(
+                {
+                    "type": "table",
+                    "title": item.get("title") or "Table",
+                    "categories": headers,
+                    "rows": [],
+                    "values": [],
+                    "data_sources": ["live_dom_headers"],
+                }
+            )
+        else:
+            target["categories"] = headers
+            target["rows"] = []
+            target["values"] = []
+            target["data_sources"] = list(
+                dict.fromkeys(
+                    [*(target.get("data_sources") or []), "live_dom_headers"]
+                )
+            )
 
 
 def _merge_extractions(
@@ -7662,7 +8283,33 @@ async def _find_export_data_option(page: Page) -> tuple[Any | None, bool]:
     return export_option, menu_open
 
 
-async def _wait_for_export_dialog_button(page: Page) -> Any | None:
+async def _select_current_layout_export(dialog: Any) -> bool:
+    current_layout = re.compile(r"^Data with current layout$", re.I)
+    try:
+        radios = dialog.get_by_role("radio", name=current_layout)
+        for index in range(await radios.count()):
+            radio = radios.nth(index)
+            if await radio.is_visible() and await radio.is_enabled():
+                await radio.click()
+                return True
+    except (PlaywrightError, AttributeError):
+        pass
+    try:
+        labels = dialog.get_by_text(current_layout)
+        for index in range(await labels.count()):
+            label = labels.nth(index)
+            if await label.is_visible():
+                await label.click()
+                return True
+    except (PlaywrightError, AttributeError):
+        pass
+    return False
+
+
+async def _wait_for_export_dialog_button(
+    page: Page,
+    require_current_layout: bool = False,
+) -> Any | None:
     deadline = time.monotonic() + EXPORT_DIALOG_BUTTON_TIMEOUT_MS / 1_000
     while time.monotonic() < deadline:
         for frame in page.frames:
@@ -7670,6 +8317,10 @@ async def _wait_for_export_dialog_button(page: Page) -> Any | None:
             for dialog_index in range(await dialogs.count()):
                 dialog = dialogs.nth(dialog_index)
                 if not await dialog.is_visible():
+                    continue
+                if require_current_layout and not await _select_current_layout_export(
+                    dialog
+                ):
                     continue
                 buttons = dialog.get_by_role(
                     "button", name=re.compile(r"^Export$", re.I)
@@ -7841,6 +8492,27 @@ async def _wait_for_visual_more_options(
     return None
 
 
+async def _click_table_visual_value(container: Any) -> bool:
+    """Activate a table or matrix so Power BI reveals its visual toolbar."""
+    for selector in (
+        '[role="rowheader"]',
+        '[role="gridcell"]',
+        'td',
+        '[role="columnheader"]',
+    ):
+        cells = container.locator(selector)
+        for cell_index in range(await cells.count()):
+            cell = cells.nth(cell_index)
+            if not await cell.is_visible():
+                continue
+            try:
+                await cell.click(force=True)
+                return True
+            except PlaywrightError:
+                continue
+    return False
+
+
 def _needs_scrolled_view_fallback(
     visual_count: int, export_options: list[dict[str, Any]]
 ) -> bool:
@@ -7859,6 +8531,10 @@ async def _export_visual_data(
     page_name: str | None = None,
     filter_state: str | None = None,
     operation_log_path: Path | None = None,
+    visual_type_filter: set[str] | None = None,
+    headers_only: bool = False,
+    require_current_layout: bool = False,
+    visual_id_filter: str | None = None,
 ) -> tuple[list[dict[str, Any]], bool, list[dict[str, Any]]]:
     export_directory.mkdir(parents=True, exist_ok=True)
     evidence_directory = export_directory / "evidence"
@@ -7898,6 +8574,16 @@ async def _export_visual_data(
                     "type": "unknown",
                     "visual_id": None,
                 }
+            if (
+                visual_type_filter
+                and visual.get("type") not in visual_type_filter
+            ):
+                continue
+            if (
+                visual_id_filter is not None
+                and str(visual.get("visual_id") or "") != visual_id_filter
+            ):
+                continue
             visuals.append((frame, container, visual))
 
     exported: list[dict[str, Any]] = []
@@ -7988,6 +8674,17 @@ async def _export_visual_data(
             continue
 
         try:
+            if visual["type"] == "table" and not await _click_table_visual_value(
+                container
+            ):
+                record["export_status"] = "visual_inspection_failed"
+                record["export_error"] = (
+                    "No visible table or matrix row/value was available to "
+                    "activate the visual toolbar"
+                )
+                record_visual_timing()
+                export_options.append(record)
+                continue
             bounds = await container.bounding_box()
             if bounds and bounds["width"] > 0 and bounds["height"] > 0:
                 record["visual_bounds"] = {
@@ -8096,7 +8793,10 @@ async def _export_visual_data(
         ).as_posix()
 
         try:
-            export_button = await _wait_for_export_dialog_button(page)
+            export_button = await _wait_for_export_dialog_button(
+                page,
+                require_current_layout=headers_only or require_current_layout,
+            )
         except PlaywrightError as exc:
             record["export_status"] = "export_interaction_failed"
             record["export_error"] = str(exc)
@@ -8111,7 +8811,9 @@ async def _export_visual_data(
             await finish_export_attempt()
             continue
 
-        record["export_data_format"] = "default"
+        record["export_data_format"] = (
+            "current_layout" if headers_only or require_current_layout else "default"
+        )
 
         try:
             async with page.expect_download(
@@ -8140,7 +8842,16 @@ async def _export_visual_data(
         extension = Path(download.suggested_filename).suffix.casefold()
         export_path = export_directory / f"{index:02d}_{safe_title}{extension}"
         try:
-            await download.save_as(str(export_path))
+            with measure_stage(
+                operation_log_path,
+                job_id=job_id,
+                operation="save_export_download",
+                dashboard=dashboard,
+                page=page_name,
+                filter_state=filter_state,
+                visual=visual["title"],
+            ):
+                await download.save_as(str(export_path))
         except Exception as exc:
             logger.exception(
                 "Could not save export for visual %s on page %s",
@@ -8189,6 +8900,9 @@ async def _export_visual_data(
                 download.suggested_filename,
                 export_path.read_bytes(),
             )
+            if headers_only:
+                for sheet in export_document.get("worksheets", []):
+                    sheet["rows"] = []
             json_path.write_text(
                 json.dumps(export_document, indent=2, ensure_ascii=False),
                 encoding="utf-8",
@@ -8196,6 +8910,14 @@ async def _export_visual_data(
             exported_element = _export_element_from_json(
                 export_document, visual["type"]
             )
+            if headers_only:
+                try:
+                    export_path.unlink()
+                except OSError:
+                    logger.warning(
+                        "Could not remove temporary header export %s",
+                        export_path,
+                    )
         except ValueError as exc:
             record.update(
                 {
@@ -8236,7 +8958,7 @@ async def _export_visual_data(
             {
                 "exportOptionAvailable": True,
                 "export_status": "exported",
-                "export_data_format": "default",
+                "export_data_format": record["export_data_format"],
                 "export_file": export_path.name,
                 "export_file_path": export_path.relative_to(
                     export_directory.parent
@@ -8416,6 +9138,21 @@ async def _clear_exported_visual_highlights(page: Page, marker: str) -> None:
         ).evaluate_all("(elements) => elements.forEach(element => element.remove())")
 
 
+async def _wait_for_scroll_content_change(
+    page: Page,
+    previous_screenshot: bytes,
+) -> bytes:
+    deadline = time.monotonic() + SCROLL_SETTLE_TIMEOUT_SECONDS
+    latest_screenshot = previous_screenshot
+    previous_digest = hashlib.sha256(previous_screenshot).digest()
+    while time.monotonic() < deadline:
+        await page.wait_for_timeout(SCROLL_POLL_MS)
+        latest_screenshot = await page.screenshot(full_page=False)
+        if hashlib.sha256(latest_screenshot).digest() != previous_digest:
+            return latest_screenshot
+    return latest_screenshot
+
+
 async def _extract_scrolled_views(
     page: Page,
     page_name: str,
@@ -8448,18 +9185,22 @@ async def _extract_scrolled_views(
                     await _move_pointer_off_dashboard(page)
                     previous = await page.screenshot(full_page=False)
                     await button.evaluate("(element) => element.click()")
-                    await page.wait_for_timeout(300)
                     await _move_pointer_off_dashboard(page)
+                    scroll_wait_started = time.perf_counter()
+                    screenshot = await _wait_for_scroll_content_change(
+                        page, previous
+                    )
+                    if performance_seconds is not None:
+                        performance_seconds["scroll_settle_seconds"] = (
+                            performance_seconds.get("scroll_settle_seconds", 0.0)
+                            + time.perf_counter() - scroll_wait_started
+                        )
                     index += 1
                     screenshot_path = (
                         screenshot_directory / f"scrolled_{index:02d}.png"
                     )
-                    screenshot = await page.screenshot(
-                        path=str(screenshot_path), full_page=False
-                    )
-                    if hashlib.sha256(screenshot).digest() == hashlib.sha256(
-                        previous
-                    ).digest():
+                    screenshot_path.write_bytes(screenshot)
+                    if screenshot == previous:
                         break
                     screenshots.append(screenshot)
 
@@ -8479,6 +9220,639 @@ async def _extract_scrolled_views(
         page_name,
         filter_state,
     )
+
+
+def _numeric_export_value(value: Any) -> bool:
+    if isinstance(value, bool) or value is None:
+        return False
+    text = str(value).strip().replace(",", "")
+    if not text:
+        return False
+    if text.endswith("%"):
+        text = text[:-1].strip()
+    try:
+        float(text)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def _detect_export_hierarchy(exported_element: dict[str, Any]) -> dict[str, Any]:
+    categories = [
+        str(value).strip()
+        for value in exported_element.get("categories") or []
+        if str(value).strip()
+    ]
+    raw_rows = exported_element.get("rows") or []
+    rows = raw_rows if isinstance(raw_rows, list) else []
+    if not categories or not rows:
+        return {
+            "status": "UNVERIFIED",
+            "reason": "Export did not contain enough tabular data for hierarchy detection.",
+            "columns": [],
+            "rows": [],
+            "depth": 0,
+        }
+
+    normalized_rows: list[list[Any]] = []
+    for row in rows:
+        if isinstance(row, dict):
+            normalized_rows.append([row.get(category) for category in categories])
+        elif isinstance(row, list):
+            normalized_rows.append(row[: len(categories)])
+        else:
+            normalized_rows.append([])
+
+    column_profiles: list[dict[str, Any]] = []
+    for index, name in enumerate(categories):
+        values = [
+            row[index] if index < len(row) else None
+            for row in normalized_rows
+        ]
+        populated = [value for value in values if str(value or "").strip()]
+        numeric = [value for value in populated if _numeric_export_value(value)]
+        column_profiles.append(
+            {
+                "index": index,
+                "name": name,
+                "populated_count": len(populated),
+                "populated_ratio": round(
+                    len(populated) / max(1, len(normalized_rows)), 4
+                ),
+                "numeric_ratio": round(len(numeric) / max(1, len(populated)), 4),
+            }
+        )
+
+    first_measure = next(
+        (
+            profile["index"]
+            for profile in column_profiles
+            if profile["populated_count"] >= 2
+            and profile["numeric_ratio"] >= 0.75
+        ),
+        len(categories),
+    )
+    hierarchy_profiles = [
+        profile
+        for profile in column_profiles[:first_measure]
+        if profile["populated_count"]
+        and profile["numeric_ratio"] < 0.75
+    ]
+    if not hierarchy_profiles:
+        return {
+            "status": "UNVERIFIED",
+            "reason": "No non-numeric hierarchy dimension columns were inferred.",
+            "columns": column_profiles,
+            "rows": [],
+            "depth": 0,
+        }
+
+    hierarchy_indexes = [profile["index"] for profile in hierarchy_profiles]
+    current_values: list[str | None] = [None] * len(hierarchy_indexes)
+    detected_rows: list[dict[str, Any]] = []
+    max_depth = 0
+    for row_index, row in enumerate(normalized_rows):
+        populated_levels: list[int] = []
+        for level, column_index in enumerate(hierarchy_indexes):
+            value = row[column_index] if column_index < len(row) else None
+            text = str(value or "").strip()
+            if text:
+                current_values[level] = re.sub(r"\s+", " ", text)
+                populated_levels.append(level)
+                for deeper in range(level + 1, len(current_values)):
+                    current_values[deeper] = None
+        depth = max(populated_levels, default=-1) + 1
+        max_depth = max(max_depth, depth)
+        path = [
+            value
+            for value in current_values[:depth]
+            if value is not None
+        ]
+        if depth == 0:
+            row_type = "total"
+            current_value = None
+        elif depth < len(hierarchy_indexes):
+            row_type = "subtotal"
+            current_value = path[-1] if path else None
+        else:
+            row_type = "detail"
+            current_value = path[-1] if path else None
+        detected_rows.append(
+            {
+                "original_row_index": row_index,
+                "original_row_order": row_index,
+                "hierarchy_level": depth,
+                "hierarchy_column": (
+                    hierarchy_profiles[depth - 1]["name"] if depth else None
+                ),
+                "parent_path": path[:-1],
+                "current_value": current_value,
+                "row_type": row_type,
+                "values": row,
+            }
+        )
+
+    return {
+        "status": "PASS",
+        "columns": [
+            {
+                **profile,
+                "level": level + 1,
+                "role": "hierarchy_dimension",
+            }
+            for level, profile in enumerate(hierarchy_profiles)
+        ],
+        "rows": detected_rows,
+        "depth": max_depth,
+        "row_count": len(detected_rows),
+        "detail_row_count": sum(
+            row["row_type"] == "detail" for row in detected_rows
+        ),
+        "subtotal_row_count": sum(
+            row["row_type"] == "subtotal" for row in detected_rows
+        ),
+        "total_row_count": sum(
+            row["row_type"] == "total" for row in detected_rows
+        ),
+    }
+
+
+def _hierarchy_comparison_payload(structure: dict[str, Any]) -> dict[str, Any]:
+    """Keep only exported hierarchy fields used by deterministic comparison."""
+    columns = [
+        {
+            key: column[key]
+            for key in ("name", "level", "role")
+            if key in column
+        }
+        for column in structure.get("columns") or []
+        if isinstance(column, dict)
+    ]
+    rows = [
+        {
+            key: row[key]
+            for key in (
+                "original_row_index",
+                "original_row_order",
+                "hierarchy_level",
+                "parent_path",
+                "current_value",
+                "row_type",
+            )
+            if key in row
+        }
+        for row in structure.get("rows") or []
+        if isinstance(row, dict)
+    ]
+    return {
+        "status": structure.get("status", "UNVERIFIED"),
+        "columns": columns,
+        "rows": rows,
+        "depth": structure.get("depth", 0),
+        "row_count": len(rows),
+    }
+
+
+async def _hierarchy_menu(page: Page) -> Any:
+    return page.locator(
+        'pbi-menu[data-testid="pbi-menu"][role="menu"]:visible, '
+        '[data-testid="pbi-menu"][role="menu"]:visible, '
+        '[role="menu"][aria-label="More options"]:visible'
+    ).last
+
+
+async def _hierarchy_menu_action(
+    menu: Any, action: str, *, allow_disabled: bool = False
+) -> Any | None:
+    items = menu.locator(
+        '[role="menuitem"], [role="menuitemcheckbox"], '
+        'button, [data-automation-type="dropdown-item"]'
+    )
+    pattern = re.compile(
+        r"expand\s+all\s+down\s+one\s+level|expand.*one\s+level"
+        if action == "expand"
+        else (
+            r"\bdrill\s+up\b"
+            if action == "drill_up"
+            else (
+                r"\bgo\s+to\s+(?:the\s+)?next\s+level\b"
+                if action == "next_level"
+                else r"\bdrill\s+down\b"
+            )
+        ),
+        re.I,
+    )
+    for index in range(await items.count()):
+        item = items.nth(index)
+        if not await item.is_visible():
+            continue
+        text = await item.evaluate(
+            """item => (item.getAttribute('aria-label') ||
+              item.getAttribute('title') ||
+              item.getAttribute('aria-description') ||
+              item.innerText || item.textContent || '')
+              .replace(/\\s+/g, ' ').trim()"""
+        )
+        if not pattern.search(str(text)):
+            continue
+        disabled = (
+            await item.get_attribute("aria-disabled") == "true"
+            or await item.get_attribute("disabled") is not None
+            or not await item.is_enabled()
+        )
+        if disabled and not allow_disabled:
+            continue
+        return item
+    return None
+
+
+async def _hierarchy_table_visuals(page: Page) -> list[dict[str, str]]:
+    """Return table visuals whose menu exposes the Expand hierarchy action."""
+    buttons = page.locator('button, [role="button"]')
+    visuals: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for index in range(await buttons.count()):
+        button = buttons.nth(index)
+        if not await button.is_visible():
+            continue
+        info = await button.evaluate(
+            r"""button => {
+              const label = (button.getAttribute('aria-label') ||
+                button.getAttribute('title') || button.innerText || '')
+                .replace(/\\s+/g, ' ').trim();
+              const root = button.closest(
+                '[data-visual-id], .visualContainer, [role="group"]'
+              );
+              const table = root?.querySelector(
+                '[role="grid"], [role="table"], th, [role="columnheader"]'
+              );
+              const heading = root?.querySelector(
+                '[role="heading"], h1, h2, h3, [class*="visualTitle"]'
+              );
+              const title = (heading?.innerText || root?.getAttribute(
+                'aria-label'
+              ) || '').replace(/\s+/g, ' ').trim();
+              return label.toLowerCase().includes('more options') && table
+                ? {
+                    visual_id: root.getAttribute('data-visual-id') || '',
+                    title
+                  }
+                : null;
+            }"""
+        )
+        if not info:
+            continue
+        dom_visual_id = str(info.get("visual_id") or "")
+        visual_id = dom_visual_id or str(info.get("title") or "")
+        if not visual_id or visual_id in seen:
+            continue
+        await button.click(force=True)
+        menu = await _hierarchy_menu(page)
+        if not await menu.is_visible():
+            continue
+        expand = await _hierarchy_menu_action(menu, "expand")
+        await page.keyboard.press("Escape")
+        if expand is not None:
+            seen.add(visual_id)
+            visuals.append(
+                {
+                    "visual_id": visual_id,
+                    "dom_visual_id": dom_visual_id,
+                    "title": str(info.get("title") or ""),
+                }
+            )
+    return visuals
+
+
+async def _run_hierarchy_table_workflow(
+    page: Page,
+    destination: Path,
+    safe_page: str,
+    safe_state: str,
+    settle_seconds: float,
+) -> dict[str, Any]:
+    """Expand, drill up to the root, expand again, then export one Table."""
+    visuals = await _hierarchy_table_visuals(page)
+    if not visuals:
+        probe_root = Path(
+            tempfile.mkdtemp(prefix="powerbi-hierarchy-probe-")
+        )
+        try:
+            exported, _, options = await _export_visual_data(
+                page,
+                probe_root,
+                visual_type_filter={"table", "matrix"},
+                headers_only=False,
+                require_current_layout=True,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Hierarchy export fallback failed for %s: %s",
+                safe_page,
+                exc,
+            )
+            shutil.rmtree(probe_root, ignore_errors=True)
+            return {"detected": False, "method": "not_hierarchical"}
+
+        results: list[dict[str, Any]] = []
+        for exported_element in exported:
+            structure = _detect_export_hierarchy(exported_element)
+            columns = structure.get("columns") or []
+            detected_rows = structure.get("rows") or []
+            if structure.get("status") != "PASS" or not columns or not detected_rows:
+                continue
+            results.append(
+                {
+                    "visual_id": exported_element.get("visual_id") or "",
+                    "title": exported_element.get("title") or "",
+                    "method": "hierarchy_export_fallback",
+                    "status": structure.get("status", "UNVERIFIED"),
+                    "row_headers": [
+                        {
+                            "text": row.get("current_value"),
+                            "level": row.get("hierarchy_level", 1),
+                            "parent_path": row.get("parent_path", []),
+                            "row_type": row.get("row_type"),
+                        }
+                        for row in detected_rows
+                    ],
+                    "column_headers": [
+                        column.get("name")
+                        for column in columns
+                        if isinstance(column, dict)
+                    ],
+                    "hierarchy_structure": _hierarchy_comparison_payload(structure),
+                    "export_options": options,
+                }
+            )
+        if results:
+            target = (
+                destination
+                / safe_page
+                / "hierarchy_exports"
+                / safe_state
+            )
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(probe_root), str(target))
+            return {
+                "detected": True,
+                "method": "hierarchy_export_fallback",
+                "visuals": results,
+            }
+        shutil.rmtree(probe_root, ignore_errors=True)
+        return {"detected": False, "method": "not_hierarchical"}
+    results: list[dict[str, Any]] = []
+    for visual in visuals:
+        visual_id = visual["visual_id"]
+        dom_visual_id = visual.get("dom_visual_id") or ""
+        record: dict[str, Any] = {
+            "visual_id": visual_id,
+            "title": visual["title"],
+            "method": "hierarchy",
+            "status": "UNVERIFIED",
+            "row_headers": [],
+            "column_headers": [],
+            "hierarchy_structure": {
+                "status": "UNVERIFIED",
+                "columns": [],
+                "rows": [],
+                "depth": 0,
+            },
+            "drill_expand": {
+                "status": "UNVERIFIED",
+                "export_data_format": "current_layout",
+                "levels_expanded": 0,
+            },
+            "drill_down": {
+                "status": "SKIPPED",
+                "levels": [],
+            },
+        }
+        try:
+            cell = page.locator(
+                '[role="gridcell"], [role="rowheader"], td'
+            )
+            clicked = False
+            for cell_index in range(await cell.count()):
+                candidate = cell.nth(cell_index)
+                if not await candidate.is_visible():
+                    continue
+                same_visual = await candidate.evaluate(
+                    r"""(cell, visualId) => {
+                      const root = cell.closest(
+                        '[data-visual-id], .visualContainer, [role="group"]'
+                      );
+                      const heading = root?.querySelector(
+                        '[role="heading"], h1, h2, h3, [class*="visualTitle"]'
+                      );
+                      const title = (heading?.innerText || root?.getAttribute(
+                        'aria-label'
+                      ) || '').replace(/\s+/g, ' ').trim();
+                      return (root?.getAttribute('data-visual-id') || title) === visualId;
+                    }""",
+                    visual_id,
+                )
+                if same_visual:
+                    await candidate.click()
+                    clicked = True
+                    break
+            if not clicked:
+                raise RuntimeError("No visible Table cell was available")
+            await _wait_for_state_render(page, settle_seconds)
+
+            async def open_action(action: str) -> Any | None:
+                buttons = page.locator('button, [role="button"]')
+                for button_index in range(await buttons.count()):
+                    button = buttons.nth(button_index)
+                    if not await button.is_visible():
+                        continue
+                    matches = await button.evaluate(
+                        r"""(button, visualId) => {
+                          const root = button.closest(
+                            '[data-visual-id], .visualContainer, [role="group"]'
+                          );
+                          const label = (button.getAttribute('aria-label') ||
+                            button.getAttribute('title') || '').toLowerCase();
+                          const heading = root?.querySelector(
+                            '[role="heading"], h1, h2, h3, [class*="visualTitle"]'
+                          );
+                          const title = (heading?.innerText || root?.getAttribute(
+                            'aria-label'
+                          ) || '').replace(/\s+/g, ' ').trim();
+                          return (root?.getAttribute('data-visual-id') || title) ===
+                            visualId && label.includes('more options');
+                        }""",
+                        visual_id,
+                    )
+                    if matches:
+                        await button.click(force=True)
+                        menu = await _hierarchy_menu(page)
+                        if await menu.is_visible():
+                            result = await _hierarchy_menu_action(menu, action)
+                            if result is None:
+                                await page.keyboard.press("Escape")
+                            return result
+                return None
+
+            levels_expanded = 0
+            for _ in range(10):
+                expand = await open_action("expand")
+                if expand is None:
+                    break
+                await expand.click(force=True)
+                await _wait_for_state_render(page, settle_seconds)
+                levels_expanded += 1
+            else:
+                raise RuntimeError(
+                    "Expand All Down One Level exceeded the safety limit"
+                )
+            record["drill_expand"]["levels_expanded"] = levels_expanded
+            # Keep the export operation cooperative with other independent
+            # page tasks. No other action is started on this page until this
+            # task has verified and parsed the completed download.
+            export_task = asyncio.create_task(
+                _export_visual_data(
+                    page,
+                    destination
+                    / safe_page
+                    / "hierarchy_exports"
+                    / safe_state,
+                    visual_type_filter={"table", "matrix"},
+                    visual_id_filter=dom_visual_id or None,
+                    headers_only=False,
+                    require_current_layout=True,
+                )
+            )
+            try:
+                exported, _, options = await export_task
+            except asyncio.CancelledError:
+                if not export_task.done():
+                    export_task.cancel()
+                raise
+            matching = next(
+                (
+                    item
+                    for item in exported
+                    if (
+                        visual_id
+                        and str(item.get("visual_id") or "") == visual_id
+                    )
+                    or (
+                        visual.get("title")
+                        and str(item.get("title") or "").casefold()
+                        == visual["title"].casefold()
+                    )
+                ),
+                exported[0] if exported else {},
+            )
+            detected_structure = _detect_export_hierarchy(matching)
+            record["hierarchy_structure"] = _hierarchy_comparison_payload(
+                detected_structure
+            )
+            record["column_headers"] = [
+                column.get("name")
+                for column in record["hierarchy_structure"].get("columns") or []
+                if isinstance(column, dict) and column.get("name")
+            ]
+            detected_structure_rows = record["hierarchy_structure"].get("rows") or []
+            record["row_headers"] = (
+                [
+                    {
+                        "text": row.get("current_value"),
+                        "level": row.get("hierarchy_level", 1),
+                        "parent_path": row.get("parent_path", []),
+                        "row_type": row.get("row_type"),
+                    }
+                    for row in detected_structure_rows
+                ]
+            )
+            record["export_options"] = options
+            if not record["row_headers"]:
+                raise RuntimeError("Hierarchy export contained no row headers")
+            if record["hierarchy_structure"].get("status") != "PASS":
+                raise RuntimeError(
+                    record["hierarchy_structure"].get(
+                        "reason", "Hierarchy structure could not be detected"
+                    )
+                )
+            record["drill_expand"].update(
+                {
+                    "status": "PASS",
+                    "export_data_format": "current_layout",
+                    "export_options": options,
+                }
+            )
+
+            # Stage 2: return to the higher level before DOM/screenshot drill-down.
+            drill_up = await open_action("drill_up")
+            if drill_up is not None:
+                await drill_up.click(force=True)
+                await _wait_for_state_render(page, settle_seconds)
+                record["drill_up"] = {"status": "PASS"}
+            else:
+                record["drill_up"] = {
+                    "status": "SKIPPED",
+                    "reason": "Drill Up control was unavailable",
+                }
+
+            # Stage 3: Drill Down is intentionally kept separate from export data.
+            drill_down_levels: list[dict[str, Any]] = []
+            snapshot_key = visual.get("title") or ""
+            previous_snapshot = await page.evaluate(
+                _VISUAL_SNAPSHOT_SCRIPT, snapshot_key
+            )
+            for level in range(1, MAX_DRILL_LEVELS + 1):
+                drill_down = await open_action("drill_down")
+                if drill_down is None:
+                    break
+                await drill_down.click(force=True)
+                after_snapshot = None
+                deadline = asyncio.get_running_loop().time() + 8
+                while asyncio.get_running_loop().time() < deadline:
+                    after_snapshot = await page.evaluate(
+                        _VISUAL_SNAPSHOT_SCRIPT, snapshot_key
+                    )
+                    if drill_step_verified(previous_snapshot, after_snapshot):
+                        break
+                    await page.wait_for_timeout(250)
+                screenshot_path = (
+                    destination
+                    / safe_page
+                    / "hierarchy_drill_down"
+                    / safe_state
+                    / f"{visual_id or 'visual'}_level_{level:02d}.png"
+                )
+                await _capture_png(page, screenshot_path, settle_seconds)
+                drill_down_levels.append(
+                    {
+                        "level": level,
+                        "screenshot": str(
+                            screenshot_path.relative_to(destination).as_posix()
+                        ),
+                        "headers": (after_snapshot or {}).get("headers", []),
+                        "rows": (after_snapshot or {}).get("rows", []),
+                        "verified": drill_step_verified(
+                            previous_snapshot, after_snapshot
+                        ),
+                    }
+                )
+                if not drill_down_levels[-1]["verified"]:
+                    break
+                previous_snapshot = after_snapshot
+            record["drill_down"] = {
+                "status": "PASS" if drill_down_levels else "SKIPPED",
+                "levels": drill_down_levels,
+            }
+            record["status"] = "PASS"
+        except Exception as exc:
+            logger.warning(
+                "Hierarchical Table extraction failed for %s: %s",
+                visual.get("title") or visual_id,
+                exc,
+            )
+            record["failure_reason"] = f"{type(exc).__name__}: {exc}"
+        results.append(record)
+    return {"detected": True, "method": "hierarchy", "visuals": results}
 
 
 async def _capture_state(
@@ -8545,6 +9919,20 @@ async def _capture_state(
             path=str(screenshot_path), full_page=True
         )
     timings["screenshot"] = time.perf_counter() - stage_started_at
+    table_sort_by_available = False
+    extraction_record: dict[str, Any] = {}
+    hierarchy_extraction: dict[str, Any] = {
+        "detected": False,
+        "method": "not_hierarchical",
+        "visuals": [],
+    }
+    if extract_visual_data:
+        try:
+            table_sort_by_available = bool(
+                await page.evaluate(_TABLE_HORIZONTAL_SCROLL_SCRIPT)
+            )
+        except (Exception, AssertionError, AttributeError):
+            table_sort_by_available = False
 
     extraction_log_context = (
         {
@@ -8619,6 +10007,7 @@ async def _capture_state(
                 ],
             },
         }
+    _normalize_chart_extraction(extracted, visuals)
     if callable(getattr(page, "evaluate", None)):
         report_title = await _read_report_title(page)
         if report_title:
@@ -8636,6 +10025,124 @@ async def _capture_state(
                 notes.append(
                     f"{render_warning['reason']}; visual values are unverified."
                 )
+    table_header_extraction_method = "live_dom"
+    if extract_visual_data:
+        try:
+            from .validation_scenarios import _extract_filtered_table_headers
+
+            table_headers = await _extract_filtered_table_headers(
+                page, extraction_record=extraction_record
+            )
+            table_visuals = extraction_record.get("visuals", [])
+            if table_visuals:
+                _merge_table_headers(
+                    extracted,
+                    [
+                        {
+                            "type": "table",
+                            "title": visual.get("title"),
+                            "categories": visual.get("headers"),
+                        }
+                        for visual in table_visuals
+                    ],
+                )
+            elif table_headers:
+                _merge_table_headers(
+                    extracted,
+                    [{"type": "table", "title": "", "categories": table_headers}],
+                )
+            table_header_extraction_method = extraction_record.get(
+                "method", "SORT_MENU"
+            )
+        except (Exception, AssertionError, AttributeError) as exc:
+            logger.warning(
+                "Table header inspection failed for %s/%s; using DOM fallback: %s",
+                dashboard,
+                page_name,
+                exc,
+            )
+            try:
+                table_headers = await page.evaluate(_TABLE_HEADERS_SCRIPT)
+                _merge_table_dom_headers(extracted, table_headers)
+            except (Exception, AssertionError, AttributeError) as dom_exc:
+                logger.warning(
+                    "Table header DOM fallback failed for %s/%s: %s",
+                    dashboard,
+                    page_name,
+                    dom_exc,
+                )
+            table_header_extraction_method = "HORIZONTAL_SCROLL"
+    if extract_visual_data:
+        with measure_stage(
+            operation_log_path,
+            job_id=job_id,
+            operation="hierarchy_table_extraction",
+            dashboard=dashboard,
+            page=page_name,
+            filter_state=state_name,
+        ):
+            hierarchy_extraction = await _run_hierarchy_table_workflow(
+                page,
+                destination,
+                safe_page,
+                safe_state,
+                settle_seconds,
+            )
+        for hierarchy_visual in hierarchy_extraction.get("visuals", []):
+            successful = hierarchy_visual.get("status") == "PASS"
+            if successful:
+                _merge_table_headers(
+                    extracted,
+                    [
+                        {
+                            "type": "table",
+                            "title": hierarchy_visual.get("title") or "",
+                            "categories": hierarchy_visual.get(
+                                "column_headers", []
+                            ),
+                        }
+                    ],
+                )
+            for element in extracted.get("elements", []):
+                if (
+                    isinstance(element, dict)
+                    and str(element.get("type") or "").casefold() == "table"
+                    and (
+                        not hierarchy_visual.get("title")
+                        or _normalized_control_text(
+                            str(element.get("title") or "")
+                        )
+                        == _normalized_control_text(
+                            str(hierarchy_visual.get("title") or "")
+                        )
+                        or str(element.get("visual_id") or "")
+                        == str(hierarchy_visual.get("visual_id") or "")
+                    )
+                ):
+                    element["row_headers"] = hierarchy_visual.get(
+                        "row_headers", []
+                    )
+                    element["hierarchy_structure"] = hierarchy_visual.get(
+                        "hierarchy_structure",
+                        {
+                            "status": "UNVERIFIED",
+                            "columns": [],
+                            "rows": [],
+                            "depth": 0,
+                        },
+                    )
+                    element["hierarchy_extraction"] = (
+                        "sort_expand_drill_up"
+                        if successful
+                        else "unverified"
+                    )
+        extracted["hierarchy_table_extraction"] = hierarchy_extraction
+    extracted["table_header_extraction"] = {
+        "horizontal_scroll_available": table_sort_by_available,
+        "method": table_header_extraction_method,
+        "sort_by_columns": extraction_record.get("sort_by_columns", []),
+        "visuals": extraction_record.get("visuals", []),
+    }
     timings["screenshot_extraction"] = time.perf_counter() - stage_started_at
     if not use_screenshot_extraction:
         write_operation_event(
@@ -8699,10 +10206,13 @@ async def _capture_state(
     extracted["capture_performance_seconds"] = {
         name: round(duration, 3)
         for name, duration in timings.items()
-        if name != "extraction_cache_hits"
+        if name not in {"extraction_cache_hits", "extraction_cache_misses"}
     }
     extracted["capture_performance_counts"] = {
-        "extraction_cache_hits": int(timings.get("extraction_cache_hits", 0))
+        "extraction_cache_hits": int(timings.get("extraction_cache_hits", 0)),
+        "extraction_cache_misses": int(
+            timings.get("extraction_cache_misses", 0)
+        ),
     }
     logger.info(
         "Captured dashboard state %s in %.3fs "
@@ -9224,7 +10734,7 @@ async def _capture_filter_case(
                     selection,
                     destination,
                     settle_seconds,
-                    dict(extraction_cache),
+                    extraction_cache,
                     filter_inventory=filter_inventory,
                     job_id=job_id,
                     operation_log_path=operation_log_path,
@@ -10133,6 +11643,8 @@ async def _detect_and_apply_page_visual_types(
             if not isinstance(visual, dict) or not is_header_divider(visual)
         ]
     screenshot_path = Path(reference_state.screenshot)
+    if "scroll" in screenshot_path.name.casefold():
+        return
     if not screenshot_path.is_file():
         raise FileNotFoundError(
             "Representative screenshot is missing for visual type detection: "
@@ -10189,6 +11701,7 @@ async def _capture_dashboard_page(
     extract_visual_data: bool = True,
     include_filter_cases: bool = True,
     detect_visual_types: bool = False,
+    initial_page: Page | None = None,
 ) -> dict[str, Any]:
     page_wait_started_at = time.perf_counter()
     write_operation_event(
@@ -10211,25 +11724,31 @@ async def _capture_dashboard_page(
             page=page_name,
             duration_seconds=time.perf_counter() - page_wait_started_at,
         )
-        with measure_stage(
-            operation_log_path,
-            job_id=job_id,
-            operation="create_page_context",
-            dashboard=dashboard,
-            page=page_name,
-        ):
-            context: BrowserContext = await browser.new_context(**context_options)
-        context_open = True
-        try:
-            page = await context.new_page()
+        if initial_page is None:
             with measure_stage(
                 operation_log_path,
                 job_id=job_id,
-                operation="navigate_to_report_page",
+                operation="create_page_context",
                 dashboard=dashboard,
                 page=page_name,
             ):
-                await _goto_report(page, url)
+                context: BrowserContext = await browser.new_context(**context_options)
+            context_open = True
+        else:
+            context = initial_page.context
+            context_open = False
+        try:
+            page = initial_page
+            if page is None:
+                page = await context.new_page()
+                with measure_stage(
+                    operation_log_path,
+                    job_id=job_id,
+                    operation="navigate_to_report_page",
+                    dashboard=dashboard,
+                    page=page_name,
+                ):
+                    await _goto_report(page, url)
             with measure_stage(
                 operation_log_path,
                 job_id=job_id,
@@ -10422,8 +11941,9 @@ async def _capture_dashboard_page(
                     page=page_name,
                     filter_state="initial",
                 )
-            await context.close()
-            context_open = False
+            if context_open:
+                await context.close()
+                context_open = False
 
             selections = _filter_case_combinations(execution_plan)
 
@@ -10526,6 +12046,7 @@ async def capture_dashboard(
     include_filter_cases: bool = True,
     detect_visual_types: bool = False,
     shared_browser: Browser | None = None,
+    initial_page: Page | None = None,
 ) -> list[DashboardState]:
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "capture_performance.jsonl").write_text(
@@ -10556,24 +12077,28 @@ async def capture_dashboard(
                 MAX_PARALLEL_PAGE_CAPTURES
             )
         try:
-            with measure_stage(
-                operation_log_path,
-                job_id=job_id,
-                operation="create_page_discovery_context",
-                dashboard=dashboard,
-            ):
-                discovery_context: BrowserContext = await browser.new_context(
-                    **context_options
-                )
-            try:
-                page = await discovery_context.new_page()
+            discovery_context = None
+            if initial_page is None:
                 with measure_stage(
                     operation_log_path,
                     job_id=job_id,
-                    operation="navigate_dashboard_for_discovery",
+                    operation="create_page_discovery_context",
                     dashboard=dashboard,
                 ):
-                    await _goto_report(page, url)
+                    discovery_context = await browser.new_context(
+                        **context_options
+                    )
+            try:
+                page = initial_page
+                if page is None:
+                    page = await discovery_context.new_page()
+                    with measure_stage(
+                        operation_log_path,
+                        job_id=job_id,
+                        operation="navigate_dashboard_for_discovery",
+                        dashboard=dashboard,
+                    ):
+                        await _goto_report(page, url)
                 with measure_stage(
                     operation_log_path,
                     job_id=job_id,
@@ -10605,7 +12130,8 @@ async def capture_dashboard(
                     initial_inventory["pages"] or ["Report"]
                 )
             finally:
-                await discovery_context.close()
+                if discovery_context is not None:
+                    await discovery_context.close()
 
             page_inventories: dict[str, dict[str, Any]] = {}
             page_plans: dict[str, dict[str, Any]] = {}
@@ -10651,6 +12177,11 @@ async def capture_dashboard(
                 persist_page_documents()
 
             async def capture_page(page_name: str) -> dict[str, Any]:
+                page_initial = (
+                    initial_page
+                    if page_name == page_names[0]
+                    else None
+                )
                 result = await _capture_dashboard_page(
                     browser,
                     context_options,
@@ -10662,13 +12193,14 @@ async def capture_dashboard(
                     shared_filter_plans,
                     capture_semaphore,
                     page_semaphore,
-                    dict(extraction_cache),
+                    extraction_cache,
                     on_page_prepared,
                     job_id,
                     operation_log_path,
                     extract_visual_data,
                     include_filter_cases,
                     detect_visual_types,
+                    initial_page=page_initial,
                 )
                 if on_state_captured is not None:
                     for state in result["states"]:
@@ -10747,6 +12279,7 @@ async def capture_dashboard_pair(
     include_filter_cases: bool = False,
     detect_visual_types: bool = False,
     browser: Browser | None = None,
+    initial_pages: tuple[Page | None, Page | None] | None = None,
 ) -> tuple[list[DashboardState], list[DashboardState]]:
     operation_log_path = operation_log_path or destination / "operation_timings.jsonl"
     dashboard_a_directory = destination / "dashboard_A"
@@ -10799,6 +12332,7 @@ async def capture_dashboard_pair(
             include_filter_cases=include_filter_cases,
             detect_visual_types=detect_visual_types,
             shared_browser=browser,
+            initial_page=initial_pages[0] if initial_pages else None,
         ),
         capture_dashboard(
             url=url_b,
@@ -10817,6 +12351,7 @@ async def capture_dashboard_pair(
             include_filter_cases=include_filter_cases,
             detect_visual_types=detect_visual_types,
             shared_browser=browser,
+            initial_page=initial_pages[1] if initial_pages else None,
         ),
     )
 

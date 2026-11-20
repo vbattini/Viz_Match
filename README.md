@@ -233,6 +233,46 @@ The app finds exact workspace and report names in the authenticated Power BI
 session before starting screenshot capture. Keep the server bound to localhost
 unless you add authentication and HTTPS for remote access.
 
+### How Dashboard A and Dashboard B are selected
+
+The `Workspace Name` and `Report Name` entered in a job identify **Dashboard A**,
+the Snowflake/Base baseline. The application opens Power BI Workspaces, searches
+for an exact workspace name, searches that workspace for an exact report name,
+clicks the matching workspace and report through Playwright, and verifies the
+displayed workspace and report titles before capture. The report URL is saved
+from the page only after the report is opened. The opened report page is reused
+for the initial dashboard capture. When isolated capture contexts are needed
+for other pages or filter states, they reopen the report through the same
+workspace/report UI clicks; the saved report URL is retained for reference.
+The configured Power BI Home page is the browser bootstrap destination.
+
+**Dashboard B** is not selected by position or by the semantic-model field. Its
+names are derived from Dashboard A using the configured naming convention:
+`POWERBI_GCP_WORKSPACE_PREFIX` + the Dashboard A workspace name (default:
+`Tredence <Workspace Name>`) and the Dashboard A report name +
+`POWERBI_GCP_REPORT_SUFFIX` (default: `<Report Name> GCP`). The two targets are
+discovered independently in separate Power BI pages. The result links are
+labeled Dashboard A (Snowflake) and Dashboard B (GCP).
+
+If a workspace is not found, first verify the tenant-scoped
+`POWERBI_HOME_URL`, the exact Power BI workspace spelling, and that the signed-in
+account can see the workspace. The picker supports both the current workspace
+button layout and Power BI layouts that expose workspace links directly; when
+names are visible but the requested one is absent, the discovery error includes
+the visible names to make the mismatch actionable. A missing workspace cannot
+be bypassed by changing the semantic-model value because that field is metadata
+only.
+
+### URL inputs in the Dashboard Comparison UI
+
+The batch worksheet also accepts `Base Report URL` and `GCP Report URL`.
+Provide both HTTPS `app.powerbi.com` report URLs in a row to compare those
+reports directly. URL rows bypass workspace/report discovery and use the
+provided URLs for capture; `Workspace Name`, `Semantic Model`, and `Report
+Name` may be left blank in that mode. Name-based rows continue to use the
+workspace and report UI workflow above. Do not paste credentials, tokens, or
+query strings containing sensitive data into the worksheet.
+
 ## CLI
 
 ```powershell

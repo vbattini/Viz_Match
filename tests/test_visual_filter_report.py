@@ -3,23 +3,146 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from powerbi_dashboard_comparator.visual_filter_comparison import (
-    compare_filter_configurations,
-    compare_visual_inventories,
-)
-from powerbi_dashboard_comparator.visual_filter_report import (
-    FAIL_LABEL,
-    PASS_LABEL,
-    UNVERIFIED_LABEL,
-    _both_visual_types_unavailable,
-    _presentation_match,
-    _pass_fail,
-    _visual_display_name,
-    write_visual_filter_docx,
-    write_visual_validation_sheet,
-)
+try:
+    from powerbi_dashboard_comparator.visual_filter_comparison import (
+        compare_filter_configurations,
+        compare_visual_inventories,
+    )
+    from powerbi_dashboard_comparator.visual_filter_report import (
+        FAIL_LABEL,
+        PASS_LABEL,
+        UNVERIFIED_LABEL,
+        _both_visual_types_unavailable,
+        _hierarchy_excel_rows,
+        _presentation_match,
+        _pass_fail,
+        _visual_display_name,
+        write_visual_filter_docx,
+        write_visual_validation_sheet,
+    )
+    from powerbi_dashboard_comparator.docx_report import _filter_action_summary
+except ModuleNotFoundError:
+    from Backend.visual_filter_comparison import (
+        compare_filter_configurations,
+        compare_visual_inventories,
+    )
+    from Backend.visual_filter_report import (
+        FAIL_LABEL,
+        PASS_LABEL,
+        UNVERIFIED_LABEL,
+        _both_visual_types_unavailable,
+        _hierarchy_excel_rows,
+        _presentation_match,
+        _pass_fail,
+        _visual_display_name,
+        write_visual_filter_docx,
+        write_visual_validation_sheet,
+    )
+    from Backend.docx_report import _filter_action_summary
 
 GRID_TL = (0, 0, 400, 300)
+
+
+def test_filter_action_summary_contains_complete_ordered_state_and_terminal_semicolons() -> None:
+    rows = [
+        {
+            "filter_name": name,
+            "selected_values_a": value,
+            "selected_values_b": value,
+        }
+        for name, value in (
+            ("Facility", "02 - Sioux Falls"),
+            ("Manager, Supply Planner", "All"),
+            ("Category", "Grocery"),
+            ("Master Vendor", "ABC Vendor"),
+            ("Purchase Status", "Open"),
+            ("Center Store Item", "All"),
+        )
+    ]
+
+    summary = _filter_action_summary(rows)
+
+    assert summary.splitlines() == [
+        "Facility: 02 - Sioux Falls;",
+        "Manager, Supply Planner: All;",
+        "Category: Grocery;",
+        "Master Vendor: ABC Vendor;",
+        "Purchase Status: Open;",
+        "Center Store Item: All;",
+    ]
+
+
+def test_hierarchy_excel_rows_preserve_four_level_paths_and_status() -> None:
+    structure_a = {
+        "status": "PASS",
+        "columns": [
+            {"name": "Master Vendor", "index": 0, "level": 1},
+            {"name": "Supply Planner", "index": 1, "level": 2},
+            {"name": "Facility", "index": 2, "level": 3},
+            {"name": "Item", "index": 3, "level": 4},
+        ],
+        "rows": [
+            {
+                "hierarchy_level": 4,
+                "row_type": "detail",
+                "original_row_order": 0,
+                "parent_path": [
+                    "025000 - THE COCA COLA COMPANY",
+                    "Kris Bosshart",
+                    "39 - Oklahoma City",
+                ],
+                "current_value": "1162002217 - I/O FAIRLIFE NUTR PLN VAN",
+                "values": [
+                    "025000 - THE COCA COLA COMPANY",
+                    "Kris Bosshart",
+                    "39 - Oklahoma City",
+                    "1162002217 - I/O FAIRLIFE NUTR PLN VAN",
+                ],
+            }
+        ],
+    }
+    structure_b = {
+        **structure_a,
+        "rows": [
+            {
+                **structure_a["rows"][0],
+                "current_value": "1162002218 - I/O FAIRLIFE NUTRTN PLAN",
+                "values": [
+                    "025000 - THE COCA COLA COMPANY",
+                    "Kris Bosshart",
+                    "39 - Oklahoma City",
+                    "1162002218 - I/O FAIRLIFE NUTRTN PLAN",
+                ],
+            }
+        ],
+    }
+
+    rows = _hierarchy_excel_rows(
+        {
+            "comparisons": [
+                {
+                    "page": "Top Excess Items",
+                    "state": "Top Excess Items|initial",
+                    "visual_name": "Table",
+                    "hierarchy_structure_a": structure_a,
+                    "hierarchy_structure_b": structure_b,
+                }
+            ]
+        }
+    )
+
+    assert rows[0][4] == 4
+    assert rows[0][5:13] == [
+        "025000 - THE COCA COLA COMPANY",
+        "025000 - THE COCA COLA COMPANY",
+        "Kris Bosshart",
+        "Kris Bosshart",
+        "39 - Oklahoma City",
+        "39 - Oklahoma City",
+        "1162002217 - I/O FAIRLIFE NUTR PLN VAN",
+        "1162002218 - I/O FAIRLIFE NUTRTN PLAN",
+    ]
+    assert rows[0][-1] == "Fail"
 
 
 def test_rows_with_unavailable_types_on_both_sides_are_identified_for_exclusion() -> None:
@@ -136,7 +259,7 @@ def test_workbook_omits_visuals_unidentified_on_both_sides(
         for row in range(section_row + 2, sheet.max_row + 1)
         if str(sheet.cell(row, 1).value or "").isdigit()
     ]
-    assert visual_names == ["Orders"]
+    assert visual_names == ["Table"]
     workbook.close()
 
 
@@ -298,9 +421,15 @@ def test_workbook_keeps_rendered_visual_match_despite_unrelated_page_warning(
     visual_row = next(
         row
         for row in sheet.iter_rows(values_only=True)
-        if row[1] == "Expired LTMO" and row[4] == "TABLE_001"
+        if row[1] == "Expired LTMO" and row[4] == "Table"
     )
-    assert visual_row[6] == "Visual types match; screenshot-derived names are informational."
+    assert (
+        "Table visual types match between both dashboards. "
+        "Screenshot styling requires separate visual review."
+        in visual_row[6]
+    )
+    assert "Evidence:" not in visual_row[6]
+    assert "Filter:" in visual_row[6]
     assert visual_row[7] == "Pass"
     workbook.close()
 
@@ -377,11 +506,15 @@ def test_workbook_passes_matching_blank_kpis_despite_page_render_warning(
     visual_row = next(
         row
         for row in sheet.iter_rows(values_only=True)
-        if row[1] == "Fill Rate Trend" and row[4] == "Fill Rate"
+        if row[1] == "Fill Rate Trend" and row[4] == "KPI"
     )
-    assert visual_row[6] == (
-        "Both dashboards display this KPI as (Blank); it matches the Base dashboard."
+    assert (
+        "KPI visual types match between both dashboards. "
+        "Screenshot styling requires separate visual review."
+        in visual_row[6]
     )
+    assert "Evidence:" not in visual_row[6]
+    assert "Filter:" in visual_row[6]
     assert visual_row[7] == "Pass"
     workbook.close()
 
@@ -457,9 +590,15 @@ def test_workbook_keeps_matched_screenshot_chart_pair_observation(
     visual_row = next(
         row
         for row in sheet.iter_rows(values_only=True)
-        if row[1] == "Fill Rate Trend" and "Fill Rate Trend Line Chart" in row[4]
+        if row[1] == "Fill Rate Trend" and row[4] == "Line Chart"
     )
-    assert visual_row[6] == observation
+    assert (
+        "Line Chart visual types match between both dashboards. "
+        "Screenshot styling requires separate visual review."
+        in visual_row[6]
+    )
+    assert "Evidence:" not in visual_row[6]
+    assert "Filter:" in visual_row[6]
     assert visual_row[7] == "Pass"
     workbook.close()
 
@@ -496,7 +635,7 @@ def test_workbook_keeps_unverified_visual_rows(tmp_path: Path) -> None:
     visual_row = next(
         row
         for row in sheet.iter_rows(values_only=True)
-        if row[1] == "Expired LTMO" and row[4] == "TABLE_001"
+        if row[1] == "Expired LTMO" and row[4] == "Table"
     )
     assert visual_row[7] == "Unable to Verify"
     workbook.close()
@@ -568,10 +707,13 @@ def test_workbook_keeps_exact_title_and_types_when_title_matches(
     visual_row = section_row + 2
     assert sheet.cell(visual_row, 3).value == "KPI"
     assert sheet.cell(visual_row, 4).value == "Multi-row Card"
-    assert sheet.cell(visual_row, 5).value == "Upcoming Holiday"
-    assert sheet.cell(visual_row, 6).value == "Multi-row Card"
+    assert sheet.cell(visual_row, 5).value == "KPI"
+    assert sheet.cell(visual_row, 6).value == "KPI"
     assert sheet.cell(visual_row, 8).value == "Pass"
-    assert "type labels differ" in sheet.cell(visual_row, 7).value
+    assert (
+        "Compare Dashboard shows KPI, whereas Base Dashboard shows Multi-row Card."
+        in sheet.cell(visual_row, 7).value
+    )
     workbook.close()
 
 
@@ -766,12 +908,16 @@ def test_visual_validation_assesses_filters_data_and_layout_separately(
     visual_title_row = next(
         row
         for row in range(1, technical_title_row)
-        if sheet.cell(row, 5).value == visual_name
+        if sheet.cell(row, 5).value == "Matrix"
     )
     assert "Data Refresh Date" not in checks
     assert sheet.cell(checks["Relative Time"], 7).value == "Fail"
     assert sheet.cell(visual_title_row, 8).value == "Pass"
-    assert "row-level data is excluded" in sheet.cell(visual_title_row, 7).value
+    assert (
+        "Matrix visual types match between both dashboards. "
+        "Screenshot styling requires separate visual review."
+        in sheet.cell(visual_title_row, 7).value
+    )
     assert "Table Position & Size" not in checks
     assert "Filters Pane" not in checks
     workbook.close()
@@ -1009,7 +1155,7 @@ def test_visual_count_summary_is_not_written_as_a_visual_check(tmp_path) -> None
         for row in range(section_row + 2, sheet.max_row + 1)
         if str(sheet.cell(row, 1).value or "").isdigit()
     ]
-    assert checks == [("Table", "Table", "Orders")]
+    assert checks == [("Table", "Table", "Table")]
     workbook.close()
 
 
@@ -1089,7 +1235,7 @@ def test_dropdowns_are_not_written_as_visual_checks(tmp_path) -> None:
         for row in range(section_row + 2, sheet.max_row + 1)
         if str(sheet.cell(row, 1).value or "").isdigit()
     ]
-    assert checks == ["Item Master Table"]
+    assert checks == ["Table"]
     workbook.close()
 
 
@@ -1199,7 +1345,7 @@ def test_filter_with_unknown_types_is_unverified_and_not_reported_as_missing_vis
     ]
     assert len(filter_rows) == 1
     assert sheet.cell(filter_rows[0], 7).value == UNVERIFIED_LABEL
-    assert visual_checks == ["Item Master Table"]
+    assert visual_checks == ["Table"]
     workbook.close()
 
 
@@ -1262,13 +1408,13 @@ def test_docx_visual_validation_log_uses_unique_types_and_default_filters(
     row = table.rows[1]
     assert row.cells[1].text == "Overview"
     assert row.cells[2].text == "Table"
-    assert row.cells[3].text == "Facility: East"
+    assert row.cells[3].text == "Facility: East;"
     assert row.cells[4].text == (
         "Orders should render as Table on both dashboards with consistent "
         "titles and presentation."
     )
     assert table.cell(2, 2).text == "Bar Chart"
-    assert table.cell(2, 3).text == "Facility: East"
+    assert table.cell(2, 3).text == "Facility: East;"
     assert table.cell(2, 4).text == (
         "Sales should render as Bar Chart on both dashboards with consistent "
         "titles and presentation."
@@ -1288,6 +1434,399 @@ def test_docx_visual_validation_log_uses_unique_types_and_default_filters(
     ] == ["Pass", "Fail"]
     second_result = table.cell(2, 5)._tc.xpath(".//w:sdtContent//w:t")
     assert "".join(node.text or "" for node in second_result) == "Pass"
+
+
+def test_blank_visual_classification_in_validation_log(tmp_path: Path) -> None:
+    from Backend.visual_filter_report import (
+        classify_dashboard_visual,
+        _visual_check_display,
+        visual_validation_log_data,
+    )
+
+    # 1. Test classify_dashboard_visual function directly
+    # Blank Table
+    assert classify_dashboard_visual("Table", "Blank") == "Blank Table"
+    assert classify_dashboard_visual("Matrix", "Blank") == "Blank Table"
+    assert classify_dashboard_visual(
+        "Table",
+        "Rendered",
+        raw_data={"rows": [], "rows_extracted": True},
+    ) == "Blank Table"
+    assert classify_dashboard_visual(
+        "Table",
+        "Rendered",
+        raw_data={"rows": []},
+    ) == "Table"
+    assert classify_dashboard_visual("Table", "Rendered", raw_data={"rows": [["item1"]]}) == "Table"
+
+    # Blank KPI
+    assert classify_dashboard_visual("KPI", "Blank") == "Blank KPI"
+    assert classify_dashboard_visual("Card", "Blank") == "Blank KPI"
+    assert classify_dashboard_visual("KPI", "Rendered", raw_data={"value": "(Blank)"}) == "Blank KPI"
+    assert classify_dashboard_visual("KPI", "Rendered", raw_data={"value": "100"}) == "KPI"
+
+    # Blank Chart
+    assert classify_dashboard_visual("Bar Chart", "Blank") == "Blank Chart"
+    assert classify_dashboard_visual("Line Chart", "Blank") == "Blank Chart"
+    assert classify_dashboard_visual("Bar Chart", "Rendered", raw_data={"values": []}) == "Blank Chart"
+    assert classify_dashboard_visual("Bar Chart", "Rendered", raw_data={"values": [10, 20]}) == "Bar Chart"
+    assert classify_dashboard_visual("Treemap", "Rendered") == "Treemap"
+
+    # Missing
+    assert classify_dashboard_visual("Missing") == "Missing"
+    assert classify_dashboard_visual(None) == "Missing"
+
+    # 2. Test _visual_check_display
+    assert _visual_check_display("Blank Table", "Blank Table") == "Blank Table"
+    assert _visual_check_display("Table", "Blank Table") == "Table"
+    assert _visual_check_display("Bar Chart", "Blank Chart") == "Bar Chart"
+    assert _visual_check_display("Missing", "Table") == "Table"
+
+    # 3. Test visual_validation_log_data output rows
+    result = {
+        "visual_filter": {
+            "visual_rows": [
+                {
+                    "state": "Overview|initial",
+                    "page": "Overview",
+                    "visual_name": "Orders Table",
+                    "visual_type_a": "Table",
+                    "visual_type_b": "Table",
+                    "rendering_status_a": "Blank",
+                    "rendering_status_b": "Blank",
+                    "status": "MATCH",
+                },
+                {
+                    "state": "Overview|initial",
+                    "page": "Overview",
+                    "visual_name": "Total Sales KPI",
+                    "visual_type_a": "KPI",
+                    "visual_type_b": "KPI",
+                    "rendering_status_a": "Blank",
+                    "rendering_status_b": "Blank",
+                    "status": "MATCH",
+                },
+                {
+                    "state": "Overview|initial",
+                    "page": "Overview",
+                    "visual_name": "Revenue Trend",
+                    "visual_type_a": "Line Chart",
+                    "visual_type_b": "Line Chart",
+                    "rendering_status_a": "Blank",
+                    "rendering_status_b": "Blank",
+                    "status": "MATCH",
+                },
+                {
+                    "state": "Overview|initial",
+                    "page": "Overview",
+                    "visual_name": "Item Summary Table",
+                    "visual_type_a": "Table",
+                    "visual_type_b": "Table",
+                    "rendering_status_a": "Rendered",
+                    "rendering_status_b": "Blank",
+                    "status": "DIFFERENT",
+                },
+                {
+                    "state": "Overview|initial",
+                    "page": "Overview",
+                    "visual_name": "Category Distribution",
+                    "visual_type_a": "Bar Chart",
+                    "visual_type_b": "Bar Chart",
+                    "rendering_status_a": "Rendered",
+                    "rendering_status_b": "Blank",
+                    "status": "DIFFERENT",
+                },
+                {
+                    "state": "Overview|initial",
+                    "page": "Overview",
+                    "visual_name": "Discontinued Items",
+                    "visual_type_a": "Table",
+                    "visual_type_b": "Missing",
+                    "rendering_status_a": "Rendered",
+                    "rendering_status_b": "Missing",
+                    "status": "DIFFERENT",
+                },
+            ],
+            "filter_rows": [],
+        }
+    }
+
+    rows, states = visual_validation_log_data(result)
+    assert len(rows) == 5
+
+    # Row 1: Blank Table | Blank Table -> Pass
+    assert rows[0][2] == "Blank Table"  # Compare Dashboard
+    assert rows[0][3] == "Blank Table"  # Base Dashboard
+    assert rows[0][5] == "Table"  # Visual / Check
+    assert rows[0][7] == "Pass"         # Result
+
+    # Row 2: Blank KPI | Blank KPI -> Pass
+    assert rows[1][2] == "Blank KPI"
+    assert rows[1][3] == "Blank KPI"
+    assert rows[1][5] == "KPI"
+    assert rows[1][7] == "Pass"
+
+    # Row 3: Blank Chart | Blank Chart -> Pass
+    assert rows[2][2] == "Blank Chart"
+    assert rows[2][3] == "Blank Chart"
+    assert rows[2][5] == "Line Chart"
+    assert rows[2][7] == "Pass"
+
+    # Row 4: Blank Table | Table -> Fail
+    assert rows[3][2] == "Blank Table"
+    assert rows[3][3] == "Table"
+    assert rows[3][5] == "Table"
+    assert rows[3][7] == "Fail"
+
+    # Row 5: Blank Chart | Bar Chart -> Fail
+    assert rows[4][2] == "Blank Chart"
+    assert rows[4][3] == "Bar Chart"
+    assert rows[4][5] == "Bar Chart"
+    assert rows[4][7] == "Fail"
+
+    # Row with DOM table columns
+    cols_str = "Row Selection, Item, UPC Case, UPC Unit, MDSE Dept"
+    screen_a = tmp_path / "col_a.png"
+    screen_b = tmp_path / "col_b.png"
+    screen_a.touch()
+    screen_b.touch()
+    result_with_cols = {
+        "visual_filter": {
+            "visual_rows": [
+                {
+                    "state": "Report|initial",
+                    "page": "Report",
+                    "visual_name": "Untitled visual",
+                    "visual_type_a": "Table",
+                    "visual_type_b": "Table",
+                    "categories_a": ["Row Selection", "Item", "UPC Case", "UPC Unit", "MDSE Dept"],
+                    "categories_b": ["Row Selection", "Item", "UPC Case", "UPC Unit", "MDSE Dept"],
+                    "status": "MATCH",
+                }
+            ],
+            "filter_rows": [],
+        },
+        "screenshot_evidence": {
+            "dashboard_a": {
+                "Report|initial": {
+                    "path": str(screen_a),
+                    "capture_status": "captured",
+                }
+            },
+            "dashboard_b": {
+                "Report|initial": {
+                    "path": str(screen_b),
+                    "capture_status": "captured",
+                }
+            },
+        },
+    }
+    cols_rows, _ = visual_validation_log_data(result_with_cols)
+    assert len(cols_rows) == 2
+    # Visual Type check row
+    assert cols_rows[0][1] == "Report"
+    assert cols_rows[0][2] == "Table"
+    assert cols_rows[0][3] == "Table"
+    assert cols_rows[0][4] == "Table"
+    assert cols_rows[0][5] == "Table"
+    assert cols_rows[0][7] == "Pass"
+    # Column Headers check row
+    assert cols_rows[1][1] == "Report"
+    assert cols_rows[1][2] == f"Matrix/Table displayed; columns: {cols_str}"
+    assert cols_rows[1][3] == f"Matrix/Table displayed; columns: {cols_str}"
+    assert cols_rows[1][4] == "Table column headers"
+    assert cols_rows[1][5] == "Table column headers"
+    assert "Table column headers match between both dashboards." in cols_rows[1][6]
+    assert "Evidence:" not in cols_rows[1][6]
+    assert "Filter:" in cols_rows[1][6]
+    assert cols_rows[1][7] == "Pass"
+
+
+def test_visual_validation_log_includes_baseline_initial_state_with_scenarios(
+    tmp_path: Path,
+) -> None:
+    from Backend.visual_filter_report import visual_validation_log_data
+
+    initial_a = tmp_path / "initial_a.png"
+    initial_b = tmp_path / "initial_b.png"
+    scenario_a = tmp_path / "scenario_a.png"
+    scenario_b = tmp_path / "scenario_b.png"
+    for path in (initial_a, initial_b, scenario_a, scenario_b):
+        path.touch()
+
+    initial_state = "Report|initial"
+    scenario_state = "Report|scenario_01|table_headers_initial:initial"
+    result = {
+        "visual_filter": {
+            "visual_rows": [
+                {
+                    "state": initial_state,
+                    "page": "Report",
+                    "visual_name": "Initial visual",
+                    "visual_type_a": "Table",
+                    "visual_type_b": "Table",
+                    "status": "MATCH",
+                },
+                {
+                    "state": scenario_state,
+                    "page": "Report",
+                    "visual_name": "Scenario visual",
+                    "visual_type_a": "Table",
+                    "visual_type_b": "Table",
+                    "status": "MATCH",
+                },
+            ],
+            "filter_rows": [],
+        },
+        "screenshot_evidence": {
+            "dashboard_a": {
+                initial_state: {"path": str(initial_a), "capture_status": "captured"},
+                scenario_state: {
+                    "path": str(scenario_a),
+                    "capture_status": "captured",
+                },
+            },
+            "dashboard_b": {
+                initial_state: {"path": str(initial_b), "capture_status": "captured"},
+                scenario_state: {
+                    "path": str(scenario_b),
+                    "capture_status": "captured",
+                },
+            },
+        },
+    }
+
+    rows, states = visual_validation_log_data(result)
+
+    assert states == [initial_state, scenario_state]
+    assert rows
+    assert {row[1] for row in rows} == {"Report"}
+    assert any("Table" in row for row in rows)
+
+
+def test_visual_validation_log_uses_initial_headers_and_emits_two_rows_per_image():
+    from Backend.visual_filter_report import visual_validation_log_data
+
+    complete_headers = [
+        "Facility Nbr Desc",
+        "Purchase Status",
+        "Item Nbr",
+        "Item Nbr HS",
+        "Item",
+        "UPC Case",
+        "UPC Unit",
+        "MDSE Dept",
+        "MDSE Dept Group",
+        "MDSE Group",
+        "MDSE Category",
+        "Master Vendor",
+        "Last Received Date",
+        "Last Shipped Date",
+        "Cases per week",
+        "Inventory Total",
+        "Reserve Committed",
+        "Weeks of Supply",
+        "On Order Total",
+    ]
+    partial_headers = complete_headers[:10]
+    initial_state = "Report|initial"
+    filtered_state = "Report|scenario_02|single_filter:facility=16"
+
+    def comparison(state, headers, name, source):
+        data = {"categories": headers, "values": [], "rows": []}
+        return {
+            "state": state,
+            "element": name,
+            "element_type_a": "table",
+            "element_type_b": "table",
+            "dashboard_data_a": data,
+            "dashboard_data_b": data,
+            "data_source_a": [source],
+            "data_source_b": [source],
+            "alignment_status": "sequence_aligned",
+            "status": "MATCH",
+        }
+
+    result = {
+        "comparisons": [
+            comparison(
+                initial_state,
+                complete_headers,
+                "initial-table",
+                "powerbi_export_headers",
+            ),
+            comparison(initial_state, partial_headers, "repeated-initial-table", "screenshot"),
+            comparison(filtered_state, partial_headers, "filtered-table", "screenshot"),
+        ],
+        "visual_filter": {"visual_rows": [], "filter_rows": []},
+        "screenshot_evidence": {
+            "dashboard_a": {
+                initial_state: {},
+                filtered_state: {},
+            },
+            "dashboard_b": {
+                initial_state: {},
+                filtered_state: {},
+            },
+        },
+    }
+
+    rows, states = visual_validation_log_data(result)
+
+    assert len(rows) == 4
+    assert states == [initial_state, initial_state, filtered_state, filtered_state]
+    assert rows[0][2:4] == ["Table", "Table"]
+    assert rows[2][2:4] == ["Table", "Table"]
+    for row in (rows[1], rows[3]):
+        assert row[4] == "Table column headers"
+        assert row[2] == row[3] == (
+            "Matrix/Table displayed; columns: " + ", ".join(complete_headers)
+        )
+        assert row[7] == "Pass"
+
+
+def test_visual_validation_log_falls_back_to_initial_when_page_has_no_scenario_visuals(
+    tmp_path: Path,
+) -> None:
+    from Backend.visual_filter_report import visual_validation_log_data
+
+    initial_a = tmp_path / "initial_a.png"
+    initial_b = tmp_path / "initial_b.png"
+    initial_a.touch()
+    initial_b.touch()
+    initial_state = "Executive Summary|initial"
+    scenario_state = "Executive Summary|scenario_02|missing_evidence"
+    result = {
+        "visual_filter": {
+            "visual_rows": [
+                {
+                    "state": initial_state,
+                    "page": "Executive Summary",
+                    "visual_name": "Health Index",
+                    "visual_type_a": "KPI",
+                    "visual_type_b": "KPI",
+                    "status": "MATCH",
+                }
+            ],
+            "filter_rows": [],
+        },
+        "screenshot_evidence": {
+            "dashboard_a": {
+                initial_state: {"path": str(initial_a), "capture_status": "captured"},
+                scenario_state: {"path": None, "capture_status": "unverified"},
+            },
+            "dashboard_b": {
+                initial_state: {"path": str(initial_b), "capture_status": "captured"},
+                scenario_state: {"path": None, "capture_status": "unverified"},
+            },
+        },
+    }
+
+    rows, states = visual_validation_log_data(result)
+
+    assert states == [initial_state]
+    assert rows
+    assert rows[0][1] == "Executive Summary"
 
 
 def test_docx_defaults_tester_and_uses_status_dropdown(tmp_path) -> None:

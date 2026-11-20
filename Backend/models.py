@@ -55,6 +55,7 @@ class DashboardState:
     visuals: list[dict[str, Any]] = field(default_factory=list)
     filter_options: dict[str, list[str]] = field(default_factory=dict)
     filter_control_types: dict[str, str | None] = field(default_factory=dict)
+    filter_state_snapshot: list[dict[str, Any]] = field(default_factory=list)
 
     @property
     def state_key(self) -> str:

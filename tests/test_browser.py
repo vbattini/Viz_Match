@@ -336,6 +336,146 @@ def test_report_ready_accepts_visible_visual_without_slicer_controls(
     asyncio.run(browser._wait_for_report_ready(Page()))
 
 
+def test_fit_report_only_maximizes_and_fits_for_page_level_scroll() -> None:
+    events = []
+
+    class FitButton:
+        async def wait_for(self, **kwargs):
+            assert kwargs == {"state": "visible", "timeout": 10_000}
+            events.append("wait-for-fit")
+
+        async def click(self, **kwargs):
+            assert kwargs == {"timeout": 5_000}
+            events.append("click-fit")
+
+    class Locator:
+        async def count(self):
+            return 1
+
+        def __init__(self):
+            self.button = FitButton()
+
+        def __getattr__(self, name):
+            return getattr(self.button, name)
+
+    class Page:
+        def locator(self, selector):
+            assert selector == "#fitToPageButton"
+            return Locator()
+
+        async def evaluate(self, script):
+            assert script == browser._REPORT_PAGE_VERTICAL_SCROLL_SCRIPT
+            return {
+                "page_vertical_scroll": True,
+                "document_scroll": False,
+                "report_container_scroll": True,
+            }
+
+        async def set_viewport_size(self, viewport):
+            assert viewport == browser.CAPTURE_VIEWPORT
+            events.append("maximize-viewport")
+
+    assert asyncio.run(
+        browser._maximize_and_fit_report_if_page_scrolled(Page())
+    )
+    assert events == [
+        "maximize-viewport",
+        "wait-for-fit",
+        "click-fit",
+    ]
+
+
+def test_fit_report_tries_accessible_button_when_id_click_times_out() -> None:
+    events = []
+
+    class FitButton:
+        def __init__(self, name):
+            self.name = name
+
+        async def wait_for(self, **_kwargs):
+            events.append(f"wait-{self.name}")
+
+        async def click(self, **_kwargs):
+            events.append(f"click-{self.name}")
+            if self.name == "id":
+                raise browser.PlaywrightTimeoutError("button disappeared")
+
+    class Page:
+        async def evaluate(self, _script):
+            return {"page_vertical_scroll": True, "document_scroll": True}
+
+        async def set_viewport_size(self, _viewport):
+            events.append("maximize")
+
+        def locator(self, selector):
+            assert selector == "#fitToPageButton"
+            return FitButton("id")
+
+        def get_by_role(self, role, *, name):
+            assert role == "button"
+            assert name.search("fit to page")
+            return FitButton("role")
+
+    assert asyncio.run(
+        browser._maximize_and_fit_report_if_page_scrolled(Page())
+    )
+    assert events == [
+        "maximize",
+        "wait-id",
+        "click-id",
+        "wait-role",
+        "click-role",
+    ]
+
+
+def test_fit_report_timeout_does_not_abort_report_readiness() -> None:
+    class FitButton:
+        async def wait_for(self, **_kwargs):
+            raise browser.PlaywrightTimeoutError("control unavailable")
+
+        async def click(self, **_kwargs):
+            raise AssertionError("an unavailable control must not be clicked")
+
+    class Page:
+        async def evaluate(self, _script):
+            return {"page_vertical_scroll": True, "document_scroll": True}
+
+        async def set_viewport_size(self, _viewport):
+            pass
+
+        def locator(self, _selector):
+            return FitButton()
+
+        def get_by_role(self, _role, *, name):
+            return FitButton()
+
+    assert not asyncio.run(
+        browser._maximize_and_fit_report_if_page_scrolled(Page())
+    )
+
+
+def test_fit_report_ignores_internal_visual_scroll() -> None:
+    class Page:
+        async def evaluate(self, script):
+            assert "[role=\"grid\"], [role=\"table\"], table" in script
+            assert "element.closest(internalVisualSelector)" in script
+            return {
+                "page_vertical_scroll": False,
+                "document_scroll": False,
+                "report_container_scroll": False,
+            }
+
+        async def set_viewport_size(self, _viewport):
+            raise AssertionError("Internal visual scroll must not maximize the page")
+
+        def locator(self, _selector):
+            raise AssertionError("Internal visual scroll must not click Fit to page")
+
+    assert not asyncio.run(
+        browser._maximize_and_fit_report_if_page_scrolled(Page())
+    )
+
+
 def test_report_ready_requires_rendered_visual_content(monkeypatch) -> None:
     monkeypatch.setattr(browser, "REPORT_STABLE_SECONDS", 0.0)
 
@@ -345,12 +485,21 @@ def test_report_ready_requires_rendered_visual_content(monkeypatch) -> None:
             assert 'aria-busy="true"' in script
             assert "innerText" in script
             assert "visuals.length === 0" in script
+            assert "visuals.filter(rendered).length" in script
+            assert "const dataVisuals = visuals.filter" in script
+            assert "renderedDataVisualCount" in script
+            assert "return !busy && (" in script
             assert "available resources" in script
 
         async def evaluate(self, script):
             assert '[class*="spinner" i]' in script
             assert 'spinner[title*="loading" i]' in script
             assert '[class*="loading" i]' in script
+            assert "pageLoadingElements" in script
+            assert "page_loading_indicators" in script
+            assert "(document.body || document.documentElement)" in script
+            assert "element.closest(" in script
+            assert "[role=\"navigation\"]" in script
             assert "main.querySelectorAll(selector)" in script
             assert "visual.querySelectorAll('img')" in script
             assert "getAnimations({ subtree: true })" in script
@@ -546,6 +695,7 @@ def test_identical_screenshots_reuse_gemini_extraction(monkeypatch) -> None:
     assert len(calls) == 1
     assert performance["extraction_model_seconds"] >= 0
     assert performance["extraction_cache_hits"] == 1
+    assert performance["extraction_cache_misses"] == 1
 
 
 def test_gemini_extraction_is_logged_as_a_separate_operation(
@@ -1838,14 +1988,81 @@ def test_render_wait_times_out_unrendered_charts_as_unverified(monkeypatch) -> N
     monkeypatch.setattr(browser.time, "monotonic", lambda: clock[0])
     monkeypatch.setattr(browser, "UNRENDERED_CHART_TIMEOUT_MS", 200)
 
-    elapsed = asyncio.run(browser._wait_for_state_render(page, 0))
+    with pytest.raises(RuntimeError, match="remained unrendered"):
+        asyncio.run(browser._wait_for_state_render(page, 0))
     warning = asyncio.run(browser._read_render_warning(page))
 
-    assert 0.2 <= elapsed < 0.3
     assert warning is not None
     assert warning["reason"] == "Power BI chart content did not finish rendering"
     assert warning["indicators"][0]["unrendered_chart_visuals"] == [
         {"visual_id": "chart-1"}
+    ]
+
+
+def test_render_wait_rejects_partial_report_when_a_visual_stays_unrendered(
+    monkeypatch,
+) -> None:
+    clock = [0.0]
+    pending = {
+        "elements": 100,
+        "drawn": 14,
+        "visuals": 16,
+        "rendered_data_visuals": 15,
+        "busy": 2,
+        "busy_details": {
+            "visual_loading_classes": 2,
+            "visual_loading_markers": [
+                {"visual_index": 16, "class_name": "powerbi-spinner xsmall shown"},
+                {"visual_index": 16, "class_name": "spinner"},
+            ],
+        },
+        "unrendered_visuals": [
+            {"visual_index": 16, "visual_id": "", "size": "16x16"}
+        ],
+        "content": "partial report content",
+    }
+
+    class Frame:
+        async def evaluate(self, _script):
+            return pending
+
+    class Page:
+        frames = [Frame()]
+
+        async def wait_for_timeout(self, milliseconds):
+            clock[0] += milliseconds / 1000
+
+    monkeypatch.setattr(browser.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(browser, "UNRENDERED_CHART_TIMEOUT_MS", 200)
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"refusing to capture a partial report.*rendered_data_visuals",
+    ):
+        asyncio.run(browser._wait_for_state_render(Page(), 0))
+
+
+def test_render_warning_reports_unrendered_nonchart_visual() -> None:
+    state = {
+        "visuals": 14,
+        "busy": 0,
+        "unrendered_visuals": [
+            {"visual_index": 14, "visual_id": "", "size": "878x503"}
+        ],
+    }
+
+    class Page:
+        frames = None
+
+        async def evaluate(self, _script):
+            return state
+
+    warning = asyncio.run(browser._read_render_warning(Page()))
+
+    assert warning is not None
+    assert warning["reason"] == "Power BI visual content did not finish rendering"
+    assert warning["indicators"][0]["unrendered_visuals"] == [
+        {"visual_index": 14, "visual_id": "", "size": "878x503"}
     ]
 
 
@@ -1919,7 +2136,37 @@ def test_render_wait_fails_when_visible_images_never_finish_loading(
         asyncio.run(browser._wait_for_state_render(Page(), 0.2))
 
 
-def test_render_wait_continues_after_persistent_class_only_loading(monkeypatch) -> None:
+def test_render_wait_continues_when_content_changes_without_loading(
+    monkeypatch,
+) -> None:
+    clock = [0.0]
+
+    class Frame:
+        async def evaluate(self, _script):
+            return {
+                "elements": 100,
+                "drawn": 14,
+                "visuals": 3,
+                "busy": 0,
+                "busy_details": {},
+                "content": str(clock[0]),
+            }
+
+    class Page:
+        frames = [Frame()]
+
+        async def wait_for_timeout(self, milliseconds):
+            clock[0] += milliseconds / 1000
+
+    monkeypatch.setattr(browser.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(browser, "MAX_RENDER_WAIT_SECONDS", 0.3)
+
+    elapsed = asyncio.run(browser._wait_for_state_render(Page(), 0.1))
+
+    assert elapsed >= 0.3
+
+
+def test_render_wait_rejects_persistent_class_only_loading(monkeypatch) -> None:
     clock = [0.0]
 
     class Frame:
@@ -1954,10 +2201,56 @@ def test_render_wait_continues_after_persistent_class_only_loading(monkeypatch) 
     monkeypatch.setattr(browser.time, "monotonic", lambda: clock[0])
     monkeypatch.setattr(browser, "CLASS_ONLY_RENDER_TIMEOUT_MS", 1_000)
 
-    elapsed = asyncio.run(browser._wait_for_state_render(Page(), 0.2))
-
-    assert elapsed >= 1.0
+    with pytest.raises(
+        RuntimeError,
+        match=r"refusing to capture the report.*visual_loading_classes",
+    ):
+        asyncio.run(browser._wait_for_state_render(Page(), 0.2))
     assert clock[0] >= 1.0
+
+
+def test_page_level_loading_indicator_is_a_strong_signal() -> None:
+    assert browser._loading_signal_strength(
+        {
+            "busy": 1,
+            "busy_details": {"page_loading_indicators": 1},
+        }
+    ) == (True, False)
+
+
+def test_render_wait_does_not_defer_page_level_loading_to_class_timeout(
+    monkeypatch,
+) -> None:
+    clock = [0.0]
+
+    class Frame:
+        async def evaluate(self, _script):
+            return {
+                "elements": 100,
+                "drawn": 14,
+                "visuals": 14,
+                "busy": 1,
+                "busy_details": {
+                    "page_loading_indicators": 1,
+                    "visual_loading_classes": 1,
+                },
+                "content": "stable",
+            }
+
+    class Page:
+        frames = [Frame()]
+
+        async def wait_for_timeout(self, milliseconds):
+            clock[0] += milliseconds / 1000
+
+    monkeypatch.setattr(browser.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(browser, "CLASS_ONLY_RENDER_TIMEOUT_MS", 100)
+    monkeypatch.setattr(browser, "REPORT_READY_TIMEOUT_MS", 500)
+
+    with pytest.raises(RuntimeError, match="did not finish loading"):
+        asyncio.run(browser._wait_for_state_render(Page(), 0.2))
+
+    assert clock[0] >= 0.5
 
 
 def test_render_wait_waits_for_class_only_loading_to_clear(monkeypatch) -> None:
@@ -4854,7 +5147,11 @@ def test_slicer_dropdown_timeout_on_detached_combobox_returns_closed() -> None:
     assert not asyncio.run(browser._slicer_dropdown_is_open(DetachedCombo()))
 
 
-def test_filter_selection_uses_real_click_and_verifies_selected_state() -> None:
+def test_filter_selection_uses_real_click_and_verifies_selected_state(
+    monkeypatch,
+) -> None:
+    events = []
+
     class Combo:
         def __init__(self):
             self.values = {"All", "Benefits"}
@@ -4988,6 +5285,18 @@ def test_filter_selection_uses_real_click_and_verifies_selected_state() -> None:
         }
     ]
     selection = browser.FilterSelection(name="Service Team", value="Benefits")
+
+    async def clear_selection(
+        _page, _frame, _filter, *, values, control=None
+    ):
+        assert values == ["All", "Benefits"]
+        assert control is frame.combo
+        frame.combo.values.clear()
+        return True
+
+    monkeypatch.setattr(
+        browser, "_clear_slicer_if_button_available", clear_selection
+    )
 
     asyncio.run(browser._select_filter(Page(frame), selection, filters))
 
@@ -5220,6 +5529,115 @@ def test_checkbox_dropdown_does_not_select_aggregate_all(
 
     assert clicks == []
     assert selected == {"Last 4 Weeks"}
+
+
+def test_dropdown_replaces_aggregate_selection_before_selecting_option(
+    monkeypatch,
+) -> None:
+    selected = ["All"]
+    clicked_options = []
+    clear_calls = []
+    popup = {"open": False}
+    combo = object()
+    filter_item = {
+        "name": "Master Vendor",
+        "selector_name": "Facility Nbr Desc, Master Vendor, Vendor",
+        "control_type": "dropdown",
+        "selected": ["All"],
+        "values": ["8 - ST. CLOUD", "Other Vendor"],
+    }
+
+    class EmptySelects:
+        def filter(self, **_kwargs):
+            return self
+
+        async def count(self):
+            return 0
+
+    class Frame:
+        def locator(self, selector, **_kwargs):
+            return EmptySelects() if selector == "select" else object()
+
+    frame = Frame()
+
+    async def find_combo(_frame, _filter):
+        return combo
+
+    async def popup_open(_combo):
+        return popup["open"]
+
+    async def toggle_popup(_combo):
+        popup["open"] = not popup["open"]
+
+    async def wait_for_popup(_page, _combo):
+        popup["open"] = True
+
+    async def get_options(_frame, _combo):
+        return object()
+
+    async def get_option_texts(_options):
+        return ["Select all", "8 - ST. CLOUD", "Other Vendor"]
+
+    async def get_selected_options(_options):
+        return list(selected)
+
+    async def close_popup(_page, _combo):
+        popup["open"] = False
+
+    async def clear_selection(
+        _page, _frame, item, *, values, control=None
+    ):
+        assert item is filter_item
+        assert values == ["Select all", "8 - ST. CLOUD", "Other Vendor"]
+        assert control is combo
+        clear_calls.append(item["name"])
+        selected.clear()
+        return True
+
+    async def click_option(
+        _page,
+        _frame,
+        _combo,
+        value,
+        *,
+        filter_name=None,
+        expected_options=None,
+    ):
+        clicked_options.append(value)
+        selected[:] = [value]
+
+    async def wait_for_selection(_page, _filter, _value):
+        return list(selected)
+
+    monkeypatch.setattr(browser, "_combobox_for_filter", find_combo)
+    monkeypatch.setattr(browser, "_slicer_dropdown_is_open", popup_open)
+    monkeypatch.setattr(browser, "_click_slicer_control", toggle_popup)
+    monkeypatch.setattr(browser, "_wait_for_slicer_open", wait_for_popup)
+    monkeypatch.setattr(browser, "_options_for_combobox", get_options)
+    monkeypatch.setattr(browser, "_accessible_option_texts", get_option_texts)
+    monkeypatch.setattr(
+        browser, "_selected_combobox_options", get_selected_options
+    )
+    monkeypatch.setattr(browser, "_close_slicer_dropdown", close_popup)
+    monkeypatch.setattr(
+        browser, "_clear_slicer_if_button_available", clear_selection
+    )
+    monkeypatch.setattr(browser, "_click_filter_option", click_option)
+    monkeypatch.setattr(
+        browser, "_wait_for_filter_selection", wait_for_selection
+    )
+
+    asyncio.run(
+        browser._select_filter(
+            SimpleNamespace(frames=[frame]),
+            browser.FilterSelection("Master Vendor", "8 - ST. CLOUD"),
+            [filter_item],
+        )
+    )
+
+    assert clear_calls == ["Master Vendor"]
+    assert clicked_options == ["8 - ST. CLOUD"]
+    assert selected == ["8 - ST. CLOUD"]
 
 
 def test_kpi_selection_is_left_at_default_without_clear(monkeypatch) -> None:

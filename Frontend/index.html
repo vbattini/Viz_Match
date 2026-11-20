@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#123c2a">
   <title>Dashboard Comparison</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=3">
 </head>
 <body>
   <div class="page-shell">
@@ -109,7 +109,7 @@
           <div class="heading-card">
             <p class="eyebrow">POWER BI · SNOWFLAKE VS GCP</p>
             <h1 id="page-title">Dashboard Comparison</h1>
-            <p class="heading-copy">Prepare and run report validation jobs in spreadsheet order.</p>
+            <p class="heading-copy">Prepare and run report validation jobs in spreadsheet order. Dashboard A is the Snowflake baseline; Dashboard B is the matching GCP report.</p>
           </div>
           <button id="config-toggle" class="sheet-toggle" type="button" aria-expanded="true" aria-controls="configuration-content">
             <span id="config-toggle-label">Hide sheet</span>
@@ -121,6 +121,7 @@
         <div id="configuration-content" class="configuration-content">
           <div class="sheet-title-row">
             <span id="job-counter" class="job-counter">0 of 10 jobs added</span>
+            <span class="sheet-hint">A = submitted workspace/report · B = derived GCP workspace/report</span>
           </div>
 
           <div class="workbook" aria-label="Editable comparison jobs spreadsheet">
@@ -138,7 +139,7 @@
                 <button id="delete-rows" class="small-tool-button" type="button" title="Delete selected rows">− <span>Delete row</span></button>
                 <button id="clear-rows" class="small-tool-button muted-tool-button" type="button">Clear all</button>
               </div>
-              <span class="sheet-hint">Up to 10 jobs · Ctrl+V pastes Excel ranges</span>
+              <span class="sheet-hint">Up to 10 jobs · Ctrl+V pastes Excel ranges · URL mode: fill columns D/E and leave A-C blank</span>
             </div>
 
             <div class="spreadsheet-scroll">
@@ -149,12 +150,16 @@
                     <th>A</th>
                     <th>B</th>
                     <th>C</th>
+                    <th>D</th>
+                    <th>E</th>
                   </tr>
                   <tr class="column-headings">
                     <th class="row-number-heading">S.No</th>
                     <th scope="col">Workspace Name</th>
                     <th scope="col">Semantic Model</th>
                     <th scope="col">Report Name</th>
+                    <th scope="col">Base Report URL</th>
+                    <th scope="col">GCP Report URL</th>
                   </tr>
                 </thead>
                 <tbody id="batch-rows"></tbody>
@@ -255,6 +260,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=url-inputs"></script>
 </body>
 </html>

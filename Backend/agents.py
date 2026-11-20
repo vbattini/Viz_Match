@@ -32,13 +32,14 @@ configure_vertex_ai()
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import errors as genai_errors
 from google.genai import types
 logger = logging.getLogger(__name__)
 MODEL_REQUEST_ATTEMPTS = positive_int_setting(
     "PBI_MODEL_REQUEST_ATTEMPTS", 5
 )
 MODEL_REQUEST_TIMEOUT_SECONDS = positive_float_setting(
-    "PBI_MODEL_REQUEST_TIMEOUT_SECONDS", 300.0
+    "PBI_MODEL_REQUEST_TIMEOUT_SECONDS", 90.0
 )
 MAX_PARALLEL_MODEL_REQUESTS = positive_int_setting(
     "PBI_MAX_PARALLEL_MODEL_REQUESTS", 10
@@ -681,6 +682,26 @@ rendered and consistent; FAIL for confirmed material differences; UNVERIFIED
 when evidence is insufficient. List confirmed matches and every supported
 difference in the supplied schema. Keep observations specific and concise."""
 
+FILTER_SCENARIO_SCREENSHOT_COMPARISON_INSTRUCTIONS = """Compare each labeled
+Dashboard A (Snowflake) screenshot only with the Dashboard B (GCP) screenshot
+for the same page and filter scenario. Never compare different pages or
+scenario states with each other. Validate only visible filter presentation and
+selection context, visual presence, visual type/title, rendering, layout,
+alignment, colors, fonts, and other visual appearance.
+
+Do not compare table column headers, table row headers, hierarchy levels or
+parent-child relationships, table records, chart data values, or numeric KPI
+values. Do not infer hidden filter options or perform any export comparison.
+Table visuals may be assessed for presence, type, rendering, and appearance,
+but their header text and row content are out of scope.
+
+If the screenshots show different filter states, report that as a
+BEHAVIOR_DIFFERENCE and do not claim downstream visuals were compared at an
+equivalent state. Use UNVERIFIED when text, identity, filter state, or
+rendering is ambiguous or obscured. Return PASS only when the visible filter
+state and visual presentation are consistently supported by both screenshots.
+Keep observations specific and concise."""
+
 
 VISUAL_INVENTORY_COMPARISON_INSTRUCTIONS = """Inspect and compare the supplied
 Power BI screenshots for one report page. Dashboard A is Snowflake; Dashboard B
@@ -852,10 +873,15 @@ async def compare_scenario_screenshots(
         filter_state=f"scenario_{scenario_id}",
     ):
         model_name = _model_name()
+        comparison_instructions = (
+            FILTER_SCENARIO_SCREENSHOT_COMPARISON_INSTRUCTIONS
+            if scenario_id in {"02", "03"}
+            else SCENARIO_SCREENSHOT_COMPARISON_INSTRUCTIONS
+        )
         agent = LlmAgent(
             name="scenario_screenshot_comparator",
             model=model_name,
-            instruction=SCENARIO_SCREENSHOT_COMPARISON_INSTRUCTIONS,
+            instruction=comparison_instructions,
             output_schema=ScenarioScreenshotComparison,
             generate_content_config=_generation_config(model_name),
         )
@@ -1238,6 +1264,12 @@ def _is_retryable_model_error(error: BaseException) -> bool:
             and current.status in MODEL_RETRYABLE_HTTP_STATUSES
         ):
             return True
+        if isinstance(current, genai_errors.APIError):
+            status = getattr(current, "code", None)
+            if status is None:
+                status = getattr(current, "status", None)
+            if status in MODEL_RETRYABLE_HTTP_STATUSES:
+                return True
         if current.__cause__ is not None:
             pending.append(current.__cause__)
         if current.__context__ is not None:

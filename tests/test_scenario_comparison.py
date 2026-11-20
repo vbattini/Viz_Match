@@ -360,9 +360,9 @@ def test_scenario01_maps_only_saved_vision_result():
     ]
 
 
-def test_drilldown_does_not_compare_unrelated_filter_inventory(tmp_path):
+def test_merged_hierarchy_does_not_compare_unrelated_filter_inventory(tmp_path):
     source = tmp_path / "source"
-    page_dir = scenario_result_directory(source, "04", "Page One")
+    page_dir = scenario_result_directory(source, "01", "Page One")
     page_dir.mkdir(parents=True)
     (page_dir / "execution_status.json").write_text(
         json.dumps({"status": "SKIPPED", "reason": "no drill control"}),
@@ -375,7 +375,13 @@ def test_drilldown_does_not_compare_unrelated_filter_inventory(tmp_path):
         json.dumps({"visuals": [], "screenshots": {}}), encoding="utf-8"
     )
 
-    page, _ = sc._prepare_page("04", "04_drilldown", source, "Page One", tmp_path)
+    page, _ = sc._prepare_page(
+        "01",
+        "01_table_column_header_comparison",
+        source,
+        "Page One",
+        tmp_path,
+    )
 
     assert page["filter_comparison"]["status"] == "NOT_APPLICABLE"
     assert "inventory" not in page["filter_comparison"]
@@ -970,7 +976,7 @@ def test_scenario_comparison_runs_page_first_and_reuses_valid_cached_results(
         for scenario_id, _, _ in sc.SCENARIOS
     ]
     assert result["summary"]["comparison_order"] == "page_then_scenario"
-    assert result["summary"]["total_comparison_units"] == 8
+    assert result["summary"]["total_comparison_units"] == 6
     comparison_root = output_root / "comparison_results"
     scenario_wise = json.loads(
         (comparison_root / "scenario_wise_comparison.json").read_text()
@@ -978,13 +984,13 @@ def test_scenario_comparison_runs_page_first_and_reuses_valid_cached_results(
     page_wise = json.loads(
         (comparison_root / "page_wise_comparison.json").read_text()
     )
-    assert len(scenario_wise["scenarios"]) == 4
+    assert len(scenario_wise["scenarios"]) == 3
     assert [
         (scenario["scenario_id"], scenario["scenario_name"])
         for scenario in scenario_wise["scenarios"]
     ] == [(scenario_id, name) for scenario_id, _, name in sc.SCENARIOS]
     assert len(page_wise["pages"]) == 2
-    assert len(page_wise["pages"][0]["scenarios"]) == 4
+    assert len(page_wise["pages"][0]["scenarios"]) == 3
     assert [
         (scenario["scenario_id"], scenario["scenario_name"])
         for scenario in page_wise["pages"][0]["scenarios"]
@@ -993,10 +999,10 @@ def test_scenario_comparison_runs_page_first_and_reuses_valid_cached_results(
     assert Path(result["summary"]["page_wise_comparison_json"]).is_file()
     assert len(result["page_comparisons"]) == 2
     assert progress[-1]["status"] == "COMPLETED"
-    assert progress[-1]["completed_comparisons"] == 8
+    assert progress[-1]["completed_comparisons"] == 6
     assert progress[-1]["remaining_comparisons"] == 0
     page_result = json.loads(Path(result["page_comparisons"][0]).read_text())
-    assert len(page_result["scenarios"]) == 4
+    assert len(page_result["scenarios"]) == 3
     assert all(
         item["comparison_provenance"] == "REUSED_UNCHANGED_SAVED_COMPARISON"
         for item in page_result["scenarios"]
@@ -1106,11 +1112,11 @@ def test_scenario_comparison_marks_failed_pair_unverified_and_continues(
     assert first_page["scenarios"][0]["comparison_status"] == "PASS"
     assert first_page["scenarios"][1]["comparison_status"] == "UNVERIFIED"
     assert "vision unavailable" in first_page["scenarios"][1]["evidence"]["errors"][-1]
-    assert len(first_page["scenarios"]) == 4
-    assert result["summary"]["total_page_scenarios_processed"] == 8
+    assert len(first_page["scenarios"]) == 3
+    assert result["summary"]["total_page_scenarios_processed"] == 6
 
 
-def test_one_page_comparison_pairs_all_four_scenarios_from_manifests(
+def test_one_page_comparison_pairs_active_scenarios_from_manifests(
     tmp_path, monkeypatch
 ):
     source_root = tmp_path / "job"
@@ -1181,11 +1187,6 @@ def test_one_page_comparison_pairs_all_four_scenarios_from_manifests(
         "01": [("table_headers_scroll", "table_headers_scroll:horizontal_scroll_01")],
         "02": [("single_filter", "single_filter:region=north")],
         "03": [("multiple_filter", "multiple_filter:region=north,south")],
-        "04": [
-            ("drill_initial", "drill_initial:initial"),
-            ("drill_before", "drill_level_before:sales:1"),
-            ("drill_after", "drill_level_after:sales:1"),
-        ],
     }
 
     async def create_manifest_entries():
@@ -1292,17 +1293,55 @@ def test_one_page_comparison_pairs_all_four_scenarios_from_manifests(
         )
     )
 
-    assert [scenario_id for scenario_id, _ in vision_calls] == [
-        "02",
-        "03",
-        "04",
-    ]
-    assert len(vision_calls[-1][1]) == 8
-    assert result["summary"]["total_page_scenarios_processed"] == 4
+    assert [scenario_id for scenario_id, _ in vision_calls] == ["02", "03"]
+    assert len(vision_calls[-1][1]) == 4
+    assert result["summary"]["total_page_scenarios_processed"] == 3
     page_result = json.loads(Path(result["page_comparisons"][0]).read_text())
-    assert len(page_result["scenarios"]) == 4
+    assert len(page_result["scenarios"]) == 3
     assert page_result["scenarios"][0]["comparison_status"] == "PASS"
-    assert page_result["scenarios"][3]["visual_comparison"]["status"] == "PASS"
+    assert page_result["scenarios"][2]["visual_comparison"]["status"] == "PASS"
     assert (source_root / "comparison_results" / "scenario_wise_comparison.json").is_file()
     assert (source_root / "comparison_results" / "page_wise_comparison.json").is_file()
     assert (source_root / "comparison_results" / "final_comparison_summary.json").is_file()
+
+
+def test_compare_dom_headers_matches_identical_sequences():
+    res = sc.compare_dom_headers(["Item", "Price", "Qty"], ["Item", "Price", "Qty"])
+    assert res["status"] == "PASS"
+    assert res["matching_headers"] == ["Item", "Price", "Qty"]
+    assert res["missing_headers"] == []
+    assert res["additional_headers"] == []
+
+
+def test_compare_dom_headers_detects_order_differences():
+    res = sc.compare_dom_headers(["Item", "Price", "Qty"], ["Price", "Item", "Qty"])
+    assert res["status"] == "FAIL"
+    assert len(res["differently_ordered_headers"]) == 2
+    assert res["missing_headers"] == []
+    assert res["additional_headers"] == []
+
+
+def test_compare_dom_headers_preserves_duplicate_occurrences():
+    res = sc.compare_dom_headers(["ID", "Amt", "Amt"], ["ID", "Amt"])
+    assert res["status"] == "FAIL"
+    assert res["missing_headers"] == ["Amt"]
+    assert res["matching_headers"] == ["ID", "Amt"]
+
+
+def test_select_scenario_screenshot_pairs_honors_requested_cap():
+    items_a = [{"label": f"step_{i}", "path": f"a_{i}.png"} for i in range(10)]
+    items_b = [{"label": f"step_{i}", "path": f"b_{i}.png"} for i in range(10)]
+    selected = sc._select_scenario_screenshot_pairs(items_a, items_b, max_pairs=4)
+    assert len(selected) == 4
+    assert selected[0][0]["label"] == "step_0"
+    assert selected[-1][0]["label"] == "step_9"
+    # Ensure no duplicates
+    labels = [pair[0]["label"] for pair in selected]
+    assert len(labels) == len(set(labels))
+
+    # Scroll screenshots are excluded from selected pairs when exclude_scroll=True
+    items_a.append({"label": "Scroll01", "path": "dashboard_A_Scroll01.png"})
+    items_b.append({"label": "Scroll01", "path": "dashboard_B_Scroll01.png"})
+    selected_with_scroll = sc._select_scenario_screenshot_pairs(items_a, items_b, max_pairs=4, exclude_scroll=True)
+    assert not any("Scroll" in p[0]["path"] or "Scroll" in p[0]["label"] for p in selected_with_scroll)
+

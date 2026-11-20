@@ -617,17 +617,24 @@ input:focus-visible {
 
 .spreadsheet th:nth-child(2),
 .spreadsheet td:nth-child(2) {
-  width: 31%;
+  width: 19%;
 }
 
 .spreadsheet th:nth-child(3),
 .spreadsheet td:nth-child(3) {
-  width: 34%;
+  width: 19%;
 }
 
 .spreadsheet th:nth-child(4),
 .spreadsheet td:nth-child(4) {
-  width: 35%;
+  width: 19%;
+}
+
+.spreadsheet th:nth-child(5),
+.spreadsheet td:nth-child(5),
+.spreadsheet th:nth-child(6),
+.spreadsheet td:nth-child(6) {
+  width: 21.5%;
 }
 
 .spreadsheet td {

@@ -1,10 +1,18 @@
 (() => {
   const MAX_JOBS = 10;
-  const fields = ["workspace_name", "semantic_model", "report_name"];
+  const fields = [
+    "workspace_name",
+    "semantic_model",
+    "report_name",
+    "url_a",
+    "url_b"
+  ];
   const fieldLabels = {
     workspace_name: "Workspace Name",
     semantic_model: "Semantic Model",
-    report_name: "Report Name"
+    report_name: "Report Name",
+    url_a: "Base Report URL",
+    url_b: "GCP Report URL"
   };
   const rowsBody = document.querySelector("#batch-rows");
   const grid = document.querySelector("#batch-grid");
@@ -45,7 +53,9 @@
       id: `row-${rowSequence}`,
       workspace_name: values.workspace_name || "",
       semantic_model: values.semantic_model || "",
-      report_name: values.report_name || ""
+      report_name: values.report_name || "",
+      url_a: values.url_a || "",
+      url_b: values.url_b || ""
     };
   }
 
@@ -107,11 +117,24 @@
         fields.map(field => [field, valueOf(row, field)])
       );
       jobs.push(job);
-      const missing = fields.filter(field => !job[field]);
+      const urlMode = Boolean(job.url_a || job.url_b);
+      const requiredFields = urlMode
+        ? ["url_a", "url_b"]
+        : ["workspace_name", "semantic_model", "report_name"];
+      const missing = requiredFields.filter(field => !job[field]);
       if (missing.length) {
         const messages = missing.map(field => `${fieldLabels[field]} is required.`);
         rowErrors.set(row.id, messages);
         errors.push(`Row ${index + 1}: ${messages.join(" ")}`);
+      }
+      if (urlMode && (job.url_a || job.url_b)) {
+        for (const field of ["url_a", "url_b"]) {
+          if (job[field] && !/^https:\/\/app\.powerbi\.com\//i.test(job[field])) {
+            const message = `${fieldLabels[field]} must be an HTTPS app.powerbi.com URL.`;
+            rowErrors.set(row.id, [...(rowErrors.get(row.id) || []), message]);
+            errors.push(`Row ${index + 1}: ${message}`);
+          }
+        }
       }
       const key = fields.map(field => job[field].toLocaleLowerCase()).join("\u0000");
       if (firstOccurrence.has(key)) {

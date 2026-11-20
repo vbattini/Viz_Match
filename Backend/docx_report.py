@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import logging
 import re
+import time
 from datetime import date
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from docx import Document
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+
+logger = logging.getLogger(__name__)
 
 TEMPLATE_PATH = Path(__file__).parent / "assets" / "report_template.docx"
 _PROJECT_COMPARISON_TEMPLATE = (
@@ -53,6 +58,27 @@ STATUS_TEXT_COLORS = {
 
 NAVY = "1F3864"
 BORDER_GRAY = "BFBFBF"
+
+
+def _save_document_atomic(doc: Any, path: Path) -> None:
+    temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+    try:
+        doc.save(str(temporary))
+        for attempt in range(5):
+            try:
+                temporary.replace(path)
+                return
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                logger.warning(
+                    "Temporary permission error replacing %s; retrying (%d/5)",
+                    path,
+                    attempt + 1,
+                )
+                time.sleep(0.1 * (2**attempt))
+    finally:
+        temporary.unlink(missing_ok=True)
 RED_TEXT = {"DIFFERENT", "FAIL", "Fail", "Variance"}
 MAX_CELL_CHARS = 500
 SCREENSHOT_MAX_WIDTH_IN = 6.0
@@ -144,7 +170,7 @@ def write_docx_report(
         states,
         label_initial_default_state=False,
     )
-    doc.save(str(path))
+    _save_document_atomic(doc, path)
 
 
 def _populate_comparison_template(
@@ -207,7 +233,9 @@ def _populate_comparison_template(
 
     filter_headers, source_filter_rows = filter_validation_log
     filter_rows = _docx_filter_validation_rows(
-        filter_headers, source_filter_rows
+        filter_headers,
+        source_filter_rows,
+        (result.get("visual_filter") or {}).get("filter_rows") or [],
     )
     _replace_docx_log_table(
         doc,
@@ -452,7 +480,9 @@ def _replace_docx_log_table(
 
 
 def _docx_filter_validation_rows(
-    source_headers: list[str], source_rows: list[list[Any]]
+    source_headers: list[str],
+    source_rows: list[list[Any]],
+    structured_rows: list[dict[str, Any]] | None = None,
 ) -> list[list[str]]:
     source_columns = {
         str(header): index for index, header in enumerate(source_headers)
@@ -475,31 +505,122 @@ def _docx_filter_validation_rows(
             row[source_columns[column]]
         )
 
+    grouped: list[dict[str, Any]] = []
+
+    def flush_group(group: dict[str, Any] | None) -> None:
+        if group is None:
+            return
+        grouped.append(group)
+
+    if structured_rows and all(isinstance(row, dict) for row in structured_rows):
+        groups_by_state: dict[tuple[str, str], dict[str, Any]] = {}
+        for row in structured_rows:
+            state = str(row.get("state") or "").strip()
+            page = str(row.get("page") or "").strip()
+            if not page and state:
+                page = state.split("|", 1)[0].strip()
+            filter_name = str(row.get("filter_name") or "").strip()
+            if not page or not filter_name:
+                continue
+            group = groups_by_state.setdefault(
+                (page, state),
+                {
+                    "page": page,
+                    "filter_names": set(),
+                    "filters": [],
+                    "statuses": [],
+                },
+            )
+            group["filter_names"].add(filter_name.casefold())
+            group["filters"].append(
+                {
+                    "name": filter_name,
+                    "base": str(row.get("selected_values_a") or "").strip()
+                    or "Not captured",
+                    "compare": str(row.get("selected_values_b") or "").strip()
+                    or "Not captured",
+                    "observation": str(row.get("comparison_notes") or "").strip(),
+                }
+            )
+            group["statuses"].append(str(row.get("status") or ""))
+        grouped.extend(groups_by_state.values())
+    else:
+        current: dict[str, Any] | None = None
+        for row in source_rows:
+            if len(row) != len(source_headers):
+                raise ValueError(
+                    "Source Filter Validation Log row does not match its headers."
+                )
+            page = value(row, "Page / Area")
+            filter_name = value(row, "Compare Dashboard")
+            base_selection = value(row, "Base Dashboard") or "Not captured"
+            compare_selection = value(row, "Visual / Check") or "Not captured"
+            normalized_name = " ".join(filter_name.split()).casefold()
+            if (
+                current is None
+                or current["page"] != page
+                or normalized_name in current["filter_names"]
+            ):
+                flush_group(current)
+                current = {
+                    "page": page,
+                    "filter_names": set(),
+                    "filters": [],
+                    "statuses": [],
+                }
+            current["filter_names"].add(normalized_name)
+            current["filters"].append(
+                {
+                    "name": filter_name,
+                    "base": base_selection,
+                    "compare": compare_selection,
+                    "observation": value(row, "Observation"),
+                }
+            )
+            current["statuses"].append(value(row, "Result"))
+        flush_group(current)
+
     result: list[list[str]] = []
-    for row in source_rows:
-        if len(row) != len(source_headers):
-            raise ValueError(
-                "Source Filter Validation Log row does not match its headers."
-            )
-        filter_name = value(row, "Compare Dashboard")
-        base_selection = value(row, "Base Dashboard")
-        compare_selection = value(row, "Visual / Check")
-        if " ".join(base_selection.split()).casefold() == " ".join(
-            compare_selection.split()
-        ).casefold():
-            action = f"{filter_name}: {base_selection}"
-        else:
-            action = (
-                f"{filter_name}: Base: {base_selection}; "
-                f"Compare: {compare_selection}"
-            )
+    for index, group in enumerate(grouped, start=1):
+        actions: list[str] = []
+        failure_details: list[str] = []
+        for item in group["filters"]:
+            base_selection = item["base"]
+            compare_selection = item["compare"]
+            if " ".join(base_selection.split()).casefold() == " ".join(
+                compare_selection.split()
+            ).casefold():
+                action = f"{item['name']}: {base_selection}"
+            else:
+                action = (
+                    f"{item['name']}: Base: {base_selection}; "
+                    f"Compare: {compare_selection}"
+                )
+            actions.append(f"{action};")
+            observation = " ".join(item["observation"].split())
+            if observation and observation != "-":
+                failure_details.append(f"{item['name']}: {observation}")
+
+        statuses = {
+            _docx_status_label(str(status or ""))
+            for status in group["statuses"]
+        }
+        result_status = (
+            "Fail"
+            if "Fail" in statuses
+            else "Unable to Verify"
+            if "Unable to Verify" in statuses
+            else "Pass"
+        )
+        if result_status != "Pass" and failure_details:
+            actions.append("Validation detail: " + " ".join(failure_details))
         result.append(
             [
-                value(row, "ID"),
-                value(row, "Page / Area"),
-                action,
+                f"{index:02d}",
+                group["page"],
+                "\n".join(actions),
                 FILTER_EXPECTED_BEHAVIOR,
-                value(row, "Result"),
+                result_status,
             ]
         )
     return result
@@ -558,17 +679,30 @@ def _docx_visual_validation_rows(
             visual_metadata,
         )
         status = value(row, "Result")
+        expected_result = _docx_expected_result(
+            value(row, "Observation")
+        )
         result.append(
             [
                 value(row, "ID"),
                 value(row, "Page / Area"),
                 visual_check,
                 _docx_visual_action(state, filter_rows, visual_metadata),
-                value(row, "Observation"),
+                expected_result,
                 status,
             ]
         )
     return result
+
+
+def _docx_expected_result(observation: str) -> str:
+    """Keep the validation expectation but omit the appended filter context."""
+    normalized = " ".join(observation.split()).strip()
+    parts = re.split(r"\s+Filter\s*:", normalized, maxsplit=1, flags=re.IGNORECASE)
+    if len(parts) == 1:
+        return normalized
+    expectation = parts[0].strip()
+    return expectation.rstrip(" .") + "." if expectation else ""
 
 
 def _docx_visual_check(
@@ -616,6 +750,12 @@ def _simple_visual_type(value: str) -> str:
     normalized = " ".join(value.split()).casefold()
     if not normalized or normalized in {"-", "not available", "not captured"}:
         return ""
+    if normalized.startswith("blank "):
+        if "table" in normalized or "matrix" in normalized:
+            return "Blank Table"
+        if "kpi" in normalized or "card" in normalized:
+            return "Blank KPI"
+        return "Blank Chart"
     for token, label in (
         ("text box", "Text Box"),
         ("matrix", "Matrix"),
@@ -679,7 +819,11 @@ def _docx_visual_action(
                     if name
                     else f"Base: {base_value}; Compare: {compare_value}"
                 )
-        return "; ".join(actions)
+        return "\n".join(
+            f"{action.rstrip(';')};"
+            for action in actions
+            if action.strip()
+        )
 
     state_key = state.casefold()
     applied_actions = []
@@ -693,7 +837,11 @@ def _docx_visual_action(
         elif action:
             applied_actions.append(action)
     if applied_actions:
-        return "; ".join(dict.fromkeys(applied_actions))
+        return "\n".join(
+            f"{action.rstrip(';')};"
+            for action in dict.fromkeys(applied_actions)
+            if action.strip()
+        )
     if default_action_found:
         return "Default filter state"
     return "Not captured"
@@ -1139,7 +1287,7 @@ def _filter_action_summary(rows: list[dict[str, Any]]) -> str:
             action = f"{name}: {value_a}"
         else:
             action = f"{name}: Snowflake: {value_a}; GCP: {value_b}"
-        actions.append(action)
+        actions.append(f"{action};")
     return "\n".join(actions) or NO_FILTER_SELECTIONS_TEXT
 
 

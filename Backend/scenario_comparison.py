@@ -66,10 +66,9 @@ COMPARISON_CATEGORIES = {
 CONFIRMED_DIFFERENCES = COMPARISON_CATEGORIES - {"MATCH", "UNVERIFIED"}
 
 SCENARIOS = (
-    ("01", "01_table_column_header_comparison", "Table Column Header Comparison"),
+    ("01", "01_table_column_header_comparison", "Table Column Header and Hierarchy Validation"),
     ("02", "02_single_filter_selection", "Single Filter Selection"),
     ("03", "03_multiple_filter_selection", "Multiple Filter Selection"),
-    ("04", "04_drilldown", "Drilldown"),
 )
 
 DOCX_NAVY = "1F3864"
@@ -824,6 +823,50 @@ def _comparison_screenshots(
             label = str(visual.get("visual") or visual.get("title") or "visual")
             result_a = visual.get("dashboard_A") or {}
             result_b = visual.get("dashboard_B") or {}
+            expand_a = result_a.get("expand_all") or {}
+            expand_b = result_b.get("expand_all") or {}
+            expand_path_a = _resolve_evidence_path(
+                expand_a.get("final_screenshot"), source_root, workspace_root
+            )
+            expand_path_b = _resolve_evidence_path(
+                expand_b.get("final_screenshot"), source_root, workspace_root
+            )
+            if expand_path_a and expand_path_a.is_file() and expand_path_b and expand_path_b.is_file():
+                sides["dashboard_A"].append(
+                    {"label": f"{label} expand all", "path": str(expand_path_a)}
+                )
+                sides["dashboard_B"].append(
+                    {"label": f"{label} expand all", "path": str(expand_path_b)}
+                )
+            elif expand_a.get("final_screenshot") or expand_b.get("final_screenshot"):
+                errors.append(f"unpaired expand-all screenshot for {label}")
+            levels_a = {
+                str(step.get("level")): step
+                for step in result_a.get("next_levels", [])
+                if isinstance(step, dict)
+            }
+            levels_b = {
+                str(step.get("level")): step
+                for step in result_b.get("next_levels", [])
+                if isinstance(step, dict)
+            }
+            for level in sorted(set(levels_a) & set(levels_b), key=lambda x: int(x)):
+                path_a = _resolve_evidence_path(
+                    levels_a[level].get("screenshot"), source_root, workspace_root
+                )
+                path_b = _resolve_evidence_path(
+                    levels_b[level].get("screenshot"), source_root, workspace_root
+                )
+                if path_a and path_a.is_file() and path_b and path_b.is_file():
+                    screenshot_label = f"{label} next level {level}"
+                    sides["dashboard_A"].append(
+                        {"label": screenshot_label, "path": str(path_a)}
+                    )
+                    sides["dashboard_B"].append(
+                        {"label": screenshot_label, "path": str(path_b)}
+                    )
+                elif levels_a[level].get("screenshot") or levels_b[level].get("screenshot"):
+                    errors.append(f"unpaired next-level screenshot for {label} level {level}")
             steps_a = {
                 str(step.get("level")): step
                 for step in result_a.get("steps", [])
@@ -996,19 +1039,118 @@ def _status_from_results(
     return STATUS_PASS
 
 
+def _select_scenario_screenshot_pairs(
+    items_a: list[dict[str, Any]],
+    items_b: list[dict[str, Any]],
+    max_pairs: int = 4,
+    exclude_scroll: bool = False,
+) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    matched_pairs: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    b_by_label = {item["label"]: item for item in items_b if item.get("label")}
+    for item_a in items_a:
+        label = item_a.get("label") or ""
+        path_a = str(item_a.get("path") or "")
+        if exclude_scroll and ("Scroll" in Path(path_a).name or "Scroll" in label):
+            continue
+        if label in b_by_label:
+            item_b = b_by_label[label]
+            path_b = str(item_b.get("path") or "")
+            if exclude_scroll and ("Scroll" in Path(path_b).name or "Scroll" in str(item_b.get("label") or "")):
+                continue
+            matched_pairs.append((item_a, item_b))
+    if len(matched_pairs) <= max_pairs:
+        return matched_pairs
+    selected = [matched_pairs[0]]
+    step_indices = [
+        int(round(i * (len(matched_pairs) - 1) / (max_pairs - 1)))
+        for i in range(1, max_pairs)
+    ]
+    for idx in dict.fromkeys(step_indices):
+        if idx < len(matched_pairs) and matched_pairs[idx] not in selected:
+            selected.append(matched_pairs[idx])
+    return selected[:max_pairs]
+
+
+def compare_dom_headers(
+    headers_a: list[str], headers_b: list[str]
+) -> dict[str, Any]:
+    def norm(h: Any) -> str:
+        return " ".join(str(h).split())
+
+    norm_a = [norm(h) for h in headers_a if str(h).strip()]
+    norm_b = [norm(h) for h in headers_b if str(h).strip()]
+
+    if not norm_a and not norm_b:
+        return {
+            "status": STATUS_UNVERIFIED,
+            "tables_found_a": None,
+            "tables_found_b": None,
+            "headers_a": [],
+            "headers_b": [],
+            "matching_headers": [],
+            "missing_headers": [],
+            "additional_headers": [],
+            "renamed_headers": [],
+            "differently_ordered_headers": [],
+            "notes": ["No table column headers found in DOM on either dashboard."],
+        }
+
+    count_a = Counter(norm_a)
+    count_b = Counter(norm_b)
+
+    matching = []
+    for h, c in (count_a & count_b).items():
+        matching.extend([h] * c)
+
+    missing = []
+    for h, c in (count_a - count_b).items():
+        missing.extend([h] * c)
+
+    additional = []
+    for h, c in (count_b - count_a).items():
+        additional.extend([h] * c)
+
+    order_diffs = []
+    if count_a == count_b and norm_a != norm_b:
+        for idx, (a, b) in enumerate(zip(norm_a, norm_b)):
+            if a != b:
+                order_diffs.append({
+                    "header": a,
+                    "position_a": idx + 1,
+                    "position_b": norm_b.index(a) + 1 if a in norm_b else None,
+                })
+
+    status = STATUS_PASS if norm_a == norm_b else STATUS_FAIL
+
+    return {
+        "status": status,
+        "tables_found_a": True if norm_a else False,
+        "tables_found_b": True if norm_b else False,
+        "headers_a": norm_a,
+        "headers_b": norm_b,
+        "matching_headers": matching,
+        "missing_headers": missing,
+        "additional_headers": additional,
+        "renamed_headers": [],
+        "differently_ordered_headers": order_diffs,
+        "notes": [
+            "DOM table column headers evaluated directly from live DOM without LLM extraction."
+        ],
+    }
+
+
 def _make_vision_inputs(
     page_name: str, screenshot_sides: dict[str, list[dict[str, Any]]]
 ) -> list[tuple[str, bytes]]:
-    items_a = screenshot_sides["dashboard_A"]
-    items_b = screenshot_sides["dashboard_B"]
-    if not items_a or len(items_a) != len(items_b):
-        return []
-    if [item["label"] for item in items_a] != [
-        item["label"] for item in items_b
-    ]:
+    items_a = screenshot_sides.get("dashboard_A") or []
+    items_b = screenshot_sides.get("dashboard_B") or []
+    selected_pairs = _select_scenario_screenshot_pairs(
+        items_a, items_b, max_pairs=4, exclude_scroll=True
+    )
+    if not selected_pairs:
         return []
     screenshots = []
-    for item_a, item_b in zip(items_a, items_b):
+    for item_a, item_b in selected_pairs:
         descriptor = item_a["label"]
         screenshots.extend(
             [
@@ -1978,57 +2120,48 @@ async def _compare_scenario(
             source_comparison = page.get("_source_comparison") or {}
             saved_vision = source_comparison.get("llm_vision_comparison")
             if not isinstance(saved_vision, dict):
-                vision_inputs = _header_vision_inputs(
-                    screenshot_data[page["page_name"]]
-                )
-                if vision_inputs:
-                    dom_evidence = {
-                        side: _dom_header_evidence(
-                            source_root,
-                            side,
-                            page["page_name"],
-                            next(
-                                (
-                                    item["path"]
-                                    for item in screenshot_data[page["page_name"]][side]
-                                    if item.get("label") == "initial"
-                                ),
-                                None,
-                            ),
-                            workspace_root,
-                        )
-                        for side in ("dashboard_A", "dashboard_B")
-                    }
-                    dom_headers = {
-                        side: value["headers"]
-                        for side, value in dom_evidence.items()
-                        if value["status"] == "VERIFIED" and value["headers"]
-                    }
-                    vision_result = await compare_table_headers_from_screenshots(
-                        vision_inputs,
+                page_name = page["page_name"]
+                headers_a: list[str] = []
+                headers_b: list[str] = []
+                for candidate in (
+                    source_root / "01_table_column_header_comparison" / safe_path_part(page_name) / "dom_extraction.json",
+                    source_root / "01_table_column_header_comparison" / page_name / "dom_extraction.json",
+                ):
+                    if candidate.is_file():
+                        try:
+                            dom_json, _ = _read_json(candidate)
+                            if dom_json:
+                                headers_a = dom_json.get("headers_a") or []
+                                headers_b = dom_json.get("headers_b") or []
+                                break
+                        except Exception:
+                            pass
+
+                dom_evidence = {
+                    side: _dom_header_evidence(
+                        source_root,
+                        side,
                         page["page_name"],
-                        dom_header_evidence=dom_headers,
-                        job_id=job_id,
-                        operation_log_path=operation_log_path,
+                        next(
+                            (
+                                item["path"]
+                                for item in screenshot_data[page["page_name"]][side]
+                                if item.get("label") == "initial"
+                            ),
+                            None,
+                        ),
+                        workspace_root,
                     )
-                    vision_result["dom_header_evidence"] = dom_evidence
-                    page["evidence"]["dom_header_evidence"] = dom_evidence
-                else:
-                    vision_result = {
-                        "status": STATUS_UNVERIFIED,
-                        "tables_found_a": None,
-                        "tables_found_b": None,
-                        "headers_a": [],
-                        "headers_b": [],
-                        "matching_headers": [],
-                        "missing_headers": [],
-                        "additional_headers": [],
-                        "renamed_headers": [],
-                        "differently_ordered_headers": [],
-                        "notes": [
-                            "Both designated initial screenshots and all applicable scroll evidence are required."
-                        ],
-                    }
+                    for side in ("dashboard_A", "dashboard_B")
+                }
+                if not headers_a:
+                    headers_a = dom_evidence.get("dashboard_A", {}).get("headers") or []
+                if not headers_b:
+                    headers_b = dom_evidence.get("dashboard_B", {}).get("headers") or []
+
+                vision_result = compare_dom_headers(headers_a, headers_b)
+                vision_result["dom_header_evidence"] = dom_evidence
+                page["evidence"]["dom_header_evidence"] = dom_evidence
                 page["visual_comparison"], page["findings"] = _scenario01_result(
                     {"llm_vision_comparison": vision_result}
                 )
@@ -2236,7 +2369,9 @@ def _final_summary(
         if len(scenarios) == 1 and scenarios[0].get("scenario_id") == "01"
         else (
             "Numeric chart/KPI values and table cell records were not validated; "
-            "this report covers visual rendering, labels, filters, and headers."
+            "Scenario 02 and Scenario 03 cover visual rendering and filter "
+            "validation only. Table headers and hierarchy are evaluated only "
+            "by their dedicated scenarios."
         )
     )
     return {
@@ -2631,24 +2766,15 @@ def _write_docx(
             shots_b = page.get("evidence", {}).get("dashboard_B_screenshots", [])
             if not shots_a and not shots_b:
                 continue
-            labels_a = [item["label"] for item in shots_a]
-            labels_b = [item["label"] for item in shots_b]
-            all_labels = list(dict.fromkeys(labels_a + labels_b))
-            for label in all_labels:
-                path_a = next(
-                    (item["path"] for item in shots_a if item["label"] == label),
-                    None,
-                )
-                path_b = next(
-                    (item["path"] for item in shots_b if item["label"] == label),
-                    None,
-                )
+            selected_pairs = _select_scenario_screenshot_pairs(shots_a, shots_b, max_pairs=4)
+            for item_a, item_b in selected_pairs:
+                label = item_a.get("label") or "screenshot"
                 _add_image_pair(
                     document,
                     f"Scenario {scenario['scenario_id']} — {page['page_name']}",
                     label,
-                    path_a,
-                    path_b,
+                    item_a.get("path"),
+                    item_b.get("path"),
                 )
 
     document.add_heading("5. Reference Documents and Limitations", level=1)
@@ -3178,7 +3304,14 @@ async def run_scenario_comparison(
     _write_docx(report_path, summary, scenarios, references)
     obsolete_scenario_output = comparison_root / "scenario_05"
     if obsolete_scenario_output.is_dir():
-        shutil.rmtree(obsolete_scenario_output)
+        try:
+            shutil.rmtree(obsolete_scenario_output)
+        except OSError:
+            logger.warning(
+                "Could not remove obsolete scenario directory %s",
+                obsolete_scenario_output,
+                exc_info=True,
+            )
     write_operation_event(
         operation_log,
         job_id=job_id,

@@ -1,4 +1,4 @@
-"""Excel and DOCX output for visual-type and filter validation.
+﻿"""Excel and DOCX output for visual-type and filter validation.
 
 The Excel workbook summarizes visible rendering, filter selections, and layout
 while keeping table rows and chart values out of the visual-validation checks.
@@ -32,6 +32,7 @@ from .docx_report import (
     _style_status_cell,
 )
 from .visual_filter_comparison import (
+    classify_visual_type,
     effective_rendering_status,
     same_visual_type,
     same_visual_name,
@@ -62,12 +63,33 @@ VISUAL_VALIDATION_HEADERS = [
     "Observation",
     "Result",
 ]
+HIERARCHY_COMPARISON_HEADERS = [
+    "ID",
+    "Page / Area",
+    "Filter / State",
+    "Visual Name",
+    "Hierarchy Level",
+    "Master Vendor (Base)",
+    "Master Vendor (Compare)",
+    "Supply Planner (Base)",
+    "Supply Planner (Compare)",
+    "Facility (Base)",
+    "Facility (Compare)",
+    "Item (Base)",
+    "Item (Compare)",
+    "Row Type (Base)",
+    "Row Type (Compare)",
+    "Row Order (Base)",
+    "Row Order (Compare)",
+    "Observation",
+    "Result",
+]
 
 PASS_LABEL = "PASS"
 FAIL_LABEL = "FAIL"
 UNVERIFIED_LABEL = "Unable to Verify"
-PASS_SIGNOFF = "PASS ☑  FAIL ☐"
-FAIL_SIGNOFF = "PASS ☐  FAIL ☑"
+PASS_SIGNOFF = "PASS â˜‘  FAIL â˜"
+FAIL_SIGNOFF = "PASS â˜  FAIL â˜‘"
 STATUS_LABELS = {
     PASS_LABEL,
     FAIL_LABEL,
@@ -338,6 +360,44 @@ def _visual_display_name(row: dict[str, Any]) -> str:
     )
 
 
+def _validation_visual_type(
+    row: dict[str, Any],
+    fallback: str | None = None,
+) -> str:
+    values = [
+        str(row.get(field) or "").strip().casefold()
+        for field in (
+            "visual_type_a",
+            "visual_type_b",
+            "element_type_a",
+            "element_type_b",
+            "standard_element_name",
+        )
+    ]
+    text = " ".join(values)
+    if "matrix" in text:
+        return "Matrix"
+    if "table" in text:
+        return "Table"
+    if "kpi" in text or "card" in text:
+        return "KPI"
+    if "bar" in text:
+        return "Bar Chart"
+    if "line" in text:
+        return "Line Chart"
+    if "pie" in text:
+        return "Pie Chart"
+    if "slicer" in text or "dropdown" in text:
+        return "Slicer"
+    if fallback:
+        fallback_key = fallback.casefold()
+        if fallback_key in {"table", "matrix"}:
+            return fallback.title()
+        if fallback_key in {"kpi", "bar chart", "line chart", "pie chart"}:
+            return fallback
+    return "Visual"
+
+
 def _visual_expected_result(row: dict[str, Any], visual_name: str) -> str:
     unavailable_types = {"", "-", "unknown", "unidentified", "not available"}
     type_a = _cell(row.get("visual_type_a"))
@@ -384,7 +444,7 @@ def _both_visual_types_unavailable(row: dict[str, Any]) -> bool:
     def unavailable(side: str) -> bool:
         value = _display_key(row.get(f"visual_type_{side}"))
         return value in _UNAVAILABLE_VISUAL_TYPES or (
-            bool(value) and set(value) <= {"-", "–", "—", "−"}
+            bool(value) and set(value) <= {"-", "â€“", "â€”", "âˆ’"}
         )
 
     return unavailable("a") and unavailable("b")
@@ -401,7 +461,9 @@ def _presentation_kind(row: dict[str, Any]) -> str | None:
     ]
     if any("kpi" in hint or "card" in hint for hint in hints):
         return "KPI"
-    if any("matrix" in hint or "table" in hint for hint in hints):
+    if any("matrix" in hint for hint in hints):
+        return "Matrix"
+    if any("table" in hint for hint in hints):
         return "Table"
     if any(
         "chart" in hint
@@ -440,12 +502,21 @@ def _table_display_columns(data: Any) -> list[str]:
     categories = data.get("categories")
     if not isinstance(categories, list):
         return []
-    return [
+    columns = [
         str(item.get("raw") if isinstance(item, dict) else item).strip()
         for item in categories
         if item is not None
         and str(item.get("raw") if isinstance(item, dict) else item).strip()
     ]
+    return list(dict.fromkeys(columns))
+
+
+def _table_has_confirmed_no_rows(data: Any) -> bool:
+    """Return whether table extraction explicitly captured an empty body."""
+    if not isinstance(data, dict) or data.get("rows_extracted") is not True:
+        return False
+    rows = data.get("rows")
+    return isinstance(rows, list) and not rows
 
 
 def _presentation_side(row: dict[str, Any], side: str, kind: str) -> str:
@@ -471,9 +542,11 @@ def _presentation_side(row: dict[str, Any], side: str, kind: str) -> str:
             return "Blank / no value displayed"
         return f"Value displayed: {value}"
 
-    if kind == "Table":
+    if kind in {"Table", "Matrix"}:
         columns = _table_display_columns(data)
         if columns:
+            if _table_has_confirmed_no_rows(data):
+                return "Blank Table; column headers displayed with no data rows"
             return f"Matrix/Table displayed; columns: {', '.join(columns)}"
         return "Matrix/Table displayed; column headers not captured"
 
@@ -513,10 +586,18 @@ def _presentation_match(
             )
         return UNVERIFIED, "KPI display state could not be verified on either dashboard."
 
-    if kind == "Table":
+    if kind in {"Table", "Matrix"}:
         columns_a = _table_display_columns(data_a)
         columns_b = _table_display_columns(data_b)
         if columns_a and columns_b:
+            blank_a = _table_has_confirmed_no_rows(data_a)
+            blank_b = _table_has_confirmed_no_rows(data_b)
+            if blank_a != blank_b:
+                blank_side = "Base" if blank_a else "Compare"
+                return (
+                    DIFFERENT,
+                    f"Blank Visual: {blank_side} table shows headers with no data rows.",
+                )
             if [_display_key(item) for item in columns_a] == [
                 _display_key(item) for item in columns_b
             ]:
@@ -610,8 +691,8 @@ def _visual_evidence_note(result: dict[str, Any], state: str) -> str:
     filenames = []
     unavailable = []
     for side, label in (
-        ("dashboard_a", "Base Dashboard"),
         ("dashboard_b", "Compare Dashboard"),
+        ("dashboard_a", "Base Dashboard"),
     ):
         filename = _visual_evidence_filename(result, side, state)
         if filename:
@@ -619,9 +700,9 @@ def _visual_evidence_note(result: dict[str, Any], state: str) -> str:
         else:
             unavailable.append(label)
     if not filenames:
-        return " Screenshot evidence unavailable."
+        return " Screenshot evidence unavailable." if "screenshot_evidence" in result else ""
     note = f" Evidence: {', '.join(filenames)}."
-    if unavailable:
+    if unavailable and "screenshot_evidence" in result:
         note += f" Screenshot evidence unavailable for {', '.join(unavailable)}."
     return note
 
@@ -640,7 +721,174 @@ def _table_columns(value: Any) -> list[str]:
     match = re.search(r"\bcolumns:\s*(.*)", str(value or ""), re.IGNORECASE)
     if match is None:
         return []
-    return [column.strip() for column in match.group(1).split(",") if column.strip()]
+    columns = []
+    seen = set()
+    for column in match.group(1).split(","):
+        normalized = " ".join(column.split())
+        key = normalized.casefold()
+        if normalized and key not in seen:
+            columns.append(normalized)
+            seen.add(key)
+    return columns
+
+
+def _hierarchy_excel_values(
+    structure: dict[str, Any] | None,
+    row: dict[str, Any] | None,
+) -> list[str]:
+    values = row.get("values") if isinstance(row, dict) else None
+    columns = structure.get("columns") if isinstance(structure, dict) else None
+    result = [""] * 4
+    if isinstance(values, list) and isinstance(columns, list):
+        for column in columns:
+            if not isinstance(column, dict):
+                continue
+            level = int(column.get("level") or 0)
+            index = int(column.get("index") or 0)
+            if 1 <= level <= 4 and index < len(values):
+                result[level - 1] = " ".join(str(values[index] or "").split())
+    if isinstance(row, dict):
+        path = [
+            " ".join(str(value or "").split())
+            for value in row.get("parent_path") or []
+        ]
+        current = " ".join(str(row.get("current_value") or "").split())
+        level = int(row.get("hierarchy_level") or 0)
+        for index, value in enumerate(path[:3]):
+            if not result[index]:
+                result[index] = value
+        if 1 <= level <= 4 and current and not result[level - 1]:
+            result[level - 1] = current
+    return result
+
+
+def _hierarchy_excel_signature(row: dict[str, Any] | None) -> tuple[Any, ...]:
+    if not isinstance(row, dict):
+        return ()
+    return (
+        int(row.get("hierarchy_level") or 0),
+        tuple(" ".join(str(value or "").split()).casefold() for value in row.get("parent_path") or []),
+        " ".join(str(row.get("current_value") or "").split()).casefold(),
+        str(row.get("row_type") or "").casefold(),
+    )
+
+
+def _hierarchy_excel_rows(result: dict[str, Any]) -> list[list[Any]]:
+    rows: list[list[Any]] = []
+    row_id = 1
+    comparison_sources = [
+        comparison
+        for comparison in result.get("comparisons") or []
+        if isinstance(comparison, dict)
+    ]
+    visual_filter = result.get("visual_filter") or {}
+    comparison_sources.extend(
+        comparison
+        for comparison in visual_filter.get("visual_rows") or []
+        if isinstance(comparison, dict)
+    )
+    seen_sources: set[tuple[str, str, str]] = set()
+    for comparison in comparison_sources:
+        if not isinstance(comparison, dict):
+            continue
+        structure_a = comparison.get("hierarchy_structure_a")
+        structure_b = comparison.get("hierarchy_structure_b")
+        if not isinstance(structure_a, dict) and not isinstance(structure_b, dict):
+            continue
+        source_key = (
+            str(comparison.get("page") or "").casefold(),
+            str(comparison.get("state") or "").casefold(),
+            str(
+                comparison.get("visual_id_a")
+                or comparison.get("visual_id_b")
+                or comparison.get("visual_name")
+                or comparison.get("element")
+                or ""
+            ).casefold(),
+        )
+        if source_key in seen_sources:
+            continue
+        seen_sources.add(source_key)
+        rows_a = structure_a.get("rows") if isinstance(structure_a, dict) else []
+        rows_b = structure_b.get("rows") if isinstance(structure_b, dict) else []
+        rows_a = rows_a if isinstance(rows_a, list) else []
+        rows_b = rows_b if isinstance(rows_b, list) else []
+        visual_name = (
+            comparison.get("visual_name")
+            or comparison.get("element")
+            or "Hierarchy table"
+        )
+        state = comparison.get("state") or ""
+        if not rows_a and not rows_b:
+            rows.append(
+                [
+                    f"{row_id:04d}",
+                    comparison.get("page") or "",
+                    state,
+                    visual_name,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Hierarchy extraction was not verified on either dashboard.",
+                    UNVERIFIED_LABEL,
+                ]
+            )
+            row_id += 1
+            continue
+        for index in range(max(len(rows_a), len(rows_b))):
+            base_row = rows_a[index] if index < len(rows_a) else None
+            compare_row = rows_b[index] if index < len(rows_b) else None
+            base_values = _hierarchy_excel_values(structure_a, base_row)
+            compare_values = _hierarchy_excel_values(structure_b, compare_row)
+            base_signature = _hierarchy_excel_signature(base_row)
+            compare_signature = _hierarchy_excel_signature(compare_row)
+            if base_row is not None and compare_row is not None and base_signature == compare_signature:
+                status = "Pass"
+                observation = "Hierarchy row header, level, parent path, row type, and order match."
+            elif base_row is None:
+                status = "Fail"
+                observation = "Additional hierarchy row in Compare Dashboard."
+            elif compare_row is None:
+                status = "Fail"
+                observation = "Hierarchy row is missing from Compare Dashboard."
+            else:
+                status = "Fail"
+                observation = "Hierarchy row header, level, parent path, row type, or order differs."
+            rows.append(
+                [
+                    f"{row_id:04d}",
+                    comparison.get("page") or "",
+                    state,
+                    visual_name,
+                    (base_row or compare_row or {}).get("hierarchy_level", ""),
+                    base_values[0],
+                    compare_values[0],
+                    base_values[1],
+                    compare_values[1],
+                    base_values[2],
+                    compare_values[2],
+                    base_values[3],
+                    compare_values[3],
+                    (base_row or {}).get("row_type", ""),
+                    (compare_row or {}).get("row_type", ""),
+                    (base_row or {}).get("original_row_order", ""),
+                    (compare_row or {}).get("original_row_order", ""),
+                    observation,
+                    status,
+                ]
+            )
+            row_id += 1
+    return rows
 
 
 def _visual_kind(row: dict[str, Any]) -> str:
@@ -675,18 +923,184 @@ def _brief_visual_side(value: Any) -> str:
     return "different visual content"
 
 
+def _is_table_type(visual_type: Any) -> bool:
+    v = str(visual_type or "").strip().casefold()
+    return v in {"table", "matrix"} or "table" in v or "matrix" in v
+
+
+def _is_kpi_type(visual_type: Any) -> bool:
+    v = str(visual_type or "").strip().casefold()
+    return v in {"kpi", "card", "kpi card", "multi row card"} or "kpi" in v or "card" in v
+
+
+def classify_dashboard_visual(
+    visual_type: Any,
+    rendering_status: Any = None,
+    raw_data: Any = None,
+    description: Any = None,
+) -> str:
+    v_type = str(visual_type or "").strip()
+    v_norm = _display_key(v_type)
+    r_status = str(rendering_status or "").strip().casefold()
+    desc = str(description or "").strip()
+    desc_lower = desc.casefold()
+
+    if not v_type or v_norm in _UNAVAILABLE_VISUAL_TYPES or v_norm == "missing" or "visual missing" in desc_lower:
+        return "Missing"
+
+    if v_type in {"Blank Table", "Blank KPI", "Blank Chart"}:
+        return v_type
+
+    is_blank = (
+        r_status in {"blank", "blank table", "blank kpi", "blank chart", "empty", "no data"}
+        or "blank" in desc_lower
+        or "no plotted" in desc_lower
+        or "no value displayed" in desc_lower
+        or "no data rows" in desc_lower
+    )
+    if isinstance(raw_data, dict):
+        if _is_kpi_type(v_type):
+            val = raw_data.get("value")
+            if val is None or str(val).strip().casefold().strip("!") in {"", "blank", "(blank)", "null", "none"}:
+                is_blank = True
+        elif _is_table_type(v_type):
+            if (
+                raw_data.get("rendering_status") == "blank"
+                or (
+                    raw_data.get("rows_extracted") is True
+                    and len(raw_data.get("rows") or []) == 0
+                )
+            ):
+                is_blank = True
+        else:
+            for key in ("values", "rows", "series", "data"):
+                if key in raw_data:
+                    plotted = raw_data[key]
+                    if isinstance(plotted, (list, tuple, dict)) and len(plotted) == 0:
+                        is_blank = True
+                    break
+
+    if is_blank:
+        if _is_table_type(v_type):
+            return "Blank Table"
+        if _is_kpi_type(v_type):
+            return "Blank KPI"
+        return "Blank Chart"
+
+    if "columns:" in desc_lower:
+        return desc
+
+    canonical = classify_visual_type(v_type)
+    return canonical if canonical else v_type
+
+
+def _visual_check_display(base_display: str, compare_display: str) -> str:
+    if base_display and base_display != "Missing":
+        return base_display
+    if compare_display and compare_display != "Missing":
+        return compare_display
+    return "Missing"
+
+
 def _visual_log_observation(row: dict[str, Any], result: dict[str, Any]) -> str:
     observation = " ".join(str(row.get("observation") or "").split())
     lowered = observation.casefold()
     status = str(row.get("status") or "").casefold()
     base = row.get("base")
     compare = row.get("compare")
+    base_str = str(base or "")
+    compare_str = str(compare or "")
     state = str(row.get("state") or "")
     kind = _visual_kind(row)
     base_columns = _table_columns(base)
     compare_columns = _table_columns(compare)
+    visual_check = str(row.get("visual_check") or "").strip()
+    visual_check_key = visual_check.casefold()
+    visual = row.get("visual") or {}
+    type_a = str(
+        visual.get("visual_type_a") or visual.get("element_type_a") or base_str
+    ).strip()
+    type_b = str(
+        visual.get("visual_type_b") or visual.get("element_type_b") or compare_str
+    ).strip()
 
-    if status == "fail":
+    def with_context(reason: str) -> str:
+        raw_action = row.get("filter_action")
+        filter_action = str(raw_action).strip() if raw_action is not None else ""
+        if not filter_action or filter_action.casefold() in {
+            "none",
+            "-",
+            "not captured",
+            "default filter state",
+        }:
+            filter_action = "None (default view)"
+        filter_note = f" Filter: {filter_action}."
+        return f"{reason.rstrip('.')}.{filter_note}"
+
+    if visual_check_key.endswith("column headers"):
+        if status not in {"fail", "different"}:
+            return with_context("Table column headers match between both dashboards.")
+        missing_from_base = [
+            column
+            for column in compare_columns
+            if _display_key(column) not in {_display_key(item) for item in base_columns}
+        ]
+        missing_from_compare = [
+            column
+            for column in base_columns
+            if _display_key(column) not in {_display_key(item) for item in compare_columns}
+        ]
+        details = []
+        if missing_from_base:
+            details.append(
+                "Table column headers missing from Base Dashboard: "
+                + ", ".join(missing_from_base)
+            )
+        if missing_from_compare:
+            details.append(
+                "Table column headers missing from Compare Dashboard: "
+                + ", ".join(missing_from_compare)
+            )
+        if not details and base_columns and compare_columns and (
+            [_display_key(item) for item in base_columns]
+            != [_display_key(item) for item in compare_columns]
+        ):
+            details.append(
+                "Table column headers match but appear in a different order: "
+                "Base: " + ", ".join(base_columns)
+                + "; Compare: " + ", ".join(compare_columns)
+            )
+        return with_context(". ".join(details) or "Table column headers could not be compared")
+
+    known_visual_types = {
+        "table",
+        "matrix",
+        "kpi",
+        "bar chart",
+        "line chart",
+        "pie chart",
+        "slicer",
+    }
+    if visual_check_key in known_visual_types:
+        normalized_a = _display_key(type_a)
+        normalized_b = _display_key(type_b)
+        if normalized_a != normalized_b and normalized_a and normalized_b:
+            return with_context(
+                f"Compare Dashboard shows {type_b}, whereas Base Dashboard shows {type_a}"
+            )
+        if status not in {"fail", "different"}:
+            return with_context(
+                f"{visual_check} visual types match between both dashboards. "
+                "Screenshot styling requires separate visual review."
+            )
+
+    if base_str == "Blank Table" and compare_str == "Blank Table":
+        reason = "Both dashboards display this table as blank (with column headers and no data rows)."
+    elif base_str == "Blank KPI" and compare_str == "Blank KPI":
+        reason = "Both dashboards display this KPI as (Blank); it matches the Base dashboard."
+    elif base_str == "Blank Chart" and compare_str == "Blank Chart":
+        reason = "Both dashboards display this chart with no plotted data."
+    elif status in {"fail", "different"}:
         if _visual_missing(base) != _visual_missing(compare):
             missing_side = (
                 "Base Dashboard"
@@ -694,6 +1108,12 @@ def _visual_log_observation(row: dict[str, Any], result: dict[str, Any]) -> str:
                 else "Compare Dashboard"
             )
             reason = f"{kind} visual is missing from {missing_side}."
+        elif base_str.startswith("Blank ") and not compare_str.startswith("Blank "):
+            reason = f"{base_str} on Base Dashboard; Compare Dashboard displays {compare_str} with data."
+        elif compare_str.startswith("Blank ") and not base_str.startswith("Blank "):
+            reason = f"{compare_str} on Compare Dashboard; Base Dashboard displays {base_str} with data."
+        elif base_str.startswith("Blank ") and compare_str.startswith("Blank ") and base_str != compare_str:
+            reason = f"Blank visual type differs: Base is {base_str}; Compare is {compare_str}."
         elif (
             base_columns
             and compare_columns
@@ -749,7 +1169,7 @@ def _visual_log_observation(row: dict[str, Any], result: dict[str, Any]) -> str:
                         "Table headers missing from Base Dashboard: "
                         f"{', '.join(missing_from_base)}."
                     )
-            return reason + _visual_evidence_note(result, state)
+            return reason
         elif base_columns and compare_columns and base_columns != compare_columns:
             position = next(
                 index
@@ -763,7 +1183,7 @@ def _visual_log_observation(row: dict[str, Any], result: dict[str, Any]) -> str:
                 f"Base has {base_columns[position - 1]}; "
                 f"Compare has {compare_columns[position - 1]}."
             )
-            return reason + _visual_evidence_note(result, state)
+            return reason
         elif bool(base_columns) != bool(compare_columns):
             side = (
                 "Compare Dashboard"
@@ -803,24 +1223,38 @@ def _visual_log_observation(row: dict[str, Any], result: dict[str, Any]) -> str:
                 f"{_brief_visual_side(base)}; Compare Dashboard shows "
                 f"{_brief_visual_side(compare)}."
             )
-        return reason + _visual_evidence_note(result, state)
+        return reason
 
     if base_columns and compare_columns and base_columns == compare_columns:
-        return "Table headers match between both dashboards."
-    if "screenshot styling requires visual review" in lowered:
-        return (
+        if "row-level data is excluded" in lowered:
+            reason = "Table headers match between both dashboards. Same table column structure; row-level data is excluded and belongs in Data Validation."
+        else:
+            reason = "Table headers match between both dashboards."
+    elif "screenshot styling requires visual review" in lowered:
+        reason = (
             f"{kind} visual types match. "
             "Screenshot styling requires separate visual review."
         )
-    if "same visual type" in lowered:
-        return f"{kind} visual types match between both dashboards."
-    if (
+    elif "same visual type" in lowered:
+        reason = f"{kind} visual types match between both dashboards."
+    elif (
         "columns:" in lowered
         or len(observation) > 160
         or re.search(r"\b[A-Za-z]+_\d+\b", observation)
     ):
-        return f"{kind} visual matches between both dashboards."
-    return observation
+        reason = f"{kind} visual matches between both dashboards."
+    else:
+        reason = observation
+
+    raw_action = row.get("filter_action")
+    filter_action = str(raw_action).strip() if raw_action is not None else ""
+    if not filter_action or filter_action.casefold() in {"none", "-", "not captured", "default filter state"}:
+        filter_action = "None (default view)"
+    filter_note = f" Filter: {filter_action}."
+
+    if "evidence:" in reason.casefold():
+        reason = re.split(r"\s+Evidence:.*$", reason, flags=re.IGNORECASE)[0]
+    return f"{reason.rstrip('.')}.{filter_note}"
 
 
 def write_visual_validation_sheet(
@@ -888,6 +1322,19 @@ def write_visual_validation_sheet(
         "Base Dashboard Screenshot",
         "Compare Dashboard Screenshot",
     ]
+    def _is_scroll_row(row: dict[str, Any]) -> bool:
+        state = str(row.get("state") or "")
+        if "Scroll" in state:
+            return True
+        for side in ("dashboard_a", "dashboard_b"):
+            fn = _visual_evidence_filename(result, side, state)
+            if fn and "Scroll" in fn:
+                return True
+        obs = str(row.get("comparison_notes") or row.get("observation") or "")
+        if "Scroll" in obs:
+            return True
+        return False
+
     visual_filter = result.get("visual_filter") or {}
     visual_rows = [
         row
@@ -895,6 +1342,7 @@ def write_visual_validation_sheet(
         if isinstance(row, dict)
         and not _is_excluded_visual_element(row)
         and not _both_visual_types_unavailable(row)
+        and not _is_scroll_row(row)
     ]
     filter_rows = [
         row
@@ -965,6 +1413,7 @@ def write_visual_validation_sheet(
                     in {"", "-", "unknown", "missing"}
                     for field in ("filter_type_a", "filter_type_b")
                 )
+                and row.get("status") != DIFFERENT
             )
         )
     ]
@@ -1023,8 +1472,15 @@ def write_visual_validation_sheet(
     )
     page_groups: dict[str, dict[str, Any]] = {}
     if has_scenario_groups:
+        allowed_scenarios = ("|scenario_01|", "|scenario_02|")
         page_groups = {
-            str(group["state"]).casefold(): group for group in groups.values()
+            str(group["state"]).casefold(): group
+            for group in groups.values()
+            if str(group["state"]).casefold().endswith("|initial")
+            or any(
+                marker in str(group["state"]).casefold()
+                for marker in allowed_scenarios
+            )
         }
     else:
         for group in groups.values():
@@ -1055,7 +1511,6 @@ def write_visual_validation_sheet(
 
     def action_for(group: dict[str, Any]) -> str:
         state = str(group["state"]).casefold()
-        actions = []
         selected = sorted(
             (
                 row
@@ -1064,20 +1519,9 @@ def write_visual_validation_sheet(
             ),
             key=lambda row: row.get("aligned_position") or 0,
         )
-        for row in selected:
-            name = str(row.get("filter_name") or "").strip()
-            if not name:
-                continue
-            value_a = str(row.get("selected_values_a") or "-").strip() or "-"
-            value_b = str(row.get("selected_values_b") or "-").strip() or "-"
-            value = (
-                value_a
-                if value_a.casefold() == value_b.casefold()
-                else f"Base: {value_a}; Compare: {value_b}"
-            )
-            actions.append(f"{name}: {value}")
-        if actions:
-            return "\n".join(actions)
+        action_summary = _filter_action_summary(selected)
+        if selected and action_summary:
+            return action_summary
         rows = group["visual_rows"]
         return str(
             rows[0].get("action_applied")
@@ -1163,11 +1607,17 @@ def write_visual_validation_sheet(
         observation: str,
         status: str = "",
         section: str = "Visual & Functional Validation Log",
+        visual: dict[str, Any] | None = None,
     ) -> None:
-        if section == "Visual & Functional Validation Log" and (
-            _EXCLUDED_VISUAL_PATTERN.search(visual_check or "")
-        ):
-            return
+        if section == "Visual & Functional Validation Log":
+            if _EXCLUDED_VISUAL_PATTERN.search(visual_check or ""):
+                return
+            for side in ("dashboard_a", "dashboard_b"):
+                fn = _visual_evidence_filename(result, side, current_state)
+                if fn and "Scroll" in fn:
+                    return
+            if "Scroll" in current_state:
+                return
         summary_rows_by_section[section].append(
             {
                 "page": page,
@@ -1178,6 +1628,8 @@ def write_visual_validation_sheet(
                 "status": status,
                 "section": section,
                 "state": current_state,
+                "visual": visual,
+                "filter_action": action_for(current_group) if current_group is not None else None,
             }
         )
 
@@ -1277,7 +1729,9 @@ def write_visual_validation_sheet(
         return description + (f"\n{'; '.join(details)}" if details else "")
 
     current_state = ""
+    current_group: dict[str, Any] | None = None
     for group in page_groups.values():
+        current_group = group
         state = str(group["state"])
         current_state = state
         page = str(group["page"])
@@ -1327,7 +1781,12 @@ def write_visual_validation_sheet(
                 selected_a,
                 selected_b,
             )
-            if selection_status == UNVERIFIED:
+            if recorded_status == UNVERIFIED:
+                filter_status = UNVERIFIED
+                filter_observation = _cell(filter_row.get("comparison_notes"))
+                if filter_observation == "-":
+                    filter_observation = selection_observation
+            elif selection_status == UNVERIFIED:
                 filter_observation = _cell(filter_row.get("comparison_notes"))
                 if filter_observation == "-":
                     filter_observation = selection_observation
@@ -1364,21 +1823,70 @@ def write_visual_validation_sheet(
             if isinstance(row, dict)
             and str(row.get("state") or "").casefold() == state_key
             and _presentation_kind(row) is not None
+            and "Scroll" not in str(row.get("state") or "")
         ]
+        if state_key.endswith("|initial"):
+            def uses_initial_header_extraction(row: dict[str, Any]) -> bool:
+                sources = []
+                for field in (
+                    "data_source_a",
+                    "data_source_b",
+                    "evidence_sources_a",
+                    "evidence_sources_b",
+                ):
+                    value = row.get(field)
+                    sources.extend(value if isinstance(value, list) else [value])
+                return any(
+                    "powerbi_export_headers" in str(source).casefold()
+                    for source in sources
+                    if source
+                )
+
+            if any(
+                _presentation_kind(row) in {"Table", "Matrix"}
+                and uses_initial_header_extraction(row)
+                for row in page_comparisons
+            ):
+                page_comparisons = [
+                    row
+                    for row in page_comparisons
+                    if _presentation_kind(row) not in {"Table", "Matrix"}
+                    or uses_initial_header_extraction(row)
+                ]
         table_comparison_count = sum(
-            _presentation_kind(row) == "Table" for row in page_comparisons
+            _presentation_kind(row) in {"Table", "Matrix"} for row in page_comparisons
         )
         matched_layout_names: set[str] = set()
         for comparison in page_comparisons:
             kind = _presentation_kind(comparison)
             if kind is None:
                 continue
+            if str(comparison.get("alignment_status") or "").casefold() in {
+                "ambiguous_alignment",
+                "capture_unavailable",
+            }:
+                continue
             layout = matching_layout(comparison, group)
-            name = (
-                _visual_display_name(layout)
-                if layout is not None
-                else str(comparison.get("element") or f"Unnamed {kind}").strip()
-            )
+            comparison_element = _display_key(comparison.get("element"))
+            if layout is None and comparison_element in {
+                "",
+                "untitled visual",
+                "visual",
+                "unidentified",
+            }:
+                continue
+            if layout is None and not any(
+                str(comparison.get(field) or "").strip()
+                for field in (
+                    "visual_type_a",
+                    "visual_type_b",
+                    "element_type_a",
+                    "element_type_b",
+                )
+            ):
+                continue
+            visual_type = _validation_visual_type(layout or comparison, kind)
+            name = visual_type
             if layout is not None:
                 matched_layout_names.update(
                     _display_key(value)
@@ -1424,20 +1932,94 @@ def write_visual_validation_sheet(
                     if not title_issues:
                         visual_status = UNVERIFIED
 
-            add_summary_row(
-                page,
-                name,
-                base_description,
-                compare_description,
-                observation,
-                _validation_label(visual_status),
-            )
+            if kind in {"Table", "Matrix"} and (
+                "columns:" in str(base_description).casefold()
+                or "columns:" in str(compare_description).casefold()
+            ):
+                visual_type_a = str(
+                    (layout or comparison).get("visual_type_a")
+                    or (layout or comparison).get("element_type_a")
+                    or "Table"
+                )
+                visual_type_b = str(
+                    (layout or comparison).get("visual_type_b")
+                    or (layout or comparison).get("element_type_b")
+                    or "Table"
+                )
+                type_obs = str((layout or {}).get("comparison_notes") or "").strip()
+                if "row-level data is excluded" in observation.casefold():
+                    type_obs = observation
+                elif not type_obs or "columns:" in type_obs.casefold():
+                    type_obs = f"{kind} visual types match between both dashboards."
+                type_status = _validation_label(
+                    MATCH
+                    if _display_key(visual_type_a) == _display_key(visual_type_b)
+                    else DIFFERENT
+                )
+
+                add_summary_row(
+                    page,
+                    name,
+                    visual_type_a,
+                    visual_type_b,
+                    type_obs,
+                    type_status,
+                    visual=layout or comparison,
+                )
+                base_columns = _table_display_columns(
+                    comparison.get("dashboard_data_a")
+                )
+                compare_columns = _table_display_columns(
+                    comparison.get("dashboard_data_b")
+                )
+                base_keys = {_display_key(column) for column in base_columns}
+                compare_keys = {_display_key(column) for column in compare_columns}
+                missing = [
+                    column for column in compare_columns if _display_key(column) not in base_keys
+                ]
+                additional = [
+                    column for column in base_columns if _display_key(column) not in compare_keys
+                ]
+                if not missing and not additional:
+                    col_obs = "Table headers match between both dashboards."
+                    col_status = MATCH
+                else:
+                    details = []
+                    if missing:
+                        details.append(
+                            f"Table column headers missing from Base Dashboard: {', '.join(missing)}."
+                        )
+                    if additional:
+                        details.append(
+                            f"Additional Table column headers in Base Dashboard: {', '.join(additional)}."
+                        )
+                    col_obs = " ".join(details)
+                    col_status = DIFFERENT
+                add_summary_row(
+                    page,
+                    f"{visual_type} column headers",
+                    base_description,
+                    compare_description,
+                    col_obs,
+                    _validation_label(col_status),
+                    visual=comparison,
+                )
+            else:
+                add_summary_row(
+                    page,
+                    name,
+                    base_description,
+                    compare_description,
+                    observation,
+                    _validation_label(visual_status),
+                    visual=comparison,
+                )
             base_layout, compare_layout, layout_observation, layout_status = (
                 layout_summary(layout)
             )
             layout_check = (
                 "Table Position & Size"
-                if kind == "Table" and table_comparison_count == 1
+                if kind in {"Table", "Matrix"} and table_comparison_count == 1
                 else f"{name} Position & Size"
             )
             add_summary_row(
@@ -1450,6 +2032,11 @@ def write_visual_validation_sheet(
             )
 
         for visual in group["visual_rows"]:
+            if any(
+                _display_key(visual.get(f"visual_type_{side}")) == "missing"
+                for side in ("a", "b")
+            ):
+                continue
             identity = {
                 _display_key(value)
                 for value in (
@@ -1593,12 +2180,48 @@ def write_visual_validation_sheet(
                 observation += " Screenshot evidence is missing."
             add_summary_row(
                 page,
-                _visual_display_name(visual),
+                _validation_visual_type(visual),
                 type_a or "Not Available",
                 type_b or "Not Available",
                 observation,
                 _validation_label(visual_status),
+                visual=visual,
             )
+            cats_a = visual.get("categories_a") or []
+            cats_b = visual.get("categories_b") or []
+            if _is_table_type(type_a or type_b) and (cats_a or cats_b):
+                unique_a = list(dict.fromkeys(str(c).strip() for c in cats_a if str(c).strip()))
+                unique_b = list(dict.fromkeys(str(c).strip() for c in cats_b if str(c).strip()))
+                cols_str_a = f"Matrix/Table displayed; columns: {', '.join(unique_a)}" if unique_a else "Matrix/Table displayed; column headers not captured"
+                cols_str_b = f"Matrix/Table displayed; columns: {', '.join(unique_b)}" if unique_b else "Matrix/Table displayed; column headers not captured"
+                keys_a = {_display_key(column) for column in unique_a}
+                keys_b = {_display_key(column) for column in unique_b}
+                missing = [column for column in unique_b if _display_key(column) not in keys_a]
+                additional = [column for column in unique_a if _display_key(column) not in keys_b]
+                if not missing and not additional:
+                    col_obs = "Table headers match between both dashboards."
+                    col_status = "Pass"
+                else:
+                    details = []
+                    if missing:
+                        details.append(
+                            f"Table column headers missing from Base Dashboard: {', '.join(missing)}."
+                        )
+                    if additional:
+                        details.append(
+                            f"Additional Table column headers in Base Dashboard: {', '.join(additional)}."
+                        )
+                    col_obs = " ".join(details)
+                    col_status = "Fail"
+                add_summary_row(
+                    page,
+                    f"{_validation_visual_type(visual)} column headers",
+                    cols_str_a,
+                    cols_str_b,
+                    col_obs,
+                    col_status,
+                    visual=visual,
+                )
             base_layout, compare_layout, layout_observation, layout_status = (
                 layout_summary(visual)
             )
@@ -1612,7 +2235,7 @@ def write_visual_validation_sheet(
             )
 
         has_table = any(
-            _presentation_kind(row) == "Table" for row in page_comparisons
+            _presentation_kind(row) in {"Table", "Matrix"} for row in page_comparisons
         ) or any(
             any(
                 token in str(row.get(f"visual_type_{side}") or "").casefold()
@@ -1670,6 +2293,28 @@ def write_visual_validation_sheet(
 
     visual_log_rows: list[list[Any]] = []
     visual_log_states: list[str] = []
+    visual_log_summary_rows: list[dict[str, Any]] = []
+    visual_log_keys: set[tuple[str, str, str, str]] = set()
+    initial_table_headers: dict[str, dict[str, list[str]]] = {}
+    for row in summary_rows_by_section["Visual & Functional Validation Log"]:
+        state = str(row.get("state") or "").casefold()
+        if not state.endswith("|initial") or "column headers" not in str(
+            row.get("visual_check") or ""
+        ).casefold():
+            continue
+        page_key = _display_key(row.get("page"))
+        visual = row.get("visual") or {}
+        headers_by_side = initial_table_headers.setdefault(
+            page_key, {"a": [], "b": []}
+        )
+        for side in ("a", "b"):
+            headers = _table_display_columns(
+                visual.get(f"dashboard_data_{side}")
+                or {"categories": visual.get(f"categories_{side}")}
+            )
+            if len(headers) > len(headers_by_side[side]):
+                headers_by_side[side] = headers
+
     for row in summary_rows_by_section["Visual & Functional Validation Log"]:
         if (
             row["status"] == UNVERIFIED_LABEL
@@ -1678,17 +2323,169 @@ def write_visual_validation_sheet(
             continue
         if str(row["visual_check"]).endswith("Position & Size"):
             continue
+
+        base_val = row.get("base")
+        compare_val = row.get("compare")
+        visual_data = row.get("visual") or {}
+
+        is_formatting_check = str(row.get("visual_check") or "") in {
+            "Table Header Formatting",
+            "Table Row Formatting",
+            "Total Row Formatting",
+            "Visual Alignment & Distribution",
+        }
+        if is_formatting_check:
+            base_display = str(base_val or "")
+            compare_display = str(compare_val or "")
+            visual_check_display = str(row.get("visual_check") or "")
+            status = row["status"]
+        else:
+            base_display = classify_dashboard_visual(
+                visual_type=visual_data.get("visual_type_a") or base_val,
+                rendering_status=visual_data.get("rendering_status_a"),
+                raw_data=visual_data.get("categories_a") or visual_data.get("dashboard_data_a"),
+                description=base_val,
+            )
+            compare_display = classify_dashboard_visual(
+                visual_type=visual_data.get("visual_type_b") or compare_val,
+                rendering_status=visual_data.get("rendering_status_b"),
+                raw_data=visual_data.get("categories_b") or visual_data.get("dashboard_data_b"),
+                description=compare_val,
+            )
+            visual_check_display = str(row.get("visual_check") or "")
+
+            status = row.get("status") or "Pass"
+            if (
+                base_display.startswith("Blank ")
+                and compare_display.startswith("Blank ")
+                and base_display == compare_display
+            ):
+                status = "Pass"
+            elif (
+                (base_display.startswith("Blank ") != compare_display.startswith("Blank "))
+                or base_display != compare_display
+            ):
+                if (
+                    base_display == "Missing"
+                    or compare_display == "Missing"
+                    or base_display.startswith("Blank ")
+                    or compare_display.startswith("Blank ")
+                ):
+                    status = "Fail"
+
+        visual_check = str(row.get("visual_check") or "")
+        is_table_header_row = "column headers" in visual_check.casefold()
+        is_table_visual_row = not is_table_header_row and _is_table_type(
+            visual_data.get("visual_type_a")
+            or visual_data.get("visual_type_b")
+            or visual_check
+        )
+        headers_by_side = initial_table_headers.get(
+            _display_key(row.get("page")), {}
+        )
+        base_headers = headers_by_side.get("a") or []
+        compare_headers = headers_by_side.get("b") or []
+        if is_table_header_row:
+            if base_headers:
+                base_display = (
+                    "Matrix/Table displayed; columns: " + ", ".join(base_headers)
+                )
+            if compare_headers:
+                compare_display = (
+                    "Matrix/Table displayed; columns: " + ", ".join(compare_headers)
+                )
+            if base_headers and compare_headers:
+                status = (
+                    "Pass"
+                    if [_display_key(column) for column in base_headers]
+                    == [_display_key(column) for column in compare_headers]
+                    else "Fail"
+                )
+        elif is_table_visual_row and base_headers and compare_headers:
+            base_data = visual_data.get("dashboard_data_a")
+            compare_data = visual_data.get("dashboard_data_b")
+            base_blank = _table_has_confirmed_no_rows(base_data)
+            compare_blank = _table_has_confirmed_no_rows(compare_data)
+            if base_blank or compare_blank:
+                base_display = "Blank Table" if base_blank else "Table"
+                compare_display = "Blank Table" if compare_blank else "Table"
+                status = "Pass" if base_blank == compare_blank else "Fail"
+            else:
+                base_display = "Table"
+                compare_display = "Table"
+                status = "Pass"
+
+        classified_row = {
+            **row,
+            "base": base_display,
+            "compare": compare_display,
+            "status": status,
+        }
+
+        visual_data = row.get("visual") or {}
+        visual_identity = next(
+            (
+                _display_key(visual_data.get(field))
+                for field in (
+                    "visual_id_a",
+                    "visual_id_b",
+                    "visual_name",
+                    "visual_name_a",
+                    "visual_name_b",
+                )
+                if visual_data.get(field)
+            ),
+            _display_key(row.get("visual_check")),
+        )
+        visual_key = (
+            _display_key(row.get("state")),
+            _display_key(row.get("page")),
+            visual_identity,
+            _display_key(row.get("visual_check")),
+        )
+        page_initial_headers = initial_table_headers.get(
+            _display_key(row.get("page")), {}
+        )
+        if (
+            any(page_initial_headers.values())
+            and _is_table_type(
+                visual_data.get("visual_type_a")
+                or visual_data.get("visual_type_b")
+                or visual_check
+            )
+        ):
+            visual_role = (
+                "headers" if "column headers" in visual_check.casefold() else "visual"
+            )
+            visual_key = (
+                _display_key(row.get("state")),
+                _display_key(row.get("page")),
+                "table",
+                visual_role,
+            )
+        if visual_key in visual_log_keys:
+            continue
+        visual_log_keys.add(visual_key)
+        visual_log_summary_rows.append(
+            {
+                **row,
+                "base": base_display,
+                "compare": compare_display,
+                "status": status,
+            }
+        )
+
         section_id = len(visual_log_rows) + 1
         visual_log_rows.append(
             [
                 f"{section_id:02d}",
                 row["page"],
-                row["compare"],
-                row["base"],
+                compare_display,
+                base_display,
                 row["visual_check"],
-                row["base"],
-                _visual_log_observation(row, result),
-                row["status"],
+                visual_check_display,
+                _visual_log_observation(classified_row, result),
+                status,
             ]
         )
         visual_log_states.append(str(row.get("state") or ""))
@@ -1757,7 +2554,12 @@ def write_visual_validation_sheet(
                 cell.alignment = Alignment(wrap_text=True, vertical="center")
 
             section_id = 0
-            for row in summary_rows_by_section[section]:
+            section_rows = (
+                visual_log_summary_rows
+                if section == "Visual & Functional Validation Log"
+                else summary_rows_by_section[section]
+            )
+            for row in section_rows:
                 if (
                     section == "Visual & Functional Validation Log"
                     and row["status"] == UNVERIFIED_LABEL
@@ -1864,6 +2666,57 @@ def write_visual_validation_sheet(
         ):
             sheet.column_dimensions[get_column_letter(column)].width = width
         sheet.freeze_panes = "A3"
+        hierarchy_rows = _hierarchy_excel_rows(result)
+        if hierarchy_rows:
+            hierarchy_sheet = workbook.create_sheet("Hierarchy_Comparison")
+            hierarchy_sheet.append(["Hierarchy Row Header Comparison"])
+            hierarchy_sheet.merge_cells(
+                start_row=1,
+                start_column=1,
+                end_row=1,
+                end_column=len(HIERARCHY_COMPARISON_HEADERS),
+            )
+            hierarchy_sheet.cell(1, 1).font = Font(
+                bold=True, color="FFFFFF", size=14
+            )
+            hierarchy_sheet.cell(1, 1).fill = PatternFill(
+                "solid", fgColor=HEADER_FILL
+            )
+            hierarchy_sheet.append(HIERARCHY_COMPARISON_HEADERS)
+            for cell in hierarchy_sheet[2]:
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill("solid", fgColor=HEADER_FILL)
+                cell.alignment = Alignment(wrap_text=True, vertical="center")
+            for values in hierarchy_rows:
+                hierarchy_sheet.append(values)
+                row_index = hierarchy_sheet.max_row
+                for cell in hierarchy_sheet[row_index]:
+                    cell.alignment = Alignment(wrap_text=True, vertical="top")
+                status_cell = hierarchy_sheet.cell(row_index, len(HIERARCHY_COMPARISON_HEADERS))
+                style_status_cell(status_cell, str(status_cell.value or ""))
+                hierarchy_sheet.conditional_formatting.add(
+                    status_cell.coordinate,
+                    CellIsRule(
+                        operator="equal",
+                        formula=['"Pass"'],
+                        font=Font(size=11, color=STATUS_TEXT_COLORS["pass"]),
+                    ),
+                )
+                hierarchy_sheet.conditional_formatting.add(
+                    status_cell.coordinate,
+                    CellIsRule(
+                        operator="equal",
+                        formula=['"Fail"'],
+                        font=Font(size=11, color=STATUS_TEXT_COLORS["fail"]),
+                    ),
+                )
+            for column in range(1, len(HIERARCHY_COMPARISON_HEADERS) + 1):
+                hierarchy_sheet.column_dimensions[get_column_letter(column)].width = (
+                    18 if column <= 4 else 26
+                )
+            hierarchy_sheet.column_dimensions["R"].width = 58
+            hierarchy_sheet.column_dimensions["S"].width = 14
+            hierarchy_sheet.freeze_panes = "A3"
         workbook.save(path)
     finally:
         workbook.close()

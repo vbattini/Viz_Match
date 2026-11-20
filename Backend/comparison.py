@@ -2557,9 +2557,20 @@ def compare_dashboards(
         captured_states_a, captured_states_b
     )
 
+    def _is_scroll_state(state: Any) -> bool:
+        if state is None:
+            return False
+        screenshot = getattr(state, "screenshot", None)
+        if screenshot and "Scroll" in Path(str(screenshot)).name:
+            return True
+        step = str(getattr(state, "scenario_step", "") or "")
+        return "Scroll" in step
+
     for state_key in all_state_keys:
         state_a = by_key_a.get(state_key)
         state_b = by_key_b.get(state_key)
+        if _is_scroll_state(state_a) or _is_scroll_state(state_b):
+            continue
         if any(
             state is not None and _state_capture_status(state) != "captured"
             for state in (state_a, state_b)
@@ -3126,6 +3137,8 @@ def compare_dashboards(
     def screenshot_manifest(states: list[DashboardState]) -> dict[str, dict[str, Any]]:
         manifest = {}
         for state in states:
+            if getattr(state, "screenshot", None) and "Scroll" in Path(str(state.screenshot)).name:
+                continue
             metadata = state.extracted.get("dashboard_metadata")
             if not isinstance(metadata, dict):
                 metadata = {}

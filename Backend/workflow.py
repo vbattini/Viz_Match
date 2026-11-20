@@ -69,6 +69,7 @@ class ComparisonWorkflowRun:
         browser: Browser | None = None,
         report_metadata: dict[str, Any] | None = None,
         scenario_state_loader: ScenarioStateLoader | None = None,
+        initial_pages: tuple[Any | None, Any | None] | None = None,
     ) -> None:
         self.job_id = job_id
         self.url_a = url_a
@@ -79,6 +80,7 @@ class ComparisonWorkflowRun:
         self.browser = browser
         self.report_metadata = report_metadata
         self.scenario_state_loader = scenario_state_loader
+        self.initial_pages = initial_pages
         self.scenario_context: dict[str, Any] = {}
         self.states_a: list[DashboardState] = []
         self.states_b: list[DashboardState] = []
@@ -168,13 +170,14 @@ class ComparisonWorkflowRun:
                     destination=self.output_dir,
                     storage_state=self.storage_state,
                     headed=False,
-                    settle_seconds=2.0,
-                    extract_visual_data=False,
+                    settle_seconds=30.0,
+                    extract_visual_data=True,
                     job_id=self.job_id,
                     operation_log_path=self.operation_log_path,
                     on_state_captured=publish_state,
                     detect_visual_types=True,
                     browser=self.browser,
+                    initial_pages=self.initial_pages,
                 )
             finally:
                 completed_states.put_nowait(None)
@@ -439,6 +442,7 @@ async def run_dashboard_comparison(
     report_metadata: dict[str, Any] | None = None,
     generate_report: bool = True,
     scenario_state_loader: ScenarioStateLoader | None = None,
+    initial_pages: tuple[Any | None, Any | None] | None = None,
 ) -> dict[str, Any]:
     workflow_run = ComparisonWorkflowRun(
         job_id=job_id,
@@ -450,6 +454,7 @@ async def run_dashboard_comparison(
         browser=browser,
         report_metadata=report_metadata,
         scenario_state_loader=scenario_state_loader,
+        initial_pages=initial_pages,
     )
     workflow_steps = [
         _ComparisonStepAgent(

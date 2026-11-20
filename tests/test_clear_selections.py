@@ -5,7 +5,10 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-from powerbi_dashboard_comparator import browser
+try:
+    from powerbi_dashboard_comparator import browser
+except ModuleNotFoundError:
+    from Backend import browser
 
 
 class FakeButton:

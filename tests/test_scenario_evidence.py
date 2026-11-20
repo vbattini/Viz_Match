@@ -60,6 +60,75 @@ def test_manifest_inventory_excludes_drilldown_initial_screenshots(tmp_path):
     ] == ["drilldown_before"]
 
 
+def test_manifest_store_keeps_captures_for_distinct_single_filter_states(tmp_path):
+    store = EvidenceManifestStore(tmp_path)
+    store.initialize()
+    for filename, pairing_key in (
+        ("first.png", "single_filter:facility=5 - minot"),
+        ("second.png", "single_filter:facility=9 - rapid city"),
+    ):
+        asyncio.run(
+            store.add(
+                {
+                    "dashboard_id": "dashboard_A",
+                    "page_name": "Report",
+                    "scenario_id": "02",
+                    "pairing_key": pairing_key,
+                    "screenshot_filename": filename,
+                    "screenshot_full_path": str(tmp_path / filename),
+                }
+            )
+        )
+
+    manifest = read_evidence_manifest(tmp_path, "dashboard_A")
+
+    assert [item["screenshot_filename"] for item in manifest["screenshots"]] == [
+        "first.png",
+        "second.png",
+    ]
+
+
+def test_manifest_store_keeps_distinct_single_filter_states_from_existing_manifest(
+    tmp_path,
+):
+    manifest_path = tmp_path / "dashboard_A" / "evidence_manifest.json"
+    _write_json(
+        manifest_path,
+        {
+            "dashboard_id": "dashboard_A",
+            "screenshots": [
+                {
+                    "dashboard_id": "dashboard_A",
+                    "page_name": "Report",
+                    "scenario_id": "02",
+                    "pairing_key": "single_filter:facility=9 - rapid city",
+                    "screenshot_filename": "rapid-city.png",
+                    "screenshot_full_path": str(tmp_path / "rapid-city.png"),
+                    "screenshot_capture_timestamp": "2026-11-19T06:28:27+00:00",
+                },
+                {
+                    "dashboard_id": "dashboard_A",
+                    "page_name": "Report",
+                    "scenario_id": "02",
+                    "pairing_key": "single_filter:facility=5 - minot",
+                    "screenshot_filename": "minot.png",
+                    "screenshot_full_path": str(tmp_path / "minot.png"),
+                    "screenshot_capture_timestamp": "2026-11-19T06:29:03+00:00",
+                },
+            ],
+        },
+    )
+
+    store = EvidenceManifestStore(tmp_path)
+    store.initialize()
+    manifest = read_evidence_manifest(tmp_path, "dashboard_A")
+
+    assert [item["screenshot_filename"] for item in manifest["screenshots"]] == [
+        "rapid-city.png",
+        "minot.png",
+    ]
+
+
 def test_legacy_evidence_is_verified_and_reorganized_into_four_scenarios(tmp_path):
     page_name = "Page One"
     page_key = "Page_One"
@@ -289,7 +358,9 @@ def test_legacy_evidence_is_verified_and_reorganized_into_four_scenarios(tmp_pat
         ).read_text(encoding="utf-8")
     )
     assert migrated_cache["scenario_id"] == "01"
-    assert migrated_cache["scenario_name"] == "Table Column Header Comparison"
+    assert migrated_cache["scenario_name"] == (
+        "Table Column Header and Hierarchy Validation"
+    )
     assert Path(migrated_cache["evidence"]["scenario_directory"]) == (
         scenario_result_directory(tmp_path, "01", page_name).resolve()
     )

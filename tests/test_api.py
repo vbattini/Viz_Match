@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import io
+import logging
 import os
 import zipfile
 from fastapi.testclient import TestClient
@@ -34,6 +35,31 @@ def test_job_output_retention_keeps_twenty_newest_directories(
         path.name for path in output_root.iterdir() if path.is_dir()
     } == {"current"} | {f"old-{index}" for index in range(2, 21)}
     assert (output_root / "unrelated.txt").read_text() == "keep"
+
+
+def test_job_output_retention_handles_locked_directory_without_failing(
+    tmp_path, monkeypatch
+) -> None:
+    output_root = tmp_path / "jobs"
+    monkeypatch.setattr(api, "OUTPUT_ROOT", output_root)
+    for index in range(21):
+        job_dir = output_root / f"old-{index}"
+        job_dir.mkdir(parents=True)
+        os.utime(job_dir, (index + 1, index + 1))
+
+    original_rmtree = api.shutil.rmtree
+
+    def locked_rmtree(path, *args, **kwargs):
+        if Path(path).name == "old-0":
+            raise PermissionError("[WinError 32] The process cannot access the file because it is being used by another process: 'Dashboard_Comparison.docx'")
+        return original_rmtree(path, *args, **kwargs)
+
+    monkeypatch.setattr(api.shutil, "rmtree", locked_rmtree)
+
+    current_dir = api._prepare_job_output("current")
+
+    assert current_dir.is_dir()
+    assert (output_root / "old-0").is_dir()
 
 
 def test_job_output_folder_uses_first_report_name_and_updates_paths(
@@ -599,6 +625,109 @@ def test_batch_request_requires_all_three_fields_and_caps_jobs() -> None:
 
 
 @pytest.mark.parametrize(
+    ("method", "path", "status_code", "should_log"),
+    [
+        ("GET", "/api/batches/123", 200, False),
+        ("GET", "/api/batches/123?poll=1", 200, False),
+        ("GET", "/api/batches/123", 404, True),
+        ("GET", "/api/batches/123/summary.json", 200, True),
+        ("POST", "/api/batches/123", 200, True),
+    ],
+)
+def test_batch_poll_access_log_filter_keeps_non_poll_requests(
+    method: str, path: str, status_code: int, should_log: bool
+) -> None:
+    record = logging.LogRecord(
+        "uvicorn.access",
+        logging.INFO,
+        __file__,
+        1,
+        '%s - "%s %s HTTP/%s" %d',
+        ("127.0.0.1", method, path, "1.1", status_code),
+        None,
+    )
+
+    assert api._BatchPollingAccessLogFilter().filter(record) is should_log
+
+
+def test_batch_cleanup_removes_only_transient_discovery_state(
+    tmp_path, monkeypatch
+) -> None:
+    debug_dir = tmp_path / "discovery_debug"
+    debug_dir.mkdir()
+    (debug_dir / "stale.html").write_text("stale", encoding="utf-8")
+    nested = debug_dir / "nested"
+    nested.mkdir()
+    (nested / "stale.json").write_text("stale", encoding="utf-8")
+    auth_path = tmp_path / "auth.json"
+    auth_path.write_text("authentication", encoding="utf-8")
+    monkeypatch.setenv("POWERBI_DEBUG_DIR", str(debug_dir))
+
+    removed = api._clear_batch_transient_state(auth_path)
+
+    assert removed == 2
+    assert list(debug_dir.iterdir()) == []
+    assert auth_path.read_text(encoding="utf-8") == "authentication"
+
+
+def test_batch_fails_explicitly_when_transient_cleanup_fails(
+    monkeypatch, caplog
+) -> None:
+    batch_id = str(uuid4())
+    job_id = str(uuid4())
+    request = api.BatchRequest(
+        jobs=[
+            api.BatchJobRequest(
+                workspace_name="Workspace",
+                semantic_model="Model",
+                report_name="Report",
+            )
+        ]
+    )
+    monkeypatch.setattr(
+        api,
+        "JOBS",
+        {job_id: {"status": "queued", "error": None, "summary": None}},
+    )
+    monkeypatch.setattr(
+        api,
+        "BATCHES",
+        {
+            batch_id: {
+                "status": "queued",
+                "current_job_number": None,
+                "stop_on_first_failure": False,
+                "jobs": [
+                    {
+                        "number": 1,
+                        "job_id": job_id,
+                        "status": "pending",
+                        "summary": None,
+                        "error": None,
+                    }
+                ],
+                "error": None,
+            }
+        },
+    )
+    monkeypatch.setattr(api, "ACTIVE_BATCH_ID", batch_id)
+    monkeypatch.setattr(api, "ACTIVE_JOB_ID", None)
+    monkeypatch.setattr(
+        api,
+        "_clear_batch_transient_state",
+        lambda _storage_state: (_ for _ in ()).throw(
+            RuntimeError("cleanup failed explicitly")
+        ),
+    )
+
+    asyncio.run(api._run_batch(batch_id, request, Path("auth.json")))
+
+    assert api.BATCHES[batch_id]["status"] == "failed"
+    assert "cleanup failed explicitly" in api.BATCHES[batch_id]["error"]
+    assert "failed while running" in caplog.text
+
+
+@pytest.mark.parametrize(
     ("stop_on_first_failure", "expected_order", "expected_statuses"),
     [
         (
@@ -615,10 +744,12 @@ def test_batch_request_requires_all_three_fields_and_caps_jobs() -> None:
 )
 def test_batch_runs_sequentially_and_handles_failure(
     monkeypatch,
+    caplog,
     stop_on_first_failure,
     expected_order,
     expected_statuses,
 ) -> None:
+    caplog.set_level(logging.INFO, logger="Backend.api")
     batch_id = str(uuid4())
     request = api.BatchRequest(
         jobs=[
@@ -670,6 +801,8 @@ def test_batch_runs_sequentially_and_handles_failure(
     monkeypatch.setattr(api, "ACTIVE_BATCH_ID", batch_id)
     monkeypatch.setattr(api, "ACTIVE_JOB_ID", None)
     order = []
+    events = []
+    cooldowns = []
     active_jobs = 0
     max_active_jobs = 0
 
@@ -678,17 +811,41 @@ def test_batch_runs_sequentially_and_handles_failure(
         active_jobs += 1
         max_active_jobs = max(max_active_jobs, active_jobs)
         order.append(job_request.report_name)
-        await asyncio.sleep(0.001)
+        events.append(job_request.report_name)
         if job_request.report_name == "Second":
             jobs[job_id].update(status="failed", error="expected failure")
         else:
             jobs[job_id].update(status="completed", summary={"matches": 1})
         active_jobs -= 1
 
+    async def fake_sleep(duration):
+        cooldowns.append(duration)
+        events.append(f"rest:{duration}")
+        assert api.BATCHES[batch_id]["cooldown_message"] == (
+            f"Waiting {api.BATCH_JOB_COOLDOWN_SECONDS} seconds before "
+            f"starting job {len(order) + 1}."
+        )
+
     monkeypatch.setattr(api, "_run_comparison", fake_run_comparison)
+    monkeypatch.setattr(api, "_clear_batch_transient_state", lambda _storage: 0)
+    monkeypatch.setattr(api.asyncio, "sleep", fake_sleep)
     asyncio.run(api._run_batch(batch_id, request, Path("auth.json")))
 
     assert order == expected_order
+    expected_cooldowns = (
+        [api.BATCH_JOB_COOLDOWN_SECONDS]
+        * (len(expected_order) - 1)
+    )
+    assert cooldowns == expected_cooldowns
+    assert events == [
+        item
+        for index, report in enumerate(expected_order)
+        for item in (
+            (report, f"rest:{api.BATCH_JOB_COOLDOWN_SECONDS}")
+            if index < len(expected_order) - 1
+            else (report,)
+        )
+    ]
     assert max_active_jobs == 1
     assert [job["status"] for job in batch_jobs] == expected_statuses
     assert api._batch_counts(api.BATCHES[batch_id]) == {
@@ -697,6 +854,11 @@ def test_batch_runs_sequentially_and_handles_failure(
         "failed": 1,
         "skipped": expected_statuses.count("skipped"),
     }
+    assert f"Batch started: batch_id={batch_id}" in caplog.text
+    assert "Batch job started:" in caplog.text
+    assert "Batch job finished:" in caplog.text
+    assert f"Batch finished: batch_id={batch_id}" in caplog.text
+    assert "elapsed_seconds=" in caplog.text
 
 
 def test_batch_output_folder_contains_reports_and_dashboard_links(

@@ -1,4 +1,0 @@
-{
-  "status": "UNVERIFIED",
-  "reason": "page failed: RuntimeError: Power BI dropdown remained open after closing the slicer"
-}

@@ -11,6 +11,7 @@ It never reads chart labels, headers, cell values or KPI numbers.
 from __future__ import annotations
 
 import math
+from pathlib import Path
 import re
 from typing import Any
 
@@ -418,6 +419,180 @@ def _visual_title(visual: dict[str, Any] | None) -> str:
     return str(visual.get("visual_title") or visual.get("visual_name") or "").strip()
 
 
+def _hierarchy_headers(visual: dict[str, Any] | None) -> list[tuple[str, int]]:
+    if not isinstance(visual, dict):
+        return []
+    headers = visual.get("row_headers") or []
+    result: list[tuple[str, int]] = []
+    for item in headers:
+        if isinstance(item, dict):
+            text = " ".join(str(item.get("text") or "").split())
+            level = int(item.get("level") or 1)
+        else:
+            text = " ".join(str(item or "").split())
+            level = 1
+        if text:
+            result.append((text.casefold(), level))
+    return result
+
+
+def _hierarchy_structure(visual: dict[str, Any] | None) -> dict[str, Any]:
+    structure = visual.get("hierarchy_structure") if isinstance(visual, dict) else None
+    if isinstance(structure, dict) and structure.get("status"):
+        return structure
+    headers = visual.get("row_headers") if isinstance(visual, dict) else []
+    rows = []
+    for index, header in enumerate(headers or []):
+        if isinstance(header, dict):
+            text = header.get("text")
+            level = header.get("level") or 1
+        else:
+            text = header
+            level = 1
+        if text:
+            rows.append(
+                {
+                    "original_row_index": index,
+                    "original_row_order": index,
+                    "hierarchy_level": level,
+                    "parent_path": [],
+                    "current_value": text,
+                    "row_type": "detail",
+                }
+            )
+    return {
+        "status": "PASS" if rows else "UNVERIFIED",
+        "columns": [],
+        "rows": rows,
+        "depth": max((row["hierarchy_level"] for row in rows), default=0),
+        "row_count": len(rows),
+    }
+
+
+def _hierarchy_row_signature(structure: dict[str, Any]) -> list[tuple[Any, ...]]:
+    signatures: list[tuple[Any, ...]] = []
+    for row in structure.get("rows") or []:
+        if not isinstance(row, dict):
+            continue
+        signatures.append(
+            (
+                int(row.get("hierarchy_level") or 0),
+                tuple(
+                    " ".join(str(value or "").split()).casefold()
+                    for value in row.get("parent_path") or []
+                ),
+                " ".join(str(row.get("current_value") or "").split()).casefold(),
+                str(row.get("row_type") or "").casefold(),
+            )
+        )
+    return signatures
+
+
+def _compare_hierarchy_structures(
+    structure_a: dict[str, Any],
+    structure_b: dict[str, Any],
+) -> dict[str, Any]:
+    status_a = str(structure_a.get("status") or "UNVERIFIED").upper()
+    status_b = str(structure_b.get("status") or "UNVERIFIED").upper()
+    result: dict[str, Any] = {
+        "status": "UNVERIFIED",
+        "detected_columns_a": structure_a.get("columns") or [],
+        "detected_columns_b": structure_b.get("columns") or [],
+        "depth_a": structure_a.get("depth") or 0,
+        "depth_b": structure_b.get("depth") or 0,
+        "row_count_a": structure_a.get("row_count") or len(structure_a.get("rows") or []),
+        "row_count_b": structure_b.get("row_count") or len(structure_b.get("rows") or []),
+        "missing_rows": [],
+        "additional_rows": [],
+        "different_rows": [],
+        "notes": [],
+    }
+    if status_a != "PASS" or status_b != "PASS":
+        result["notes"].append("Hierarchy detection or export extraction is unverified.")
+        return result
+
+    signatures_a = _hierarchy_row_signature(structure_a)
+    signatures_b = _hierarchy_row_signature(structure_b)
+    if structure_a.get("depth") != structure_b.get("depth"):
+        result["status"] = "DIFFERENT"
+        result["notes"].append("Detected hierarchy depth differs.")
+    if len(structure_a.get("columns") or []) != len(structure_b.get("columns") or []):
+        result["status"] = "DIFFERENT"
+        result["notes"].append("Detected hierarchy column count differs.")
+
+    if signatures_a == signatures_b and result["status"] != "DIFFERENT":
+        result["status"] = "MATCH"
+        result["notes"].append("Hierarchy rows, parent paths, levels, types, and order match.")
+        return result
+
+    if result["status"] != "DIFFERENT":
+        result["status"] = "DIFFERENT"
+    common_length = min(len(signatures_a), len(signatures_b))
+    for index in range(common_length):
+        if signatures_a[index] != signatures_b[index]:
+            result["different_rows"].append(
+                {
+                    "row_order": index,
+                    "base": signatures_a[index],
+                    "compare": signatures_b[index],
+                }
+            )
+    if len(signatures_a) > common_length:
+        result["missing_rows"] = [
+            {"row_order": index, "signature": signatures_a[index]}
+            for index in range(common_length, len(signatures_a))
+        ]
+    if len(signatures_b) > common_length:
+        result["additional_rows"] = [
+            {"row_order": index, "signature": signatures_b[index]}
+            for index in range(common_length, len(signatures_b))
+        ]
+    result["notes"].append("Hierarchy row order, values, parent paths, or row types differ.")
+    return result
+
+
+def _compare_drill_down_levels(
+    visual_a: dict[str, Any] | None,
+    visual_b: dict[str, Any] | None,
+) -> dict[str, Any]:
+    levels_a = (
+        ((visual_a or {}).get("drill_down") or {}).get("levels") or []
+    )
+    levels_b = (
+        ((visual_b or {}).get("drill_down") or {}).get("levels") or []
+    )
+    if not levels_a and not levels_b:
+        return {"status": "SKIPPED", "levels": []}
+    level_results: list[dict[str, Any]] = []
+    status = "MATCH"
+    for index in range(max(len(levels_a), len(levels_b))):
+        left = levels_a[index] if index < len(levels_a) else None
+        right = levels_b[index] if index < len(levels_b) else None
+        left_headers = (left or {}).get("headers", [])
+        right_headers = (right or {}).get("headers", [])
+        left_rows = (left or {}).get("rows", [])
+        right_rows = (right or {}).get("rows", [])
+        matched = (
+            left is not None
+            and right is not None
+            and left_headers == right_headers
+            and left_rows == right_rows
+        )
+        if not matched:
+            status = "DIFFERENT"
+        level_results.append(
+            {
+                "level": index + 1,
+                "status": "MATCH" if matched else "DIFFERENT",
+                "headers_a": left_headers,
+                "headers_b": right_headers,
+                "rows_a": left_rows,
+                "rows_b": right_rows,
+            }
+        )
+    return {"status": status, "levels": level_results}
+
+
 def _visual_row(
     page: str,
     visual_a: dict[str, Any] | None,
@@ -462,6 +637,29 @@ def _visual_row(
         "visual_id_b": _visual_id(visual_b),
         "visual_type_a": type_a,
         "visual_type_b": type_b,
+        "categories_a": visual_a.get("categories") if visual_a else None,
+        "categories_b": visual_b.get("categories") if visual_b else None,
+        "row_headers_a": (
+            visual_a.get("row_headers") if visual_a else None
+        ),
+        "row_headers_b": (
+            visual_b.get("row_headers") if visual_b else None
+        ),
+        "hierarchy_structure_a": (
+            visual_a.get("hierarchy_structure") if visual_a else None
+        ),
+        "hierarchy_structure_b": (
+            visual_b.get("hierarchy_structure") if visual_b else None
+        ),
+        "hierarchy_extraction_a": (
+            visual_a.get("hierarchy_extraction") if visual_a else None
+        ),
+        "hierarchy_extraction_b": (
+            visual_b.get("hierarchy_extraction") if visual_b else None
+        ),
+        "drill_down_comparison": _compare_drill_down_levels(
+            visual_a, visual_b
+        ),
         "rendering_status_a": (
             visual_a.get("rendering_status") if visual_a else "Missing"
         ),
@@ -568,6 +766,12 @@ def compare_visual_inventories(
             and str(a.get("confidence") or "").casefold() == "high"
             and str(b.get("confidence") or "").casefold() == "high"
         )
+        matching_blank_visual = (
+            same_name
+            and same_visual_type(type_a, type_b)
+            and render_statuses["A"] == "blank"
+            and render_statuses["B"] == "blank"
+        )
         unidentified_sides = [
             side
             for side, visual_type in (("A", type_a), ("B", type_b))
@@ -575,10 +779,10 @@ def compare_visual_inventories(
             or str(visual_type).strip().casefold()
             in {"unknown", "unidentified"}
         ]
-        if matching_blank_kpi:
+        if matching_blank_kpi or matching_blank_visual:
             status = MATCH
             notes.append(
-                "Both dashboards explicitly display this KPI as (Blank); "
+                "Both dashboards explicitly display this visual as blank; "
                 "it matches the Base dashboard."
             )
         elif failed_sides:
@@ -661,9 +865,64 @@ def compare_visual_inventories(
                 "Layout differs"
                 f" (position shift {centre:.0%} of page, size change {size:.0%})"
             )
-        rows.append(
-            _visual_row(page, a, b, status, "; ".join(notes), action_applied)
+        hierarchy_a = a.get("hierarchy_extraction")
+        hierarchy_b = b.get("hierarchy_extraction")
+        hierarchy_evidence_a = (
+            hierarchy_a
+            or a.get("hierarchy_structure")
+            or a.get("row_headers")
         )
+        hierarchy_evidence_b = (
+            hierarchy_b
+            or b.get("hierarchy_structure")
+            or b.get("row_headers")
+        )
+        hierarchy_comparison: dict[str, Any] | None = None
+        if hierarchy_evidence_a or hierarchy_evidence_b:
+            hierarchy_comparison = _compare_hierarchy_structures(
+                _hierarchy_structure(a),
+                _hierarchy_structure(b),
+            )
+            notes.append(
+                "Hierarchy detection: "
+                f"Base depth {hierarchy_comparison['depth_a']}, "
+                f"Compare depth {hierarchy_comparison['depth_b']}; "
+                f"Base rows {hierarchy_comparison['row_count_a']}, "
+                f"Compare rows {hierarchy_comparison['row_count_b']}."
+            )
+            notes.append(
+                "Detected hierarchy columns: "
+                f"Base {[(item.get('name'), item.get('level')) for item in hierarchy_comparison['detected_columns_a']]}; "
+                f"Compare {[(item.get('name'), item.get('level')) for item in hierarchy_comparison['detected_columns_b']]}."
+            )
+            if hierarchy_comparison["status"] == "UNVERIFIED":
+                status = UNVERIFIED
+                notes.append(
+                    "Hierarchical table extraction could not be verified on "
+                    "both dashboards."
+                )
+            elif hierarchy_comparison["status"] == "DIFFERENT":
+                if status == MATCH:
+                    status = DIFFERENT
+                notes.append(
+                    "Hierarchy differences: "
+                    f"{len(hierarchy_comparison['missing_rows'])} missing, "
+                    f"{len(hierarchy_comparison['additional_rows'])} additional, "
+                    f"{len(hierarchy_comparison['different_rows'])} different rows."
+                )
+                notes.append(
+                    "Hierarchical table row headers, hierarchy levels, "
+                    "parent paths, row types, or order differ."
+                )
+            else:
+                notes.append(
+                    "Hierarchical table row headers, hierarchy levels, "
+                    "parent paths, row types, and order match."
+                )
+        row = _visual_row(page, a, b, status, "; ".join(notes), action_applied)
+        if hierarchy_comparison is not None:
+            row["hierarchy_comparison"] = hierarchy_comparison
+        rows.append(row)
 
     def detection_is_uncertain(visual: dict[str, Any]) -> bool:
         rendering = str(visual.get("rendering_status") or "").casefold()
@@ -1090,6 +1349,25 @@ def _visible_visual_title(
     return min(visible_titles)[2]
 
 
+def _is_scroll_screenshot_state(state: Any) -> bool:
+    if state is None:
+        return False
+    screenshot = getattr(state, "screenshot", None)
+    if screenshot:
+        filename = Path(str(screenshot)).name
+        if "Scroll" in filename:
+            return True
+    step = str(getattr(state, "scenario_step", "") or "")
+    if "Scroll" in step:
+        return True
+    return False
+
+
+def _is_table_or_matrix_type(visual_type: Any) -> bool:
+    normalized = str(visual_type or "").casefold()
+    return "table" in normalized or "matrix" in normalized
+
+
 def visual_inventory(state: Any) -> list[dict[str, Any]]:
     """Return the visual containers of one captured state.
 
@@ -1097,18 +1375,27 @@ def visual_inventory(state: Any) -> list[dict[str, Any]]:
     title items are available. Screenshot-detected names are retained
     separately for display when title evidence has no spatial match.
     """
+    if _is_scroll_screenshot_state(state):
+        return []
     visuals: list[dict[str, Any]] = []
     captured_visuals = getattr(state, "visuals", None) or []
     if captured_visuals:
+        extracted = state.extracted or {}
+        extracted_elements = extracted.get("elements") or []
         for visual in captured_visuals:
             if not isinstance(visual, dict):
                 continue
             if is_header_divider(visual):
                 continue
+            if (
+                visual.get("scrollable")
+                and "chart"
+                in str(visual.get("visual_type") or "").casefold()
+            ):
+                continue
             geometry = _visual_geometry(visual)
             if geometry is None:
                 continue
-            extracted = state.extracted or {}
             visible_title = _visible_visual_title(
                 extracted,
                 visual,
@@ -1131,19 +1418,49 @@ def visual_inventory(state: Any) -> list[dict[str, Any]]:
             for key in ("rendering_status", "confidence"):
                 if visual.get(key) is not None:
                     item[key] = visual[key]
+            categories = visual.get("categories") or []
+            extracted_visual = next(
+                (
+                    element
+                    for element in extracted_elements
+                    if isinstance(element, dict)
+                    and str(element.get("element_id") or "").casefold()
+                    == str(visual.get("visual_id") or "").casefold()
+                ),
+                None,
+            )
+            extracted_categories = (
+                extracted_visual.get("categories") or []
+                if extracted_visual is not None
+                else []
+            )
+            categories = list(
+                dict.fromkeys(
+                    [
+                        *(
+                            str(value).strip()
+                            for value in categories
+                            if str(value).strip()
+                        ),
+                        *(
+                            str(value).strip()
+                            for value in extracted_categories
+                            if str(value).strip()
+                        ),
+                    ]
+                )
+            )
+            if not categories and "title_items" in extracted:
+                categories = [
+                    t["text"]
+                    for t in (extracted.get("title_items") or [])
+                    if t.get("category") == "column_header" and t.get("text")
+                ]
+            item["categories"] = categories
             rendering_status = str(
                 item.get("rendering_status") or ""
             ).casefold()
             is_kpi = item["visual_type"].casefold() in {"kpi", "kpi card"}
-            if (
-                rendering_status == "blank"
-                and not visible_title
-                and item["visual_type"].casefold() not in _DECORATIVE_TYPES
-                and not is_kpi
-            ):
-                continue
-            if rendering_status == "blank" and visible_title and not is_kpi:
-                item["rendering_status"] = "Rendered"
             visuals.append(item)
         return visuals
 
@@ -1153,17 +1470,25 @@ def visual_inventory(state: Any) -> list[dict[str, Any]]:
             continue
         if is_header_divider(element):
             continue
-        element_type = _normalize_type(element.get("element_type"))
+        element_type = _normalize_type(element.get("element_type") or element.get("type"))
         if element_type not in _VISUAL_CONTAINER_TYPES:
             continue
         geometry = _visual_geometry(element)
         if geometry is None:
             continue
+        categories = element.get("categories") or []
+        if not categories and "title_items" in (state.extracted or {}):
+            categories = [
+                t["text"]
+                for t in ((state.extracted or {}).get("title_items") or [])
+                if t.get("category") == "column_header" and t.get("text")
+            ]
         visuals.append(
             {
                 "visual_id": element.get("element_id") or f"{element_type}_{len(visuals) + 1}",
                 "visual_name": element.get("element_text") or element.get("title") or None,
                 "visual_type": classify_visual_type(element_type),
+                "categories": categories,
                 **geometry,
             }
         )
@@ -1233,22 +1558,93 @@ def build_visual_filter_result(
     visual_rows: list[dict[str, Any]] = []
     filter_rows: list[dict[str, Any]] = []
     unmatched: list[str] = []
+    header_schemas: dict[tuple[str, str], list[str]] = {}
+    header_schemas_by_type: dict[tuple[str, str], list[str]] = {}
+
+    for state in [*states_a, *states_b]:
+        if _is_scroll_screenshot_state(state):
+            continue
+        page_key = " ".join(
+            str(getattr(state, "page", "") or "").split()
+        ).casefold()
+        for visual in visual_inventory(state):
+            if not _is_table_or_matrix_type(visual.get("visual_type")):
+                continue
+            categories = [
+                str(value).strip()
+                for value in (visual.get("categories") or [])
+                if str(value).strip()
+            ]
+            if not categories:
+                continue
+            visual_key = " ".join(
+                str(visual.get("visual_id") or visual.get("visual_name") or "").split()
+            ).casefold()
+            key = (page_key, visual_key)
+            existing = header_schemas.get(key, [])
+            if len(categories) > len(existing):
+                header_schemas[key] = list(dict.fromkeys(categories))
+            type_key = (
+                page_key,
+                str(visual.get("visual_type") or "").casefold(),
+            )
+            type_existing = header_schemas_by_type.get(type_key, [])
+            if len(categories) > len(type_existing):
+                header_schemas_by_type[type_key] = list(dict.fromkeys(categories))
 
     for state_a in states_a:
         state_b = by_key_b.get(state_a.state_key)
         if state_b is None:
-            unmatched.append(f"A only: {state_a.state_key}")
+            if not _is_scroll_screenshot_state(state_a):
+                unmatched.append(f"A only: {state_a.state_key}")
             continue
         matched_keys.add(state_a.state_key)
-        current_visual_rows = compare_visual_inventories(
-            state_a.page,
-            visual_inventory(state_a),
-            visual_inventory(state_b),
-            action_applied=action_label(state_a.filter),
-        )
-        for row in current_visual_rows:
-            row["state"] = state_a.state_key
-        visual_rows.extend(current_visual_rows)
+        if not (_is_scroll_screenshot_state(state_a) or _is_scroll_screenshot_state(state_b)):
+            inventory_a = visual_inventory(state_a)
+            inventory_b = visual_inventory(state_b)
+            for inventory in (inventory_a, inventory_b):
+                for visual in inventory:
+                    if not _is_table_or_matrix_type(visual.get("visual_type")):
+                        continue
+                    visual_key = " ".join(
+                        str(
+                            visual.get("visual_id")
+                            or visual.get("visual_name")
+                            or ""
+                        ).split()
+                    ).casefold()
+                    schema = header_schemas.get(
+                        (
+                            " ".join(str(state_a.page or "").split()).casefold(),
+                            visual_key,
+                        ),
+                        [],
+                    )
+                    type_schema = header_schemas_by_type.get(
+                        (
+                            " ".join(str(state_a.page or "").split()).casefold(),
+                            str(visual.get("visual_type") or "").casefold(),
+                        ),
+                        [],
+                    )
+                    schema = list(dict.fromkeys([*schema, *type_schema]))
+                    categories = [
+                        str(value).strip()
+                        for value in (visual.get("categories") or [])
+                        if str(value).strip()
+                    ]
+                    visual["categories"] = list(
+                        dict.fromkeys([*categories, *schema])
+                    )
+            current_visual_rows = compare_visual_inventories(
+                state_a.page,
+                inventory_a,
+                inventory_b,
+                action_applied=action_label(state_a.filter),
+            )
+            for row in current_visual_rows:
+                row["state"] = state_a.state_key
+            visual_rows.extend(current_visual_rows)
         current_filter_rows = compare_filter_configurations(
             state_a.page,
             filter_inventory(state_a),
@@ -1281,7 +1677,9 @@ def build_visual_filter_result(
         filter_rows.extend(current_filter_rows)
 
     unmatched.extend(
-        f"B only: {key}" for key in by_key_b if key not in matched_keys
+        f"B only: {key}"
+        for key in by_key_b
+        if key not in matched_keys and not _is_scroll_screenshot_state(by_key_b[key])
     )
     return {
         "visual_rows": visual_rows,

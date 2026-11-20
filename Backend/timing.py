@@ -25,6 +25,7 @@ def write_operation_event(
     visual: str | None = None,
     duration_seconds: float | None = None,
     error_type: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> None:
     record: dict[str, Any] = {
         "timestamp_unix_seconds": time.time(),
@@ -41,6 +42,8 @@ def write_operation_event(
         record["duration_seconds"] = round(duration_seconds, 3)
     if error_type is not None:
         record["error_type"] = error_type
+    if details:
+        record.update(details)
 
     if path is not None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -72,6 +75,7 @@ def measure_stage(
     dashboard: str | None = None,
     page: str | None = None,
     filter_state: str | None = None,
+    visual: str | None = None,
 ) -> Iterator[None]:
     started_at = time.perf_counter()
     write_operation_event(
@@ -83,6 +87,7 @@ def measure_stage(
         dashboard=dashboard,
         page=page,
         filter_state=filter_state,
+        visual=visual,
     )
     try:
         yield
@@ -99,6 +104,7 @@ def measure_stage(
             dashboard=dashboard,
             page=page,
             filter_state=filter_state,
+            visual=visual,
             duration_seconds=time.perf_counter() - started_at,
             error_type=type(exc).__name__,
         )
@@ -113,5 +119,6 @@ def measure_stage(
             dashboard=dashboard,
             page=page,
             filter_state=filter_state,
+            visual=visual,
             duration_seconds=time.perf_counter() - started_at,
         )

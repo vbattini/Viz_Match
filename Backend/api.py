@@ -11,15 +11,18 @@ import shutil
 import time
 import zipfile
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 from playwright.async_api import async_playwright
 from starlette.background import BackgroundTask
 
@@ -33,11 +36,46 @@ from .discovery import discover_dashboard_pair, normalize_name
 from .workflow import run_dashboard_comparison
 
 logger = logging.getLogger(__name__)
+
+
+class _BatchPollingAccessLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        arguments = record.args
+        if not isinstance(arguments, tuple) or len(arguments) != 5:
+            return True
+
+        _, method, path, _, status_code = arguments
+        if not isinstance(method, str) or not isinstance(path, str):
+            return True
+        path = path.partition("?")[0]
+        is_batch_status_path = (
+            path.startswith("/api/batches/")
+            and "/" not in path[len("/api/batches/") :]
+        )
+        return not (
+            method == "GET" and is_batch_status_path and status_code == 200
+        )
+
+
+def _install_batch_poll_access_log_filter() -> None:
+    access_logger = logging.getLogger("uvicorn.access")
+    if not any(
+        isinstance(log_filter, _BatchPollingAccessLogFilter)
+        for log_filter in access_logger.filters
+    ):
+        access_logger.addFilter(_BatchPollingAccessLogFilter())
+
+
+_install_batch_poll_access_log_filter()
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = Path(__file__).resolve().parents[1] / "Frontend"
 OUTPUT_ROOT = PROJECT_ROOT / "output" / "jobs"
 MAX_RETAINED_JOBS = 20
 MAX_BATCH_JOBS = 10
+BATCH_JOB_COOLDOWN_SECONDS = 20
+JOB_OUTPUT_CLEANUP_ATTEMPTS = 5
+JOB_OUTPUT_CLEANUP_RETRY_SECONDS = 0.5
 MAX_IMPORT_BYTES = 5 * 1024 * 1024
 JOBS: dict[str, dict] = {}
 BATCHES: dict[str, dict] = {}
@@ -50,38 +88,88 @@ IMPORT_FIELDS = {
     "semantic model": "semantic_model",
     "report name": "report_name",
 }
+OPTIONAL_IMPORT_FIELDS = {
+    "base report url": "url_a",
+    "gcp report url": "url_b",
+}
 
 app = FastAPI(title="Power BI Dashboard Comparator")
 app.mount("/static", StaticFiles(directory=FRONTEND_ROOT / "static"), name="static")
 
 
 class CompareRequest(BaseModel):
-    workspace_name: str
+    workspace_name: str = ""
     semantic_model: str = ""
-    report_name: str
+    report_name: str = ""
+    url_a: str = ""
+    url_b: str = ""
     run_validation_scenarios: bool = False
 
-    @field_validator("workspace_name", "report_name")
+    @field_validator("workspace_name", "report_name", "url_a", "url_b")
     @classmethod
-    def validate_required_name(cls, value: str) -> str:
+    def normalize_text(cls, value: str) -> str:
         normalized = normalize_name(value)
-        if not normalized:
-            raise ValueError("This field is required.")
         return normalized
+
+    @model_validator(mode="after")
+    def validate_input_mode(self):
+        if bool(self.url_a) != bool(self.url_b):
+            raise ValueError("Provide both Base Report URL and GCP Report URL.")
+        if not self.url_a and (not self.workspace_name or not self.report_name):
+            raise ValueError(
+                "Provide both report URLs or Workspace Name and Report Name."
+            )
+        for field_name in ("url_a", "url_b"):
+            value = getattr(self, field_name)
+            if value:
+                parsed = urlsplit(value)
+                if (
+                    parsed.scheme != "https"
+                    or parsed.hostname != "app.powerbi.com"
+                ):
+                    raise ValueError(
+                        f"{field_name} must be an HTTPS app.powerbi.com URL."
+                    )
+        return self
 
 
 class BatchJobRequest(BaseModel):
-    workspace_name: str
-    semantic_model: str
-    report_name: str
+    workspace_name: str = ""
+    semantic_model: str = ""
+    report_name: str = ""
+    url_a: str = ""
+    url_b: str = ""
 
-    @field_validator("workspace_name", "semantic_model", "report_name")
+    @field_validator(
+        "workspace_name", "semantic_model", "report_name", "url_a", "url_b"
+    )
     @classmethod
-    def validate_required_name(cls, value: str) -> str:
+    def normalize_text(cls, value: str) -> str:
         normalized = normalize_name(value)
-        if not normalized:
-            raise ValueError("This field is required.")
         return normalized
+
+    @model_validator(mode="after")
+    def validate_input_mode(self):
+        if bool(self.url_a) != bool(self.url_b):
+            raise ValueError("Provide both Base Report URL and GCP Report URL.")
+        if not self.url_a and (
+            not self.workspace_name or not self.semantic_model or not self.report_name
+        ):
+            raise ValueError(
+                "Provide both report URLs or all name-based fields."
+            )
+        for field_name in ("url_a", "url_b"):
+            value = getattr(self, field_name)
+            if value:
+                parsed = urlsplit(value)
+                if (
+                    parsed.scheme != "https"
+                    or parsed.hostname != "app.powerbi.com"
+                ):
+                    raise ValueError(
+                        f"{field_name} must be an HTTPS app.powerbi.com URL."
+                    )
+        return self
 
 
 class BatchRequest(BaseModel):
@@ -102,6 +190,18 @@ class BatchRequest(BaseModel):
 class ImportPreviewRequest(BaseModel):
     filename: str
     content_base64: str
+
+
+@dataclass(frozen=True)
+class _DirectDashboardPair:
+    discovery: dict[str, Any]
+    url_a: str
+    url_b: str
+    page_a: Any | None = None
+    page_b: Any | None = None
+
+    async def close(self) -> None:
+        return None
 
 
 def _import_cell_text(value: object) -> str:
@@ -136,10 +236,14 @@ def _build_import_preview(raw_rows) -> dict:
     for header in IMPORT_FIELDS:
         if header not in positions:
             header_errors.append(f"Missing required column: {header.title()}.")
-    if len(positions) != len(IMPORT_FIELDS):
+    allowed_headers = set(IMPORT_FIELDS) | set(OPTIONAL_IMPORT_FIELDS)
+    if any(header not in allowed_headers for header in positions):
+        header_errors.append("The file contains unsupported columns.")
+    if len(positions) < len(IMPORT_FIELDS):
         header_errors.append(
             "The file must contain exactly Workspace Name, Semantic Model, "
-            "and Report Name columns."
+            "and Report Name columns, with optional Base Report URL and "
+            "GCP Report URL columns."
         )
     if header_errors:
         return {
@@ -161,7 +265,11 @@ def _build_import_preview(raw_rows) -> dict:
                 if positions[header] < len(cells)
                 else None
             )
-            for header, field in IMPORT_FIELDS.items()
+            for header, field in {
+                **IMPORT_FIELDS,
+                **OPTIONAL_IMPORT_FIELDS,
+            }.items()
+            if header in positions
         }
         unexpected_data = any(
             _import_cell_text(value)
@@ -171,10 +279,16 @@ def _build_import_preview(raw_rows) -> dict:
         if not any(values.values()) and not unexpected_data:
             continue
         nonempty_records += 1
+        url_mode = bool(values.get("url_a") or values.get("url_b"))
+        required_fields = (
+            ("url_a", "url_b")
+            if url_mode
+            else ("workspace_name", "semantic_model", "report_name")
+        )
         row_errors = [
             f"{field.replace('_', ' ').title()} is required."
-            for field, value in values.items()
-            if not value
+            for field in required_fields
+            if not values.get(field)
         ]
         if unexpected_data:
             row_errors.append("Unexpected data outside the named columns.")
@@ -276,6 +390,66 @@ def _storage_state_path() -> Path:
     return configured_path
 
 
+def _clear_batch_transient_state(storage_state: Path) -> int:
+    """Remove stale discovery diagnostics without touching authentication state.
+
+    Browser contexts are created per run, so Playwright does not leave a
+    persistent browser cache here.  The discovery diagnostics directory is the
+    only persistent discovery state used by this application.
+    """
+    configured_debug_dir = os.environ.get("POWERBI_DEBUG_DIR")
+    configured_path = Path(configured_debug_dir) if configured_debug_dir else (
+        PROJECT_ROOT / "discovery_debug"
+    )
+    if configured_path.is_symlink():
+        raise RuntimeError(
+            f"Refusing to clear symlinked transient discovery path {configured_path}; "
+            "Power BI authentication was not modified."
+        )
+    debug_dir = configured_path if configured_path.is_absolute() else PROJECT_ROOT / configured_path
+    debug_dir = debug_dir.resolve()
+    protected_storage_state = storage_state.resolve()
+    if debug_dir == protected_storage_state or debug_dir == PROJECT_ROOT:
+        raise RuntimeError(
+            f"Refusing to clear unsafe transient path {debug_dir}; "
+            "Power BI authentication was not modified."
+        )
+    if not debug_dir.exists():
+        return 0
+    if not debug_dir.is_dir() or debug_dir.is_symlink():
+        raise RuntimeError(
+            f"Transient discovery path is not a directory: {debug_dir}; "
+            "Power BI authentication was not modified."
+        )
+
+    protected_names = {"auth.json", "credentials", "credentials.json"}
+    for candidate in debug_dir.rglob("*"):
+        if candidate.name.casefold() in protected_names or (
+            candidate.is_file() and candidate.resolve() == protected_storage_state
+        ):
+            raise RuntimeError(
+                f"Refusing to clear authentication file under {debug_dir}: {candidate}; "
+                "Power BI authentication was not modified."
+            )
+
+    removed = 0
+    try:
+        for entry in debug_dir.iterdir():
+            if entry.is_symlink() or entry.is_file():
+                entry.unlink()
+            elif entry.is_dir():
+                shutil.rmtree(entry)
+            else:
+                raise OSError(f"Unsupported filesystem entry: {entry}")
+            removed += 1
+    except OSError as exc:
+        raise RuntimeError(
+            f"Could not clear transient discovery state in {debug_dir}: {exc}; "
+            "Power BI authentication was not modified."
+        ) from exc
+    return removed
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
     return HTMLResponse((FRONTEND_ROOT / "index.html").read_text(encoding="utf-8"))
@@ -358,6 +532,8 @@ async def start_batch(request: BatchRequest) -> dict:
                     "workspace_name": request_row.workspace_name,
                     "semantic_model": request_row.semantic_model,
                     "report_name": request_row.report_name,
+                    "url_a": request_row.url_a,
+                    "url_b": request_row.url_b,
                     "status": "pending",
                     "summary": None,
                     "error": None,
@@ -416,15 +592,47 @@ async def _execute_comparison(
     update_progress(2, "in_progress")
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
+        discovery = None
         try:
-            discovery = await discover_dashboard_pair(
-                workspace_name=request.workspace_name,
-                semantic_model=request.semantic_model,
-                report_name=request.report_name,
-                storage_state=storage_state,
-                on_progress=update_progress,
-                browser=browser,
-            )
+            if request.url_a and request.url_b:
+                discovery = _DirectDashboardPair(
+                    discovery={
+                        "inputs": {
+                            "workspace_name": request.workspace_name,
+                            "semantic_model": request.semantic_model,
+                            "report_name": request.report_name,
+                            "url_a": request.url_a,
+                            "url_b": request.url_b,
+                        },
+                        "dashboard_a": {
+                            "environment": "Snowflake",
+                            "report_url": request.url_a,
+                            "report_name": request.report_name or request.url_a,
+                            "status": "provided",
+                        },
+                        "dashboard_b": {
+                            "environment": "GCP",
+                            "report_url": request.url_b,
+                            "report_name": request.report_name or request.url_b,
+                            "status": "provided",
+                        },
+                        "discovery_status": "url_inputs",
+                    },
+                    url_a=request.url_a,
+                    url_b=request.url_b,
+                )
+                update_progress(2, "completed", "Using provided report URLs.")
+                for step in range(3, 8):
+                    update_progress(step, "skipped", "Provided report URL.")
+            else:
+                discovery = await discover_dashboard_pair(
+                    workspace_name=request.workspace_name,
+                    semantic_model=request.semantic_model,
+                    report_name=request.report_name,
+                    storage_state=storage_state,
+                    on_progress=update_progress,
+                    browser=browser,
+                )
             (output_dir / "discovery.json").write_text(
                 json.dumps(
                     discovery.discovery,
@@ -465,7 +673,7 @@ async def _execute_comparison(
                     destination=output_dir,
                     storage_state=storage_state,
                     headed=False,
-                    settle_seconds=2.0,
+                    settle_seconds=30.0,
                     browser=browser,
                     job_id=job_id,
                     operation_log_path=operation_log_path,
@@ -514,8 +722,14 @@ async def _execute_comparison(
                 report_metadata=discovery.discovery,
                 generate_report=True,
                 scenario_state_loader=scenario_state_loader,
+                initial_pages=(
+                    getattr(discovery, "page_a", None),
+                    getattr(discovery, "page_b", None),
+                ),
             )
         finally:
+            if discovery is not None and hasattr(discovery, "close"):
+                await discovery.close()
             await browser.close()
     _finalize_job_output(job_id, output_dir, result)
     return result["summary"]
@@ -536,7 +750,24 @@ def _prepare_job_output(job_id: str) -> Path:
         reverse=True,
     )
     for path in job_directories[MAX_RETAINED_JOBS:]:
-        shutil.rmtree(path)
+        removed = False
+        for attempt in range(1, JOB_OUTPUT_CLEANUP_ATTEMPTS + 1):
+            try:
+                shutil.rmtree(path)
+                removed = True
+                break
+            except PermissionError:
+                if attempt < JOB_OUTPUT_CLEANUP_ATTEMPTS:
+                    time.sleep(JOB_OUTPUT_CLEANUP_RETRY_SECONDS)
+            except OSError:
+                break
+        if not removed:
+            logger.warning(
+                "Could not remove old job directory %s after %s attempts; "
+                "skipping cleanup. A file may still be open by another process.",
+                path,
+                JOB_OUTPUT_CLEANUP_ATTEMPTS,
+            )
     return output_dir
 
 
@@ -682,15 +913,39 @@ async def _run_batch(
 ) -> None:
     global ACTIVE_BATCH_ID, ACTIVE_JOB_ID
     batch = BATCHES[batch_id]
-    batch["status"] = "running"
+    started_monotonic = time.monotonic()
     failed_job_seen = False
     try:
+        logger.info("Clearing transient browser/discovery state before batch: batch_id=%s", batch_id)
+        removed_transient_entries = _clear_batch_transient_state(storage_state)
+        logger.info(
+            "Transient browser/discovery cleanup complete: batch_id=%s entries_removed=%d "
+            "auth_state_preserved=%s",
+            batch_id,
+            removed_transient_entries,
+            True,
+        )
+        batch["status"] = "running"
+        logger.info(
+            "Batch started: batch_id=%s jobs=%d stop_on_first_failure=%s",
+            batch_id,
+            len(batch["jobs"]),
+            batch["stop_on_first_failure"],
+        )
         for index, batch_job in enumerate(batch["jobs"]):
             if failed_job_seen and batch["stop_on_first_failure"]:
                 batch_job["status"] = "skipped"
                 batch_job["error"] = "Skipped because an earlier job failed."
                 JOBS[batch_job["job_id"]]["status"] = "skipped"
                 JOBS[batch_job["job_id"]]["error"] = batch_job["error"]
+                logger.warning(
+                    "Batch job skipped: batch_id=%s job=%d/%d job_id=%s "
+                    "reason=earlier_job_failed",
+                    batch_id,
+                    batch_job["number"],
+                    len(batch["jobs"]),
+                    batch_job["job_id"],
+                )
                 continue
 
             job_id = batch_job["job_id"]
@@ -702,12 +957,22 @@ async def _run_batch(
                 ACTIVE_JOB_ID = job_id
 
             request_row = request.jobs[index]
+            logger.info(
+                "Batch job started: batch_id=%s job=%d/%d job_id=%s report=%r",
+                batch_id,
+                batch_job["number"],
+                len(batch["jobs"]),
+                job_id,
+                request_row.report_name,
+            )
             await _run_comparison(
                 job_id,
                 CompareRequest(
                     workspace_name=request_row.workspace_name,
                     semantic_model=request_row.semantic_model,
                     report_name=request_row.report_name,
+                    url_a=request_row.url_a,
+                    url_b=request_row.url_b,
                     run_validation_scenarios=request.run_validation_scenarios,
                 ),
                 storage_state,
@@ -716,8 +981,31 @@ async def _run_batch(
             batch_job["status"] = job["status"]
             batch_job["summary"] = job.get("summary")
             batch_job["error"] = job.get("error")
+            logger.info(
+                "Batch job finished: batch_id=%s job=%d/%d job_id=%s "
+                "status=%s elapsed_seconds=%.3f",
+                batch_id,
+                batch_job["number"],
+                len(batch["jobs"]),
+                job_id,
+                job["status"],
+                job.get("elapsed_seconds", 0.0),
+            )
             if job["status"] == "failed":
                 failed_job_seen = True
+            has_next_job = index + 1 < len(batch["jobs"])
+            should_continue = not (
+                failed_job_seen and batch["stop_on_first_failure"]
+            )
+            if has_next_job and should_continue:
+                next_job = batch["jobs"][index + 1]
+                batch["current_job_number"] = next_job["number"]
+                batch["cooldown_message"] = (
+                    f"Waiting {BATCH_JOB_COOLDOWN_SECONDS} seconds before "
+                    f"starting job {next_job['number']}."
+                )
+                await asyncio.sleep(BATCH_JOB_COOLDOWN_SECONDS)
+                batch.pop("cooldown_message", None)
 
         batch["status"] = "completed"
     except Exception as exc:
@@ -736,8 +1024,21 @@ async def _run_batch(
                 JOBS[batch_job["job_id"]]["status"] = "skipped"
                 JOBS[batch_job["job_id"]]["error"] = batch_job["error"]
     finally:
+        batch.pop("cooldown_message", None)
         batch["current_job_number"] = None
         batch["finished_at"] = datetime.now(timezone.utc).isoformat()
+        counts = _batch_counts(batch)
+        logger.info(
+            "Batch finished: batch_id=%s status=%s completed=%d failed=%d "
+            "skipped=%d total=%d elapsed_seconds=%.3f",
+            batch_id,
+            batch["status"],
+            counts["completed"],
+            counts["failed"],
+            counts["skipped"],
+            counts["total"],
+            time.monotonic() - started_monotonic,
+        )
         async with JOB_LOCK:
             if (
                 ACTIVE_JOB_ID is not None
@@ -804,6 +1105,12 @@ def _batch_payload(batch_id: str, batch: dict) -> dict:
     downloadable_job_count = sum(
         job["download_folder_ready"] for job in jobs
     )
+    cooldown_message = batch.get("cooldown_message")
+    if cooldown_message:
+        current_stage = {
+            "step": "cooldown",
+            "message": cooldown_message,
+        }
     return {
         "batch_id": batch_id,
         "status": batch["status"],

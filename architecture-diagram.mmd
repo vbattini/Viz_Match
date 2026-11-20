@@ -1,0 +1,157 @@
+---
+title: Power BI Dashboard Comparator - Full Architecture
+---
+flowchart TB
+    user[User]
+
+    subgraph presentation["Presentation Layer"]
+        ui[Frontend UI<br/>Frontend/index.html<br/>Frontend/static/app.js<br/>Frontend/static/styles.css]
+        cli[CLI<br/>Backend/cli.py]
+    end
+
+    subgraph service["Application Service Layer"]
+        api[FastAPI API<br/>Backend/api.py]
+        jobs[Job manager<br/>status, progress, output retention]
+    end
+
+    subgraph orchestration["Orchestration Layer"]
+        workflow[ADK Sequential Workflow<br/>Backend/workflow.py]
+        captureStage[Capture stage]
+        validateStage[Validation stage]
+        compareStage[Comparison stage]
+        reportStage[Report stage]
+    end
+
+    subgraph acquisition["Power BI Acquisition Layer"]
+        discovery[Workspace/report discovery<br/>Backend/discovery.py]
+        browser[Playwright browser engine<br/>Backend/browser.py]
+        navigation[Report/page navigation]
+        readiness[Render readiness and stability]
+        inventory[DOM/accessibility inventory]
+        filters[Filter planning and selection]
+        screenshots[Screenshot capture]
+        exports[Visual and hierarchy exports]
+    end
+
+    subgraph ai["AI Evidence Enrichment Layer"]
+        agents[Vertex AI / Gemini<br/>Backend/agents.py]
+        extraction[Visual title/type/rendering extraction]
+        retry[Schema validation and retry/backoff]
+    end
+
+    subgraph validation["Functional Validation Layer"]
+        scenarios[Scenario orchestrator<br/>Backend/validation_scenarios.py]
+        s01[Scenario 01<br/>Table/header + hierarchy]
+        s02[Scenario 02<br/>Single filter]
+        s03[Scenario 03<br/>Multiple filters]
+        hierarchy[DOM hierarchy sequence<br/>value cell -> Drill Up -> Expand All<br/>-> screenshot/export -> Next Level screenshot]
+        evidence[Evidence store and manifests<br/>Backend/scenario_evidence.py]
+        scenarioCompare[Scenario comparison<br/>Backend/scenario_comparison.py]
+    end
+
+    subgraph deterministic["Deterministic Comparison Layer"]
+        comparator[State alignment and status assignment<br/>Backend/comparison.py]
+        visualFilter[Visual/filter comparison<br/>Backend/visual_filter_comparison.py]
+        visualReport[Visual/filter report data<br/>Backend/visual_filter_report.py]
+        inventoryReport[Visual inventory report<br/>Backend/visual_inventory_report.py]
+    end
+
+    subgraph outputs["Report and Runtime Output Layer"]
+        json[JSON evidence and comparison]
+        xlsx[Excel validation workbook]
+        docx[DOCX validation report]
+        images[Screenshots]
+        hierarchyFiles[Hierarchy Excel evidence]
+        timing[Timing and performance JSONL<br/>Backend/timing.py]
+        output[(output/jobs/{job_id})]
+    end
+
+    subgraph external["External Systems"]
+        powerbiA[Power BI Dashboard A<br/>Snowflake / Base]
+        powerbiB[Power BI Dashboard B<br/>GCP / Compare]
+        vertex[Google Vertex AI]
+        auth[Playwright authenticated storage state]
+    end
+
+    user --> ui
+    user --> cli
+    ui --> api
+    cli --> workflow
+    api --> jobs
+    jobs --> workflow
+
+    workflow --> captureStage
+    workflow --> validateStage
+    workflow --> compareStage
+    workflow --> reportStage
+    captureStage --> discovery
+    captureStage --> browser
+    validateStage --> scenarios
+    compareStage --> comparator
+    reportStage --> visualReport
+    reportStage --> docx
+
+    discovery --> browser
+    browser --> navigation
+    browser --> readiness
+    browser --> inventory
+    browser --> filters
+    browser --> screenshots
+    browser --> exports
+    auth --> browser
+    navigation --> powerbiA
+    navigation --> powerbiB
+
+    screenshots --> agents
+    inventory --> agents
+    agents --> extraction
+    agents --> retry
+    retry --> vertex
+    extraction --> comparator
+
+    scenarios --> s01
+    scenarios --> s02
+    scenarios --> s03
+    s01 --> hierarchy
+    hierarchy --> exports
+    hierarchy --> screenshots
+    s01 --> evidence
+    s02 --> evidence
+    s03 --> evidence
+    evidence --> scenarioCompare
+    scenarioCompare --> json
+    scenarioCompare --> docx
+
+    browser --> comparator
+    filters --> visualFilter
+    inventory --> inventoryReport
+    comparator --> visualFilter
+    comparator --> visualReport
+    visualFilter --> json
+    visualReport --> xlsx
+    inventoryReport --> xlsx
+    comparator --> json
+    comparator --> docx
+    screenshots --> images
+    exports --> hierarchyFiles
+
+    json --> output
+    xlsx --> output
+    docx --> output
+    images --> output
+    hierarchyFiles --> output
+    timing --> output
+    workflow --> timing
+    browser --> timing
+    agents --> timing
+    output --> api
+    api --> ui
+
+    classDef layer fill:#eaf3ff,stroke:#2b5d91,stroke-width:1px,color:#102a43;
+    classDef component fill:#f8fbff,stroke:#4779a8,stroke-width:1px,color:#102a43;
+    classDef externalNode fill:#fff4df,stroke:#b7791f,stroke-width:1px,color:#4a2c00;
+    classDef outputNode fill:#eaf8ef,stroke:#2f855a,stroke-width:1px,color:#164a2b;
+
+    class ui,cli,api,jobs,workflow,captureStage,validateStage,compareStage,reportStage,discovery,browser,navigation,readiness,inventory,filters,screenshots,exports,agents,extraction,retry,scenarios,s01,s02,s03,hierarchy,evidence,scenarioCompare,comparator,visualFilter,visualReport,inventoryReport layer;
+    class powerbiA,powerbiB,vertex,auth externalNode;
+    class json,xlsx,docx,images,hierarchyFiles,timing,output outputNode;
